@@ -7,7 +7,7 @@
   "max_review_iterations": 3,
   "active_review_file": null,
   "last_verdict": "delivered",
-  "last_review_file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md",
+  "last_review_file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-final-deep-review-external.md",
   "last_delivered_phase": "Phase 5 - Quickstart Documentation And Closeout",
   "blocked_reason": null,
   "last_blocked_remediation": {
@@ -15,5 +15,10 @@
     "classification": "external-decision-local-repair",
     "result": "Operator instruction unblocked branch drift; active workflow switched back to the Phase 2 branch and Phase 2 review iteration 2 delivered."
   },
-  "updated_at": "2026-06-02T12:23:56Z"
+  "updated_at": "2026-06-02T12:54:11Z",
+  "external_deep_review": {
+    "file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-final-deep-review-external.md",
+    "verdict": "ready-for-finalization",
+    "recorded_at": "2026-06-02T12:54:11Z"
+  }
 }

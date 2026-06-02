@@ -172,3 +172,15 @@ Status: delivered, completed
 - Roadmap lifecycle path is now
   `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`.
 - Review/fix state is complete. The saved automation reads back `PAUSED`.
+
+## External Deep Review - 2026-06-02T12:54:11Z
+
+Status: delivered
+
+- Review file:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-final-deep-review-external.md`
+- External verdict: ready-for-finalization.
+- No blocking or needs-fix findings.
+- Low-1 skipped-test wording was fixed in finalization evidence.
+- Remaining low-severity notes were recorded as informational caveats for human
+  merge review.

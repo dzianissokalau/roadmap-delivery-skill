@@ -44,8 +44,8 @@ No missing required checks.
 
 ## Verification Evidence
 
-- `python3 -m unittest discover -s tests -v`: passed, 175 tests, 1 optional
-  Claude binary smoke skipped.
+- `python3 -m unittest discover -s tests -v`: passed, 175 tests; optional
+  host-binary smoke skips are environment-dependent.
 - `python3 scripts/build_adapters.py --check --json`: passed for Codex and
   Claude adapters with no diffs.
 - `python3 scripts/build_release.py --check --json`: passed with reproducible

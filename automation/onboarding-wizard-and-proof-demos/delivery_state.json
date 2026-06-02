@@ -9,13 +9,13 @@
   "max_review_iterations": 3,
   "last_verification": {
     "phase": "finalization",
-    "completed_at": "2026-06-02T12:25:22Z",
+    "completed_at": "2026-06-02T12:55:26Z",
     "status": "passed",
     "checks": [
       {
         "command": "python3 -m unittest discover -s tests -v",
         "status": "passed",
-        "details": "175 tests passed; 1 optional Claude binary smoke skipped."
+        "details": "175 tests passed; optional host-binary smoke skips are environment-dependent."
       },
       {
         "command": "python3 scripts/build_adapters.py --check --json",
@@ -60,22 +60,24 @@
       {
         "command": "python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --strict --allow-warning worktree_dirty --json",
         "status": "passed",
-        "details": "Completed-state validation passed with only the allowed worktree_dirty warning; saved automation readback is PAUSED."
+        "details": "Post-external-review validation passed with only the expected worktree_dirty warning."
       },
       {
         "command": "python3 -m roadmap_delivery.cli inspect --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --strict --allow-warning worktree_dirty --json",
         "status": "passed",
-        "details": "Completed-state inspection passed with only the allowed worktree_dirty warning; state is completed and saved automation readback is PAUSED."
+        "details": "Post-external-review inspection passed with completed state, PAUSED automation readback, and only the expected worktree_dirty warning."
       }
     ]
   },
   "last_review": {
-    "phase": "finalization",
-    "file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md",
+    "phase": "external final deep review",
+    "file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-final-deep-review-external.md",
     "verdict": "delivered",
-    "reviewed_at": "2026-06-02T12:07:46Z",
-    "reviewer_context": "same_context",
-    "final_deep_review_verdict": "ready-for-finalization"
+    "reviewed_at": "2026-06-02T12:54:11Z",
+    "reviewer_context": "external_fresh_clone",
+    "final_deep_review_verdict": "ready-for-finalization",
+    "source_file": "/Users/dzianissokalau/Downloads/onboarding_wizard_proof_demos_deep_review.md",
+    "reviewed_commit": "db6551e"
   },
   "last_delivered_phase": "Phase 5 - Quickstart Documentation And Closeout",
   "blocked_reason": null,
@@ -149,11 +151,11 @@
     "repair": "Renamed the roadmap to the in-progress lifecycle path, updated repository-local references, advanced durable state to Phase 1, and treated the saved prompt as state-resolved because it references stable automation artifacts.",
     "saved_prompt_retarget": "not_required_state_resolved_prompt"
   },
-  "run_count": 12,
+  "run_count": 13,
   "stalled_run_count": 0,
   "max_stalled_runs": 3,
-  "last_progress_signature": "sha256:4a5c940683b161f5bbb714452ee2eb610a3282fa533abb3b0f073971b6ab8147",
-  "last_progress_at": "2026-06-02T12:25:22Z",
+  "last_progress_signature": "sha256:a1e5696e2e9c5e6d7f26ce55cfc818954a8ba6f85bfba9101a98b878e31b3a15",
+  "last_progress_at": "2026-06-02T12:55:26Z",
   "last_operator_alert": {
     "kind": "completed",
     "file": "automation/onboarding-wizard-and-proof-demos/alerts/2026-06-02T12-10-41Z-completed.md",
@@ -289,7 +291,7 @@
   "final_deep_review_prompt_file": "automation/onboarding-wizard-and-proof-demos/final_deep_review_prompt.md",
   "final_deep_review_status": "review-complete",
   "final_deep_review_waiver_reason": null,
-  "updated_at": "2026-06-02T12:25:22Z",
+  "updated_at": "2026-06-02T12:55:26Z",
   "last_phase_advance_blocker": {
     "checked_at": "2026-06-02T11:59:01Z",
     "classification": "resolved",
@@ -303,7 +305,7 @@
     "blocked_operation": null,
     "next_human_action": "None before finalization; saved automation already matches the xhigh finalization target."
   },
-  "final_deep_review_review_file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md",
+  "final_deep_review_review_file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-final-deep-review-external.md",
   "last_completion_closeout": {
     "completed_at": "2026-06-02T12:23:56Z",
     "status": "completed",
@@ -317,5 +319,15 @@
     "completed_alert_written_at": "2026-06-02T12:10:41Z",
     "pause_readback_at": "2026-06-02T12:23:56Z",
     "pause_source": "saved automation TOML readback; this run did not edit saved automation config."
+  },
+  "external_deep_review": {
+    "file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-final-deep-review-external.md",
+    "source_file": "/Users/dzianissokalau/Downloads/onboarding_wizard_proof_demos_deep_review.md",
+    "verdict": "ready-for-finalization",
+    "recorded_at": "2026-06-02T12:54:11Z",
+    "reviewed_commit": "db6551e",
+    "blocking_findings": 0,
+    "needs_fix_findings": 0,
+    "low_severity_notes_recorded": 5
   }
 }

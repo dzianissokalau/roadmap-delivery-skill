@@ -688,8 +688,8 @@ Branch: `codex/onboarding-wizard-and-proof-demos-finalization`
 
 ### Tests And Verification
 
-- `python3 -m unittest discover -s tests -v`: passed, 175 tests, 1 optional
-  Claude binary smoke skipped.
+- `python3 -m unittest discover -s tests -v`: passed, 175 tests; optional
+  host-binary smoke skips are environment-dependent.
 - `python3 scripts/build_adapters.py --check --json`: passed for Codex and
   Claude adapters with no diffs.
 - `python3 scripts/build_release.py --check --json`: passed; release artifact
@@ -763,8 +763,8 @@ Branch: `codex/onboarding-wizard-and-proof-demos-finalization`
 
 ### Tests And Verification
 
-- `python3 -m unittest discover -s tests -v`: passed, 175 tests, 1 optional
-  Claude binary smoke skipped.
+- `python3 -m unittest discover -s tests -v`: passed, 175 tests; optional
+  host-binary smoke skips are environment-dependent.
 - `python3 scripts/build_adapters.py --check --json`: passed for Codex and
   Claude adapters with no generated package diffs.
 - `python3 scripts/build_release.py --check --json`: passed with reproducible
@@ -842,3 +842,33 @@ Branch: `codex/onboarding-wizard-and-proof-demos-finalization`
 - Repair scope: updated repository-local completion metadata only.
 - Saved automation config edit by this run: no.
 - State status updated from `completed_pending_pause` to `completed`.
+
+## External Deep Review - 2026-06-02T12:54:11Z
+
+Status: delivered
+Branch: `codex/onboarding-wizard-and-proof-demos-finalization`
+Review file:
+`automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-final-deep-review-external.md`
+
+### Source
+
+- External review source:
+  `/Users/dzianissokalau/Downloads/onboarding_wizard_proof_demos_deep_review.md`
+- External verdict: `ready-for-finalization`.
+- Reviewed commit: `db6551e`.
+
+### Findings
+
+- No blocking or needs-fix findings.
+- Low-severity note about environment-specific optional host-binary skip counts
+  was addressed by changing finalization evidence wording from a fixed skipped
+  count to environment-dependent optional host-binary skips.
+- Informational notes about operator-local paths, mid-delivery model-policy
+  relaxation, the Phase 2 local `main` fast-forward incident, and same-context
+  phase reviews were recorded in the external review artifact.
+
+### Next Action
+
+- Human merge review can proceed. Promotion to `main`, publication, release,
+  credential use, and installed-skill sync remain separate human-approved
+  actions.
