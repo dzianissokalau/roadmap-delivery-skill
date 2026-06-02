@@ -4,6 +4,12 @@ This directory is the Codex adapter source for the committed skill package at
 `skill/roadmap-delivery-skill/`. The shared adapter renderer treats this
 package as the baseline generated Codex output.
 
+The generated Codex package is an Apache-2.0 repository artifact. Codex and
+OpenAI names in this directory are compatibility labels only and do not imply
+endorsement, certification, sponsorship, or official vendor status. Keep support
+claims tied to the generated package layout, helper scripts, documented install
+flow, and repository validation checks.
+
 The renderer uses `package_manifest.json` to combine host-neutral core sources
 with Codex-specific templates. Reference entries in the manifest point to their
 matching `core/references/` source so package generation fails if a canonical

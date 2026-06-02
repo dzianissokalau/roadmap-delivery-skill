@@ -33,7 +33,9 @@ class ApprovalPolicyTests(unittest.TestCase):
         self.assertTrue(delegated_local["pause_saved_automation"])
         self.assertFalse(delegated_local["push_current_phase_branch"])
         self.assertTrue(delegated_delivery["push_current_phase_branch"])
-        self.assertFalse(default_approval_policy("conservative")["pause_automation_on_completion"])
+        self.assertFalse(default_approval_policy("conservative")["operations"]["pause_saved_automation"])
+        self.assertTrue(default_approval_policy("conservative")["pause_automation_on_completion"])
+        self.assertTrue(default_approval_policy("conservative")["pause_automation_on_stall"])
         self.assertTrue(default_approval_policy("delegated_local")["pause_automation_on_completion"])
 
     def test_operation_resolver_distinguishes_allowed_ask_and_forbidden(self):

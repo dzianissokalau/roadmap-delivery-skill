@@ -4,14 +4,56 @@ The Codex adapter is generated into `skill/roadmap-delivery-skill/`. Treat that
 directory as the installable package snapshot; do not sync it into a live Codex
 home until the generated package and smoke checks pass.
 
-## Check The Generated Package
+The generated Codex package is an Apache-2.0 repository artifact. Codex and
+OpenAI names in these instructions describe compatibility and install targets;
+they do not imply endorsement, certification, sponsorship, or official vendor
+status. See `docs/trademark-and-licensing.md` for the full boundary.
+
+## Short Path
+
+Build the local release artifacts, extract the Codex package into a temporary
+Codex home, and run the offline validation commands before touching an active
+install:
+
+```bash
+export SMOKE_HOME="$(mktemp -d)"
+python3 scripts/build_release.py --output-dir dist --json
+mkdir -p "$SMOKE_HOME/.codex/skills/roadmap-delivery-skill"
+tar -xzf dist/roadmap-delivery-codex-skill-0.1.0.tar.gz \
+  -C "$SMOKE_HOME/.codex/skills/roadmap-delivery-skill" \
+  --strip-components=1
+```
+
+## Verification Path
 
 From the repository root:
 
 ```bash
 python3 scripts/build_adapters.py --adapter codex --check
-python3 scripts/build_release.py --check
+python3 scripts/build_release.py --check --json
+python3 scripts/check_release_privacy.py --repo-root .
+python3 -m unittest tests.test_install_smoke -v
 ```
+
+## Marketplace Readiness Checklist
+
+Use this checklist when evaluating whether the Codex package is ready for a
+human-approved marketplace, registry, or public distribution submission. The
+automation may prepare this evidence locally, but it must not submit, publish,
+sync an installed skill, or use credentials.
+
+| Area | Codex package evidence |
+|---|---|
+| Required metadata | `skill/roadmap-delivery-skill/SKILL.md` declares the skill name and description; release notes and the release manifest record version `0.1.0`, Apache-2.0 licensing, checksums, and package identity. |
+| Package contents | `SKILL.md`, `agents/openai.yaml`, canonical `references/`, and helper `scripts/` are generated from adapter metadata and checked by `python3 scripts/build_adapters.py --adapter codex --check`. |
+| Compatibility limits | Support is limited to file-backed roadmap artifacts, local helper scripts, saved automation readback when available, and documented Codex runner behavior. Optional live `codex --help` does not prove full host feature parity. |
+| Privacy limits | Release-bound packages must exclude `automation/`, `roadmaps/`, `.git/`, `.codex/`, local alerts, review transcripts, private paths, and credentials; run `python3 scripts/check_release_privacy.py --repo-root .`. |
+| Submission blockers | Marketplace submission, package registry upload, branch or tag pushes, repository setting changes, installed-skill synchronization, and credential use require explicit human approval. |
+
+The native Codex path for this repository is the generated skill package.
+Manual fallback is direct staging into an isolated `${CODEX_HOME}` or a
+temporary `.codex/skills/roadmap-delivery-skill` directory after the checks
+above pass.
 
 ## Stage An Isolated Install
 
@@ -45,6 +87,10 @@ CODEX_HOME="$SMOKE_HOME/.codex" codex --help
 
 If `codex` is not installed, skip only the host binary check. The package
 layout and helper-script smoke checks still run offline.
+
+The supported behavior is limited to the generated package layout, helper
+scripts, documented install flow, and file-backed validation. Optional live
+binary checks do not prove full host feature parity.
 
 ## Prepare Demo Automation Readback
 
@@ -102,6 +148,19 @@ PYTHONPATH="$PWD/src" \
 
 For blocked-remediation and model-policy-mismatch fixtures, follow
 `examples/demo-roadmap/runtime-checklist.md` in a temporary copy of the fixture.
+
+## Rollback Or Cleanup
+
+Remove the temporary smoke home when validation is complete:
+
+```bash
+rm -rf "$SMOKE_HOME"
+```
+
+If you later choose to update an active Codex home, keep a backup of the
+previous `roadmap-delivery-skill` directory. Roll back by restoring that backup
+or by removing only the staged `roadmap-delivery-skill` directory; do not delete
+unrelated local skills.
 
 ## Updating An Active Install
 

@@ -18,7 +18,7 @@ from .paths import slug_forms, state_candidates as state_file_candidates
 from .state import JsonObjectError, load_json_object, write_json_object
 
 
-DEFAULT_MAX_STALLED_RUNS = 3
+DEFAULT_MAX_STALLED_RUNS = 2
 RUN_LOG_FILENAME = "automation_run_log.jsonl"
 SIGNATURE_VERSION = 1
 

@@ -85,26 +85,33 @@ class PrivacySanitizationTests(unittest.TestCase):
     def test_bundle_scan_rejects_forbidden_release_paths(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
-            bundle = root / "bundle.tar.gz"
             leaked_file = root / "private.md"
             leaked_file.write_text("local automation evidence\n", encoding="utf-8")
-            with tarfile.open(bundle, "w:gz") as archive:
-                archive.add(leaked_file, arcname="automation/private.md")
+            for arcname in (
+                "automation/private.md",
+                "roadmap-delivery-0.1.0/automation/private.md",
+                "roadmap-delivery-0.1.0/roadmaps/private.md",
+                "roadmap-delivery-0.1.0/.git/config",
+            ):
+                with self.subTest(arcname=arcname):
+                    bundle = root / f"{arcname.replace('/', '-')}.tar.gz"
+                    with tarfile.open(bundle, "w:gz") as archive:
+                        archive.add(leaked_file, arcname=arcname)
 
-            result = self.run_scanner(
-                "--repo-root",
-                str(root),
-                "--release-path",
-                "README.md",
-                "--bundle",
-                str(bundle),
-                "--json",
-            )
+                    result = self.run_scanner(
+                        "--repo-root",
+                        str(root),
+                        "--release-path",
+                        "README.md",
+                        "--bundle",
+                        str(bundle),
+                        "--json",
+                    )
 
-        report = self.parse_json(result)
-        self.assertEqual(result.returncode, 1, report)
-        self.assertEqual(report["findings"][0]["code"], "forbidden_bundle_path")
-        self.assertEqual(report["findings"][0]["path"], "automation/private.md")
+                    report = self.parse_json(result)
+                    self.assertEqual(result.returncode, 1, report)
+                    self.assertEqual(report["findings"][0]["code"], "forbidden_bundle_path")
+                    self.assertEqual(report["findings"][0]["path"], arcname)
 
     def test_ci_and_docs_reference_privacy_guardrails(self):
         workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")

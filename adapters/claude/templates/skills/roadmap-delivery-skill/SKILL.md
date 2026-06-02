@@ -35,6 +35,19 @@ branch and commit history, verification output, and runner configuration.
 - Use phase model policy, stalled-run handling, or model-aware automation: read
   `references/model-policy-and-stall-control.md`.
 
+## Package Readiness
+
+This generated Claude plugin skill is a local package component, not a
+marketplace submission. Treat the package as ready for human distribution
+review only when adapter checks prove the plugin manifest, README, packaged
+skill, reviewer agent, safety hooks, canonical references, host capability
+metadata, install documentation, compatibility limits, privacy limits, and
+explicit submission blockers are present. Installed plugin synchronization,
+publication, package registry upload, marketplace submission, credential use,
+branch pushes, and repository setting changes remain human-approved
+operations. Host capability metadata is required readiness evidence for
+supported adapters.
+
 ## Hard Rules
 
 - Work exactly one roadmap phase at a time.

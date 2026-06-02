@@ -1,0 +1,32 @@
+title: "[Idea]: "
+labels:
+  - idea
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome as planning input and do not imply committed dates or support guarantees. Keep examples free of credentials, local paths, automation logs, and review transcripts.
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: Describe the workflow, package, check, or documentation improvement.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What would be easier to understand, install, verify, or contribute?
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks or boundaries
+      description: Note approval, privacy, publication, compatibility, or maintenance concerns.
+  - type: textarea
+    id: starter
+    attributes:
+      label: Starter task
+      description: Suggest a small local-only task if one is obvious.

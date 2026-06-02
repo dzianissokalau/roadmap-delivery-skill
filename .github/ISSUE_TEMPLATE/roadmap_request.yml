@@ -1,0 +1,47 @@
+name: Roadmap request
+description: Suggest a roadmap track, phase, or acceptance-criteria improvement.
+title: "[Roadmap]: "
+labels:
+  - roadmap
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Roadmap requests are planning inputs, not delivery commitments. Avoid dates, paid-support assumptions, credentials, private paths, automation logs, and review transcripts.
+  - type: textarea
+    id: request
+    attributes:
+      label: Request
+      description: What capability, phase, or acceptance criterion should be considered?
+    validations:
+      required: true
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        - Release and distribution trust
+        - Host validation and GitHub Action companion
+        - Adapter packaging
+        - Core workflow
+        - Onboarding and demos
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: user_value
+    attributes:
+      label: User value
+      description: Who benefits, and how would the repository prove the work is complete?
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Boundaries
+      description: Note privacy, approval, publication, credential, or support-limit concerns.
+  - type: textarea
+    id: starter_task
+    attributes:
+      label: Starter task idea
+      description: Optional small local task that could be done without private automation evidence.

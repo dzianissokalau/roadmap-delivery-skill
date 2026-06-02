@@ -43,6 +43,7 @@ TEXT_SUFFIXES = {
     ".yml",
 }
 FORBIDDEN_BUNDLE_PREFIXES = ("automation/", "roadmaps/", ".git/")
+FORBIDDEN_BUNDLE_SEGMENTS = {"automation", "roadmaps", ".git", ".codex"}
 
 
 @dataclass(frozen=True)
@@ -186,8 +187,8 @@ def forbidden_bundle_path(name: str) -> Optional[str]:
         return "Bundle member path escapes the release archive root."
     if any(name.startswith(prefix) for prefix in FORBIDDEN_BUNDLE_PREFIXES):
         return "Bundle contains repository-local automation, roadmap, or git metadata."
-    if ".codex" in path.parts:
-        return "Bundle member path contains a private Codex directory segment."
+    if any(segment in path.parts for segment in FORBIDDEN_BUNDLE_SEGMENTS):
+        return "Bundle contains repository-local automation, roadmap, git, or private Codex metadata."
     return None
 
 

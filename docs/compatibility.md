@@ -18,7 +18,7 @@ planning surface.
 | Model policy file | Supported | `phase_model_policy.json` gates required model and reasoning readback. |
 | Approval policy file | Supported | Missing `approval_policy.json` keeps conservative fallback; delegated modes require valid policy readback. |
 | Adaptive model policy | Supported | Run quality can retarget the next run within explicit caps and saved automation readback. |
-| Completion and stall self-pause | Supported with approval | Pause is automatic only when policy or explicit approval allows it and readback confirms `PAUSED`. |
+| Completion and stall self-pause | Default safety behavior | Generated policies pause completed automations and pause stalled automations after 2 no-progress runs by default, with opt-out policy flags and readback confirmation. |
 | Adapter package generation | Supported | `scripts/build_adapters.py --check` verifies committed Codex and Claude output. |
 | Codex package generation | Supported | `scripts/build_codex_package.py --check` remains a compatibility wrapper check. |
 | Claude plugin package | Supported local package | Generated under `dist/claude/` with skill, reviewer agent, hooks, and references. |
@@ -48,6 +48,33 @@ Approval policy, adaptive model policy, and completion or stall pause behavior
 are host-neutral control-plane contracts. Hosts that cannot read or update a
 saved runner config must expose that limitation as an explicit fallback instead
 of claiming automatic retarget or pause support.
+
+## Marketplace And Distribution Boundary
+
+Marketplace-native package preparation is a local evidence step. Codex and
+Claude package checks can prove generated file layout, manifest or frontmatter
+metadata, required references, helper script availability, host capability
+metadata, documented host parity limits, privacy limits, and human-approved
+submission blockers. They do not prove vendor acceptance, live marketplace
+availability, installed package synchronization, or external publication.
+
+Human-approved distribution actions include marketplace submission, package
+registry upload, branch or tag push, release publication, repository setting
+changes, credential use, installed Codex skill synchronization, and installed
+Claude plugin synchronization. If one of those operations becomes necessary,
+the automation must stop with local evidence recorded rather than performing
+the operation automatically.
+
+Host parity limits must remain beside marketplace-preparation guidance:
+
+- Codex support is the generated skill package plus documented local staging,
+  helper scripts, validation, and optional live binary smoke checks.
+- Claude support is the generated local plugin package plus manifest checks,
+  packaged skill/reviewer/hooks, validation, and optional live binary smoke
+  checks.
+- Optional live-host checks are warnings or evidence notes unless the result is
+  recorded; they are not a substitute for repository validators and privacy
+  scanning.
 
 ## Host Capability Contract
 

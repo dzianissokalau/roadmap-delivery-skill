@@ -69,6 +69,7 @@ class ClaudePluginPackageTests(unittest.TestCase):
         self.assertEqual(claude["check_mode"], "output")
         self.assertTrue(claude["output_committed"])
         self.assertEqual(claude["output_dir"], str(DIST_ROOT))
+        self.assertEqual(claude["marketplace_readiness"]["status"], "ok")
 
     def test_manifest_declares_minimal_plugin_identity(self):
         self.run_build_check()
@@ -80,6 +81,7 @@ class ClaudePluginPackageTests(unittest.TestCase):
         self.assertEqual(manifest["license"], "Apache-2.0")
         self.assertIsInstance(manifest["description"], str)
         self.assertTrue(manifest["description"])
+        self.assertIn("file-backed", manifest["description"])
         self.assertEqual(set(path.name for path in PLUGIN_MANIFEST.parent.iterdir()), {"plugin.json"})
 
     def test_skill_and_core_references_are_generated(self):
@@ -132,6 +134,20 @@ class ClaudePluginPackageTests(unittest.TestCase):
         self.assertIn("conservative fallbacks", readme)
         self.assertIn("status-only pause surfaces", readme)
         self.assertIn("local alerts", readme)
+
+    def test_package_readme_records_marketplace_readiness_boundary(self):
+        self.run_build_check()
+        skill = SKILL_FILE.read_text(encoding="utf-8")
+        readme = (DIST_ROOT / "README.md").read_text(encoding="utf-8")
+
+        for text in (skill, readme):
+            with self.subTest(document=text.splitlines()[0]):
+                lowered = text.lower()
+                self.assertIn("marketplace", lowered)
+                self.assertIn("host capability metadata", lowered)
+                self.assertIn("privacy limits", lowered)
+                self.assertIn("submission blockers", lowered)
+                self.assertIn("human approval", lowered)
 
     def test_reviewer_agent_is_read_only_and_enforces_review_gate(self):
         self.run_build_check()

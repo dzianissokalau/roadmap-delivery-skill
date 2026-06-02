@@ -1,0 +1,51 @@
+name: Bug report
+description: Report reproducible framework, CLI, adapter, or release-check behavior.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, private paths, local automation logs, review transcripts, or unredacted release bundles. Use a private security report for vulnerabilities.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What failed, and what did you expect instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Roadmap delivery workflow
+        - CLI or shared library
+        - Codex package
+        - Claude package
+        - Release or privacy checks
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: List the smallest local steps or commands that reproduce the issue.
+      placeholder: |
+        1. Run ...
+        2. Open ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Safe evidence
+      description: Paste redacted command output, file names, or screenshots that do not expose secrets or local-only automation evidence.
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification already tried
+      description: List any checks you ran, such as unit tests, adapter checks, release checks, or git diff checks.

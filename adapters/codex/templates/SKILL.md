@@ -25,6 +25,18 @@ Use this skill for file-backed, phase-gated roadmap delivery workflows. Keep wor
 - Repair bad state, stale paths, blocked runs, or lifecycle drift: read `references/troubleshooting.md`.
 - Use phase model policy, stalled-run handling, or model-aware automation: read `references/model-policy-and-stall-control.md`.
 
+## Package Readiness
+
+This generated Codex package is a local skill package, not a marketplace
+submission. Treat the package as ready for human distribution review only when
+adapter checks prove the `SKILL.md`, router agent, canonical references, helper
+scripts, host capability metadata, install documentation, compatibility limits,
+privacy limits, and explicit submission blockers are present. Installed skill
+synchronization, publication, package registry upload, marketplace submission,
+credential use, branch pushes, and repository setting changes remain
+human-approved operations. Host capability metadata is required readiness
+evidence for supported adapters.
+
 ## Hard Rules
 
 - Work exactly one roadmap phase at a time.
@@ -48,11 +60,13 @@ Use this skill for file-backed, phase-gated roadmap delivery workflows. Keep wor
   controls. A non-flawless run may update durable state and propose or perform
   an approved saved automation retarget, but it does not change the active
   model inside the current session.
-- Completion and stall self-pause require `pause_saved_automation`,
-  `pause_automation_on_completion`, `pause_automation_on_stall`, or explicit
-  approval plus saved automation readback. If pause approval or readback is
-  missing, write the local alert and keep the state in the appropriate blocked
-  or `completed_pending_pause` form.
+- Completion and repeated-stall self-pause are default safety behaviors for
+  generated policies through `pause_automation_on_completion` and
+  `pause_automation_on_stall`. `pause_saved_automation` still gates broad
+  saved-runner edits in conservative mode. If a roadmap explicitly disables a
+  context pause, or pause tooling/readback is unavailable, write the local
+  alert and keep the state in the appropriate blocked or
+  `completed_pending_pause` form.
 
 ## Stop Conditions
 

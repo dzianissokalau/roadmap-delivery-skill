@@ -24,7 +24,7 @@ Minimum structure:
 ```json
 {
   "schema_version": 1,
-  "max_stalled_runs": 3,
+  "max_stalled_runs": 2,
   "notification": {
     "mode": "alert_file",
     "fallback": "alert_file"

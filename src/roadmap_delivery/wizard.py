@@ -45,6 +45,9 @@ def build_wizard_plan(options: WizardOptions) -> Dict[str, Any]:
         "cadence": report["cadence"],
         "execution_environment": report["execution_environment"],
         "host_target": report["host_target"],
+        "max_stalled_runs": report["model_policy"]["policy"]["max_stalled_runs"],
+        "pause_automation_on_completion": report["approval_policy"]["policy"].get("pause_automation_on_completion"),
+        "pause_automation_on_stall": report["approval_policy"]["policy"].get("pause_automation_on_stall"),
     }
     report["validation"] = {
         "next_commands": report["next_commands"],
@@ -205,6 +208,9 @@ def options_from_values(
     execution_environment: str,
     host_target: str,
     branch_prefix: str,
+    max_stalled_runs: int,
+    pause_on_completion: Optional[bool],
+    pause_on_stall: Optional[bool],
     write: bool,
     force: bool = False,
 ) -> WizardOptions:
@@ -224,6 +230,9 @@ def options_from_values(
             execution_environment=execution_environment,
             host_target=host_target,
             branch_prefix=branch_prefix,
+            max_stalled_runs=max_stalled_runs,
+            pause_on_completion=pause_on_completion,
+            pause_on_stall=pause_on_stall,
         ),
         write=write,
         force=force,

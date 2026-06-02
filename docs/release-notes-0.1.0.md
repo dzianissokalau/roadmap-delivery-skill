@@ -26,15 +26,70 @@ has not been published to an external package registry.
 - `examples/autonomy-controls/` documents approval modes, adaptive retarget
   traces, and completion or stall self-pause evidence.
 
+## Release Artifacts
+
+These notes are the source of truth for the first release candidate contents.
+`scripts/build_release.py` records matching package names, versions, SHA-256
+checksums, and adapter capability summaries in
+`dist/roadmap-delivery-0.1.0-manifest.json`.
+
+The exact checksum values are generated output. They are intentionally kept in
+the manifest, checksum file, and closeout evidence instead of being copied into
+these notes, because these notes are included in the source archive and would
+change the source checksum if edited after a build.
+
+| Artifact | Purpose |
+|---|---|
+| `roadmap-delivery-0.1.0-source.tar.gz` | Repository source archive for local review. |
+| `roadmap-delivery-codex-skill-0.1.0.tar.gz` | Generated Codex skill package. |
+| `roadmap-delivery-claude-plugin-0.1.0.tar.gz` | Generated local Claude plugin package. |
+| `roadmap-delivery-generic-markdown-pack-0.1.0.tar.gz` | Documentation-only pack for future adapter planning. |
+| `roadmap-delivery-schemas-0.1.0.tar.gz` | Versioned schema bundle. |
+| `roadmap-delivery-cli-0.1.0.tar.gz` | Local CLI source package. |
+| `roadmap-delivery-0.1.0-manifest.json` | Deterministic manifest with package checksums and capability summaries. |
+| `roadmap-delivery-0.1.0-checksums.sha256` | SHA-256 checksum file for local verification. |
+
 ## Local Verification
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/build_adapters.py --check
-python3 scripts/build_release.py --check
+python3 scripts/build_release.py --check --json
 python3 scripts/check_release_privacy.py --repo-root .
 git diff --check
 ```
+
+Final closeout also runs:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+After building into `dist/`, verify the local artifacts from inside that
+directory:
+
+```bash
+shasum -a 256 -c roadmap-delivery-0.1.0-checksums.sha256
+```
+
+## Release Candidate Evidence
+
+The first release candidate is ready for human review when the release
+manifest, checksum output, adapter drift check, privacy scan, install smoke
+checks, full test suite, and final deep-review prompt all exist and are
+recorded in the roadmap delivery artifacts.
+
+Evidence is split deliberately:
+
+- User-facing release contents and limitations are in these notes and the
+  changelog.
+- Deterministic artifact identity is in the generated manifest and checksum
+  output from `scripts/build_release.py`.
+- Verification summaries, privacy scan results, and the final deep-review
+  prompt are recorded under the roadmap automation artifacts.
+- Publication, branch pushes, tag creation, marketplace submission,
+  installed-skill sync, live plugin sync, and credential use remain outside
+  the release candidate.
 
 ## Compatibility
 
@@ -53,3 +108,25 @@ git diff --check
   and readback evidence before saved automation retarget or pause actions.
 - External publication, branch promotion, and installed-skill synchronization
   are not part of this release candidate and require operator approval.
+
+## Limitations
+
+- Release artifacts are local preparation outputs, not a published release.
+- Live Codex and Claude binary checks are optional maintainer smoke checks when
+  those host binaries are installed.
+- The generic markdown pack is not a runtime integration for future named
+  hosts.
+- Marketplace submission, package registry upload, tag creation, and installed
+  host sync are outside this release candidate.
+- The final deep-review prompt prepares human or fresh-context review, but it
+  does not publish or promote the release by itself.
+
+## Publication Boundary
+
+This release candidate can be built, checked, and reviewed locally without
+credentials. Publishing a tag, GitHub Release, package registry artifact,
+marketplace package, release branch, installed global skill, or live plugin
+sync requires explicit human approval.
+
+Commercialisation, pricing, paid support, hosted-service packaging, and
+guaranteed response times are not part of this release candidate.

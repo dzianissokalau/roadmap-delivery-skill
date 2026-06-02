@@ -199,6 +199,35 @@ class InstallSmokeTests(unittest.TestCase):
             self.assertEqual(validate["status"], "ok")
             self.assertEqual(validate["warnings"], [])
 
+    def test_release_artifacts_stage_offline_package_layouts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / "dist"
+            report = self.run_json(
+                [
+                    sys.executable,
+                    "scripts/build_release.py",
+                    "--output-dir",
+                    str(output_dir),
+                    "--json",
+                ]
+            )
+            artifacts = {item["kind"]: Path(item["path"]) for item in report["artifacts"]}
+
+            codex_unpack = Path(tmp) / "codex-unpack"
+            claude_unpack = Path(tmp) / "claude-unpack"
+            shutil.unpack_archive(str(artifacts["codex_skill_package"]), codex_unpack)
+            shutil.unpack_archive(str(artifacts["claude_plugin_package"]), claude_unpack)
+
+            codex_package = codex_unpack / "roadmap-delivery-codex-skill-0.1.0"
+            claude_package = claude_unpack / "roadmap-delivery-claude-plugin-0.1.0"
+            self.assertTrue((codex_package / "SKILL.md").is_file())
+            self.assertTrue((codex_package / "references" / "phase-loop.md").is_file())
+            self.assertTrue((codex_package / "scripts" / "validate_delivery_artifacts.py").is_file())
+            self.assertTrue((claude_package / ".claude-plugin" / "plugin.json").is_file())
+            self.assertTrue((claude_package / "skills" / "roadmap-delivery-skill" / "SKILL.md").is_file())
+            self.assertTrue((claude_package / "agents" / "reviewer.md").is_file())
+            self.assertTrue((claude_package / "hooks" / "hooks.json").is_file())
+
     def test_runtime_docs_cover_required_install_and_manual_checks(self):
         codex_doc = (REPO_ROOT / "docs" / "installing-codex.md").read_text(encoding="utf-8")
         claude_doc = (REPO_ROOT / "docs" / "installing-claude.md").read_text(encoding="utf-8")
@@ -213,6 +242,42 @@ class InstallSmokeTests(unittest.TestCase):
                 self.assertIn("blocked-remediation", text)
                 self.assertIn("model-policy-mismatch", text)
                 self.assertIn("AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR", text)
+        self.assertIn("## Short Path", codex_doc)
+        self.assertIn("## Verification Path", codex_doc)
+        self.assertIn("## Rollback Or Cleanup", codex_doc)
+        self.assertIn("## Short Path", claude_doc)
+        self.assertIn("## Verification Path", claude_doc)
+        self.assertIn("## Rollback Or Cleanup", claude_doc)
+        for text in (codex_doc, claude_doc):
+            with self.subTest(readiness_doc=text.splitlines()[0]):
+                self.assertIn("## Marketplace Readiness Checklist", text)
+                self.assertIn("Required metadata", text)
+                self.assertIn("Package contents", text)
+                self.assertIn("Compatibility limits", text)
+                self.assertIn("Privacy limits", text)
+                self.assertIn("Submission blockers", text)
+                self.assertIn("Manual fallback", text)
+
+    def test_adapter_report_records_marketplace_readiness(self):
+        report = self.run_json(
+            [
+                sys.executable,
+                "scripts/build_adapters.py",
+                "--check",
+                "--json",
+            ]
+        )
+
+        self.assertEqual(report["status"], "ok")
+        for adapter_report in report["reports"]:
+            with self.subTest(adapter=adapter_report["adapter"]):
+                readiness = adapter_report["marketplace_readiness"]
+                self.assertEqual(readiness["status"], "ok", readiness)
+                self.assertEqual(readiness["failures"], [])
+                self.assertTrue(
+                    any(item["name"] == "host capability metadata" for item in readiness["checks"]),
+                    readiness,
+                )
 
     @unittest.skipIf(shutil.which("codex") is None, "codex binary is not installed; offline package smoke covers layout")
     def test_optional_codex_binary_help_runs_with_temp_home(self):

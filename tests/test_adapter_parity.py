@@ -149,6 +149,20 @@ class AdapterParityTests(unittest.TestCase):
                 self.assertEqual(adapter_report["check_mode"], "output")
                 self.assertTrue(adapter_report["output_committed"])
 
+    def test_marketplace_readiness_report_covers_supported_package_evidence(self):
+        for adapter_report in self.build_report()["reports"]:
+            with self.subTest(adapter=adapter_report["adapter"]):
+                readiness = adapter_report["marketplace_readiness"]
+                self.assertEqual(readiness["status"], "ok", readiness)
+                self.assertEqual(readiness["failures"], [])
+                check_names = {item["name"] for item in readiness["checks"]}
+
+                self.assertIn("host capability metadata", check_names)
+                self.assertTrue(any(name.startswith("package file ") for name in check_names))
+                self.assertTrue(any("readiness documentation docs/installing-" in name for name in check_names))
+                self.assertIn("readiness documentation docs/adapters.md", check_names)
+                self.assertIn("readiness documentation docs/compatibility.md", check_names)
+
     def test_generated_package_snapshots_match_adapter_reports(self):
         for adapter, snapshot_path in SNAPSHOTS.items():
             with self.subTest(adapter=adapter):

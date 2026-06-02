@@ -1,9 +1,10 @@
 # Release Install And Distribution Trust Roadmap
 
-Status: Not Started
-Current phase: Phase 0 - Release Trust Contract And Scope
+Status: Delivered
+Current phase: Complete
 Last updated: 2026-06-02
-Next action: Set up automation or deliver Phase 0.
+Next action: Run the final deep-review prompt from the GitHub review branch,
+then make separate human merge and publication decisions.
 Blocked by: None.
 
 ## Purpose
@@ -34,7 +35,7 @@ commercial launch.
 Recommended automation setup:
 
 ```text
-ROADMAP_PATH=roadmaps/not_started_release_install_and_distribution_trust_roadmap.md
+ROADMAP_PATH=roadmaps/delivered_release_install_and_distribution_trust_roadmap.md
 ROADMAP_SLUG=release-install-and-distribution-trust
 AUTOMATION_DIR=automation/release-install-and-distribution-trust
 AUTOMATION_ID=release-install-and-distribution-trust
@@ -107,7 +108,7 @@ tests/
   test_privacy_sanitization.py
   test_install_smoke.py
 roadmaps/
-  not_started_release_install_and_distribution_trust_roadmap.md
+  delivered_release_install_and_distribution_trust_roadmap.md
 ```
 
 Do not add commercial pricing, paid-plan language, sales copy, or hosted
@@ -147,7 +148,7 @@ boundaries.
 ### Owned Files
 
 ```text
-roadmaps/not_started_release_install_and_distribution_trust_roadmap.md
+roadmaps/delivered_release_install_and_distribution_trust_roadmap.md
 docs/release-process.md
 README.md
 automation/README.md
@@ -207,6 +208,20 @@ git diff --check
   credentials, or review transcripts.
 - Stop if license or trademark claims require legal judgement beyond project
   compatibility guidance.
+
+### Delivery Evidence
+
+- Delivered on 2026-06-02.
+- Review:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-0-review-iteration-2.md`
+- Required verification passed:
+  `python3 scripts/build_release.py --check`,
+  `python3 scripts/check_release_privacy.py --repo-root .`,
+  `python3 -m unittest tests.test_release_builder tests.test_privacy_sanitization -v`,
+  and `git diff --check`.
+- Targeted checklist checks passed:
+  `python3 scripts/build_adapters.py --check` and
+  `python3 -m unittest tests.test_install_smoke -v`.
 
 ## Phase 1 - Licensing Trademark And Support Boundary
 
@@ -276,6 +291,21 @@ git diff --check
 - Stop if guidance would require a binding legal opinion.
 - Stop if adapter metadata implies official vendor certification.
 - Stop if generated package changes drift from canonical sources.
+
+### Delivery Evidence
+
+- Delivered on 2026-06-02.
+- Review:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-1-review-iteration-1.md`
+- Required verification passed:
+  `python3 scripts/build_adapters.py --check --json`,
+  `python3 scripts/build_release.py --check`,
+  `python3 -m unittest tests.test_adapter_parity tests.test_claude_plugin_package tests.test_release_builder -v`,
+  and `git diff --check`.
+- Targeted checks passed:
+  `python3 -m unittest tests.test_install_smoke tests.test_quality_gates -v`.
+- Retarget check passed: Phase 2 requires `gpt-5.5` / `high`, and saved
+  automation readback remains `gpt-5.5` / `xhigh`, so no retarget is needed.
 
 ## Phase 2 - Release Asset And Install Path Hardening
 
@@ -353,6 +383,26 @@ git diff --check
 - Stop if install docs require destructive changes to a user's active Codex or
   Claude home.
 - Stop if checksum or manifest behavior is nondeterministic.
+
+### Delivery Evidence
+
+- Delivered on 2026-06-02.
+- Review:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-2-review-iteration-1.md`
+- Required verification passed:
+  `python3 scripts/build_release.py --check --json`,
+  `python3 scripts/check_release_privacy.py --repo-root .`,
+  `python3 -m unittest tests.test_release_builder tests.test_install_smoke tests.test_privacy_sanitization -v`,
+  and `git diff --check`.
+- The release manifest now records release-note provenance, package names,
+  versions, checksums, sizes, and adapter capability summaries.
+- Install docs now include short paths, verification paths, isolated staging,
+  optional live-host checks, and rollback or cleanup guidance.
+- Privacy checks reject prefixed and nested `automation/`, `roadmaps/`,
+  `.git/`, and `.codex` bundle members while clean release-bound content
+  passes.
+- Retarget check passed: Phase 3 requires `gpt-5.5` / `high`, and saved
+  automation readback remains `gpt-5.5` / `xhigh`, so no retarget is needed.
 
 ## Phase 3 - Marketplace-Native Package Preparation
 
@@ -432,6 +482,21 @@ git diff --check
   readback, hooks, or approval UX.
 - Stop if generated snapshots drift from adapter inputs.
 
+### Delivery Evidence
+
+- Delivered on 2026-06-02.
+- Review:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-3-review-iteration-1.md`
+- Required verification passed:
+  `python3 scripts/build_adapters.py --check --json`,
+  `python3 scripts/build_release.py --check --json`,
+  `python3 -m unittest tests.test_adapter_parity tests.test_claude_plugin_package tests.test_install_smoke -v`,
+  and `git diff --check`.
+- Targeted Codex adapter verification passed:
+  `python3 -m unittest tests.test_adapter_codex -v`.
+- Retarget check passed: Phase 4 requires `gpt-5.5` / `medium`, and saved
+  automation readback remains `gpt-5.5` / `xhigh`, so no retarget is needed.
+
 ## Phase 4 - Public Project Governance Surfaces
 
 ### Objective
@@ -503,6 +568,28 @@ git diff --check
 - Stop if adding templates requires repository setting changes that cannot be
   made from local files.
 
+### Delivery Evidence
+
+- Delivered on 2026-06-02.
+- Review:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-4-review-iteration-1.md`
+- Required verification passed:
+  `python3 -m unittest tests.test_quality_gates -v` and `git diff --check`.
+- Added issue templates for bug reports, installation help, roadmap requests,
+  and documentation gaps.
+- Added discussion templates for ideas, usage reports, and host compatibility
+  observations.
+- Added a pull request template covering verification, privacy, adapter drift,
+  release impact, publication boundaries, and support limits.
+- README now shows a public roadmap index with delivered, active, and planned
+  not-yet-configured tracks without committed dates or support guarantees.
+- Contributor workflow docs now list public entry points, safe starter tasks,
+  and privacy reporting routes.
+- No repository settings, credentials, publication, branch push, marketplace
+  submission, hosted board, SLA, or paid support surface was added.
+- Retarget check passed: Phase 5 requires `gpt-5.5` / `xhigh`, and saved
+  automation readback remains `gpt-5.5` / `xhigh`, so no retarget is needed.
+
 ## Phase 5 - Release Candidate Evidence And Closeout
 
 ### Objective
@@ -518,7 +605,7 @@ docs/release-notes-0.1.0.md
 README.md
 CHANGELOG.md
 automation/<roadmap-slug>/
-roadmaps/not_started_release_install_and_distribution_trust_roadmap.md
+roadmaps/delivered_release_install_and_distribution_trust_roadmap.md
 ```
 
 ### Inputs
@@ -578,3 +665,38 @@ git diff --check
 - Stop if the final deep review prompt has not been prepared or explicitly
   waived by a human.
 - Stop if release publication becomes necessary to satisfy acceptance criteria.
+
+### Delivery Evidence
+
+- Delivered on 2026-06-02.
+- Review:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-5-review-iteration-1.md`
+- Final deep-review prompt:
+  `automation/release-install-and-distribution-trust/final-deep-review-prompt.md`
+- Required verification passed:
+  `python3 -m unittest discover -s tests -v`,
+  `python3 scripts/build_adapters.py --check --json`,
+  `python3 scripts/build_release.py --check --json`,
+  `python3 scripts/check_release_privacy.py --repo-root .`, and
+  `git diff --check`.
+- Full test suite result: 185 tests ran with 1 expected optional Claude binary
+  smoke skipped because the binary is not installed.
+- Release builder result: version `0.1.0` artifacts were reproducible across
+  two builds, package artifact validators passed, and embedded privacy scan
+  findings were 0.
+- Privacy scan result: 125 files scanned, 0 findings, 0 errors.
+- Completion state: completed. The operator manually paused the saved
+  `release-install-and-distribution-trust` automation and readback reports
+  `PAUSED`.
+- GitHub review branch:
+  https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/release-install-and-distribution-trust-phase-5
+- Direct final deep-review prompt:
+  https://github.com/dzianissokalau/roadmap-delivery-skill/blob/codex/release-install-and-distribution-trust-phase-5/automation/release-install-and-distribution-trust/final-deep-review-prompt.md
+
+## Human Follow-Up
+
+- Run the final deep-review prompt in a fresh context from the GitHub review
+  branch before merge review or publication planning.
+- Decide separately whether to merge, tag, publish a GitHub Release, submit
+  marketplace packages, sync installed skills/plugins, or use credentials.
+  None of those actions are implied by the review branch push.

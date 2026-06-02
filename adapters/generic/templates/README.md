@@ -18,8 +18,9 @@ Continue, Cline, Roo Code, OpenHands, or another named host.
 The workflow references carry the same safety contract as the Codex and Claude
 packages: `approval_policy.json` decisions are conservative by default,
 `adaptive_model_policy` affects only the next run after run quality is known,
-and completion or stall self-pause requires trusted runner readback or a local
-alert with an operator action.
+and completion or stall self-pause uses trusted runner readback or a local
+alert with an operator action. Generated policies default those safety pauses
+on and use a two-run no-progress threshold unless setup overrides them.
 
 ## Support Boundary
 

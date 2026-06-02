@@ -8,7 +8,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
-from typing import Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +30,156 @@ from roadmap_delivery.rendering import (  # noqa: E402
 
 DEFAULT_ADAPTERS = ("codex", "claude")
 AVAILABLE_ADAPTERS = (*DEFAULT_ADAPTERS, "generic")
+MARKETPLACE_READINESS = {
+    "codex": {
+        "package_files": [
+            "SKILL.md",
+            "agents/openai.yaml",
+            "references/phase-loop.md",
+            "references/review-and-fix.md",
+            "scripts/inspect_delivery_state.py",
+            "scripts/validate_delivery_artifacts.py",
+            "scripts/plan_automation_retarget.py",
+        ],
+        "docs": {
+            "docs/installing-codex.md": [
+                "Marketplace Readiness Checklist",
+                "Required metadata",
+                "Package contents",
+                "Compatibility limits",
+                "Privacy limits",
+                "Submission blockers",
+                "Manual fallback",
+            ],
+            "docs/adapters.md": [
+                "Marketplace Preparation",
+                "Codex",
+                "Claude",
+                "submission blockers",
+            ],
+            "docs/compatibility.md": [
+                "Marketplace And Distribution Boundary",
+                "human-approved",
+                "host parity limits",
+            ],
+        },
+        "capability_terms": [
+            "support_status:",
+            "parity_level:",
+            "fallback:",
+            "protected_operations:",
+        ],
+    },
+    "claude": {
+        "package_files": [
+            ".claude-plugin/plugin.json",
+            "README.md",
+            "skills/roadmap-delivery-skill/SKILL.md",
+            "agents/reviewer.md",
+            "hooks/hooks.json",
+            "hooks/roadmap_delivery_safety.py",
+            "skills/roadmap-delivery-skill/references/phase-loop.md",
+            "skills/roadmap-delivery-skill/references/review-and-fix.md",
+        ],
+        "docs": {
+            "docs/installing-claude.md": [
+                "Marketplace Readiness Checklist",
+                "Required metadata",
+                "Package contents",
+                "Compatibility limits",
+                "Privacy limits",
+                "Submission blockers",
+                "Manual fallback",
+            ],
+            "docs/adapters.md": [
+                "Marketplace Preparation",
+                "Codex",
+                "Claude",
+                "submission blockers",
+            ],
+            "docs/compatibility.md": [
+                "Marketplace And Distribution Boundary",
+                "human-approved",
+                "host parity limits",
+            ],
+        },
+        "capability_terms": [
+            "support_status:",
+            "parity_level:",
+            "fallback:",
+            "protected_operations:",
+        ],
+    },
+}
+
+
+def _read_text(repo_root: Path, relative_path: str) -> str:
+    path = repo_root / relative_path
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise AdapterRenderError(f"Cannot read marketplace readiness evidence {path}: {exc}") from exc
+
+
+def evaluate_marketplace_readiness(repo_root: Path, adapter: str, report: Dict[str, Any]) -> Dict[str, Any]:
+    config = MARKETPLACE_READINESS.get(adapter)
+    if config is None:
+        return {"status": "not_applicable", "checks": [], "failures": []}
+
+    checks: List[Dict[str, Any]] = []
+    failures: List[str] = []
+
+    def record(name: str, ok: bool, evidence: str, missing: Optional[List[str]] = None) -> None:
+        check = {
+            "name": name,
+            "status": "passed" if ok else "failed",
+            "evidence": evidence,
+        }
+        if missing:
+            check["missing"] = missing
+        checks.append(check)
+        if not ok:
+            failures.append(f"{name} missing {', '.join(missing or [])}")
+
+    rendered_paths = {str(item.get("path", "")) for item in report.get("files", [])}
+    for package_file in config["package_files"]:
+        record(
+            f"package file {package_file}",
+            package_file in rendered_paths,
+            f"{adapter} rendered package file list",
+            [] if package_file in rendered_paths else [package_file],
+        )
+
+    capability_file = report.get("capability_file")
+    if capability_file:
+        capability_text = _read_text(repo_root, str(capability_file))
+        missing_terms = [
+            term for term in config["capability_terms"] if term.lower() not in capability_text.lower()
+        ]
+        record(
+            "host capability metadata",
+            not missing_terms,
+            str(capability_file),
+            missing_terms,
+        )
+    else:
+        record("host capability metadata", False, "adapter report", ["capability_file"])
+
+    for doc_path, terms in config["docs"].items():
+        doc_text = _read_text(repo_root, doc_path)
+        missing_terms = [term for term in terms if term.lower() not in doc_text.lower()]
+        record(
+            f"readiness documentation {doc_path}",
+            not missing_terms,
+            doc_path,
+            missing_terms,
+        )
+
+    return {
+        "status": "ok" if not failures else "failed",
+        "checks": checks,
+        "failures": failures,
+    }
 
 
 def load_adapter_metadata(repo_root: Path, adapter: str) -> AdapterMetadata:
@@ -90,13 +240,23 @@ def run_adapter(
         metadata = AdapterMetadata(adapter=adapter, output_dir="", files=[])
         package = RenderedPackage(metadata=metadata, output_dir=Path(""), files=[])
 
-    return build_adapter_report(
+    report = build_adapter_report(
         package,
         diffs=diffs,
         errors=errors,
         wrote=wrote,
         checked_output=checked_output,
     )
+    if not errors:
+        try:
+            readiness = evaluate_marketplace_readiness(repo_root, adapter, report)
+        except AdapterRenderError as exc:
+            readiness = {"status": "failed", "checks": [], "failures": [str(exc)]}
+        report["marketplace_readiness"] = readiness
+        if readiness["status"] == "failed":
+            report["errors"].extend(readiness["failures"])
+            report["status"] = "error"
+    return report
 
 
 def build_report(

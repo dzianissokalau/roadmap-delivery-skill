@@ -1,0 +1,51 @@
+name: Installation help
+description: Ask for help with local Codex, Claude, CLI, or release-package setup.
+title: "[Install]: "
+labels:
+  - installation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project does not provide guaranteed response times. Do not post tokens, private repository names, local home paths, `.codex` contents, automation logs, or review transcripts.
+  - type: dropdown
+    id: target
+    attributes:
+      label: Install target
+      options:
+        - Codex skill
+        - Claude plugin
+        - Python CLI
+        - Local release bundle
+        - Generic markdown pack
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What are you trying to install or verify locally?
+    validations:
+      required: true
+  - type: textarea
+    id: attempted
+    attributes:
+      label: Steps already tried
+      description: Include commands and outputs only after redacting private paths and credentials.
+      placeholder: |
+        1. Ran ...
+        2. Expected ...
+        3. Saw ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Share safe host details, such as operating system, Python version, and whether the live Codex or Claude binary is installed.
+  - type: textarea
+    id: checks
+    attributes:
+      label: Verification output
+      description: Paste redacted output from local checks, such as adapter checks, release checks, or unit tests.

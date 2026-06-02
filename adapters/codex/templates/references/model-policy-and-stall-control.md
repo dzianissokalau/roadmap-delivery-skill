@@ -30,7 +30,7 @@ Recommended shape:
 ```json
 {
   "schema_version": 1,
-  "max_stalled_runs": 3,
+  "max_stalled_runs": 2,
   "notification": {
     "mode": "alert_file",
     "fallback": "alert_file"
@@ -406,7 +406,7 @@ python3 skill/roadmap-delivery-skill/scripts/write_operator_alert.py \
   --repo-root /path/to/repo \
   --roadmap-slug <roadmap-slug> \
   --kind stalled \
-  --reason "Stalled after 3 consecutive runs without durable progress." \
+  --reason "Stalled after 2 consecutive runs without durable progress." \
   --json
 ```
 

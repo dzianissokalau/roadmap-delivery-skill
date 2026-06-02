@@ -52,6 +52,12 @@ SCHEMA_PATHS = (
     "VERSION",
     "schemas",
 )
+RELEASE_VERIFICATION_COMMANDS = (
+    "python3 scripts/build_adapters.py --check",
+    "python3 scripts/build_release.py --check --json",
+    "python3 scripts/check_release_privacy.py --repo-root .",
+    "python3 -m unittest tests.test_install_smoke -v",
+)
 
 
 class ReleaseBuildError(RuntimeError):
@@ -110,6 +116,23 @@ def validate_release_inputs(repo_root: Path, version: str) -> None:
     if missing:
         raise ReleaseBuildError(f"Release inputs are missing: {', '.join(missing)}")
 
+    release_notes = repo_root / release_notes_path(version)
+    if not release_notes.is_file():
+        raise ReleaseBuildError(f"Release notes are missing for {version}: {release_notes.relative_to(repo_root)}")
+    release_notes_text = release_notes.read_text(encoding="utf-8")
+    required_note_sections = (
+        "## Release Artifacts",
+        "## Local Verification",
+        "## Limitations",
+        "## Publication Boundary",
+    )
+    missing_note_sections = [section for section in required_note_sections if section not in release_notes_text]
+    if missing_note_sections:
+        raise ReleaseBuildError(
+            "Release notes must be the source of truth for artifacts, verification, limitations, and publication: "
+            + ", ".join(missing_note_sections)
+        )
+
     changelog = (repo_root / "CHANGELOG.md").read_text(encoding="utf-8")
     if f"## {version} " not in changelog:
         raise ReleaseBuildError(f"CHANGELOG.md does not contain an entry for {version}")
@@ -161,6 +184,10 @@ def artifact_specs(version: str) -> List[ArtifactSpec]:
 
 def generic_artifact_filename(version: str) -> str:
     return f"roadmap-delivery-generic-markdown-pack-{version}.tar.gz"
+
+
+def release_notes_path(version: str) -> str:
+    return f"docs/release-notes-{version}.md"
 
 
 def should_skip_file(path: Path) -> bool:
@@ -419,6 +446,91 @@ def write_checksums(path: Path, artifacts: Sequence[BuiltArtifact]) -> BuiltArti
     return describe_artifact("checksums", path)
 
 
+def artifact_report_by_kind(artifacts: Sequence[BuiltArtifact]) -> Dict[str, BuiltArtifact]:
+    return {artifact.kind: artifact for artifact in artifacts}
+
+
+def release_package_metadata(version: str, artifacts: Sequence[BuiltArtifact]) -> List[Dict[str, Any]]:
+    by_kind = artifact_report_by_kind(artifacts)
+
+    def package(
+        *,
+        name: str,
+        host: str,
+        kind: str,
+        install_source: str,
+        support_status: str,
+        capabilities: Sequence[str],
+        limitations: Sequence[str],
+    ) -> Dict[str, Any]:
+        artifact = by_kind[kind]
+        return {
+            "name": name,
+            "host": host,
+            "version": version,
+            "artifact": artifact.filename,
+            "sha256": artifact.sha256,
+            "size": artifact.size,
+            "install_source": install_source,
+            "support_status": support_status,
+            "capability_summary": list(capabilities),
+            "limitations": list(limitations),
+        }
+
+    return [
+        package(
+            name="roadmap-delivery-codex-skill",
+            host="codex",
+            kind="codex_skill_package",
+            install_source=CODEX_SKILL_ROOT,
+            support_status="supported",
+            capabilities=(
+                "Generated Codex skill instruction package.",
+                "File-backed inspection and validation helper scripts.",
+                "Phase model policy and blocked-remediation workflow guidance.",
+                "Same-context review fallback when subagent review is unavailable.",
+            ),
+            limitations=(
+                "Installed-skill synchronization is human-approved.",
+                "Live Codex binary checks are optional and environment-dependent.",
+            ),
+        ),
+        package(
+            name="roadmap-delivery-claude-plugin",
+            host="claude",
+            kind="claude_plugin_package",
+            install_source=CLAUDE_PLUGIN_ROOT,
+            support_status="supported_local_plugin_package",
+            capabilities=(
+                "Generated local Claude plugin package.",
+                "Packaged roadmap delivery skill, reviewer agent, and safety hooks.",
+                "File-backed CLI validation against the same repository artifacts.",
+                "Host-specific recurring automation is not assumed.",
+            ),
+            limitations=(
+                "Installed-plugin synchronization is human-approved.",
+                "Live Claude binary checks are optional and environment-dependent.",
+            ),
+        ),
+        package(
+            name="roadmap-delivery-generic-markdown-pack",
+            host="generic",
+            kind="generic_markdown_pack",
+            install_source="generated release artifact",
+            support_status="documentation_template",
+            capabilities=(
+                "Documentation and schema pack for future host adapter planning.",
+                "No runtime integration claim for named hosts.",
+                "Approval-boundary and validation guidance for future adapters.",
+            ),
+            limitations=(
+                "Not a supported runtime package.",
+                "Future hosts need their own capability file, adapter package, tests, and smoke checks.",
+            ),
+        ),
+    ]
+
+
 def build_once(repo_root: Path, output_dir: Path, *, include_paths: bool) -> Dict[str, Any]:
     version = read_version(repo_root)
     validate_release_inputs(repo_root, version)
@@ -485,7 +597,18 @@ def build_once(repo_root: Path, output_dir: Path, *, include_paths: bool) -> Dic
         "name": "roadmap-delivery",
         "version": version,
         "version_policy": "VERSION is the repository release version; external publication is human-approved.",
+        "release_notes": {
+            "path": release_notes_path(version),
+            "source_of_truth_for": [
+                "first-release contents",
+                "known limitations",
+                "local verification commands",
+                "publication boundary",
+            ],
+        },
         "artifacts": [artifact.as_report(include_path=False) for artifact in primary_artifacts],
+        "packages": release_package_metadata(version, primary_artifacts),
+        "verification_commands": list(RELEASE_VERIFICATION_COMMANDS),
         "compatibility": {
             "codex_skill_path": CODEX_SKILL_ROOT,
             "claude_plugin_path": CLAUDE_PLUGIN_ROOT,

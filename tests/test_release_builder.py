@@ -14,26 +14,28 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 class ReleaseBuilderTests(unittest.TestCase):
     maxDiff = None
 
+    def build_release(self, output_dir):
+        proc = subprocess.run(
+            [
+                sys.executable,
+                "scripts/build_release.py",
+                "--output-dir",
+                str(output_dir),
+                "--json",
+            ],
+            cwd=REPO_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr or proc.stdout)
+        return json.loads(proc.stdout)
+
     def test_build_release_checksum_file_round_trips(self):
         with tempfile.TemporaryDirectory() as tmp:
             output_dir = Path(tmp) / "dist"
-            proc = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/build_release.py",
-                    "--output-dir",
-                    str(output_dir),
-                    "--json",
-                ],
-                cwd=REPO_ROOT,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=False,
-            )
-
-            self.assertEqual(proc.returncode, 0, proc.stderr or proc.stdout)
-            report = json.loads(proc.stdout)
+            report = self.build_release(output_dir)
             self.assertEqual(report["adapter_check"]["status"], "passed")
             self.assertEqual(report["codex_artifact_validation"]["status"], "passed")
             self.assertEqual(report["claude_artifact_validation"]["status"], "passed")
@@ -76,23 +78,7 @@ class ReleaseBuilderTests(unittest.TestCase):
     def test_build_release_contains_multi_host_packages(self):
         with tempfile.TemporaryDirectory() as tmp:
             output_dir = Path(tmp) / "dist"
-            proc = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/build_release.py",
-                    "--output-dir",
-                    str(output_dir),
-                    "--json",
-                ],
-                cwd=REPO_ROOT,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=False,
-            )
-
-            self.assertEqual(proc.returncode, 0, proc.stderr or proc.stdout)
-            report = json.loads(proc.stdout)
+            report = self.build_release(output_dir)
             artifacts = {item["kind"]: Path(item["path"]) for item in report["artifacts"]}
 
             with tarfile.open(artifacts["claude_plugin_package"], "r:gz") as archive:
@@ -123,6 +109,59 @@ class ReleaseBuilderTests(unittest.TestCase):
             manifest = json.loads((output_dir / "roadmap-delivery-0.1.0-manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["compatibility"]["supported_host_packages"], ["codex", "claude"])
             self.assertEqual(manifest["compatibility"]["claude_plugin_path"], "dist/claude")
+
+    def test_manifest_records_release_notes_packages_and_capabilities(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / "dist"
+            report = self.build_release(output_dir)
+            manifest = json.loads((output_dir / "roadmap-delivery-0.1.0-manifest.json").read_text(encoding="utf-8"))
+
+            artifact_by_filename = {
+                item["filename"]: item
+                for item in report["artifacts"]
+                if item["kind"] not in {"release_manifest", "checksums"}
+            }
+            self.assertEqual(manifest["release_notes"]["path"], "docs/release-notes-0.1.0.md")
+            self.assertIn("known limitations", manifest["release_notes"]["source_of_truth_for"])
+            self.assertIn("python3 scripts/build_release.py --check --json", manifest["verification_commands"])
+
+            packages = {item["name"]: item for item in manifest["packages"]}
+            self.assertEqual(
+                sorted(packages),
+                [
+                    "roadmap-delivery-claude-plugin",
+                    "roadmap-delivery-codex-skill",
+                    "roadmap-delivery-generic-markdown-pack",
+                ],
+            )
+            for package in packages.values():
+                with self.subTest(package=package["name"]):
+                    self.assertEqual(package["version"], "0.1.0")
+                    self.assertIn(package["artifact"], artifact_by_filename)
+                    self.assertEqual(package["sha256"], artifact_by_filename[package["artifact"]]["sha256"])
+                    self.assertGreater(len(package["capability_summary"]), 1)
+                    self.assertGreater(len(package["limitations"]), 0)
+
+            self.assertEqual(packages["roadmap-delivery-codex-skill"]["host"], "codex")
+            self.assertEqual(packages["roadmap-delivery-claude-plugin"]["host"], "claude")
+            self.assertEqual(packages["roadmap-delivery-generic-markdown-pack"]["support_status"], "documentation_template")
+
+    def test_manifest_and_checksum_bytes_are_deterministic(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            first_dir = Path(tmp) / "first"
+            second_dir = Path(tmp) / "second"
+            self.build_release(first_dir)
+            self.build_release(second_dir)
+
+            for filename in (
+                "roadmap-delivery-0.1.0-manifest.json",
+                "roadmap-delivery-0.1.0-checksums.sha256",
+            ):
+                with self.subTest(filename=filename):
+                    self.assertEqual(
+                        (first_dir / filename).read_bytes(),
+                        (second_dir / filename).read_bytes(),
+                    )
 
 
 if __name__ == "__main__":

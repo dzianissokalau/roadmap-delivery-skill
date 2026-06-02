@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "max_stalled_runs": 3,
+  "notification": {
+    "mode": "alert_file",
+    "fallback": "alert_file"
+  },
+  "defaults": {
+    "model": "gpt-5.5",
+    "reasoning_effort": "xhigh"
+  },
+  "phases": {
+    "0": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "xhigh"
+    },
+    "1": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "xhigh"
+    },
+    "2": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "high"
+    },
+    "3": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "high"
+    },
+    "4": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "medium"
+    },
+    "5": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "xhigh"
+    },
+    "finalization": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "xhigh"
+    }
+  },
+  "adaptive_model_policy": {
+    "enabled": false,
+    "escalate_on": [
+      "delivered_with_fixes",
+      "verification_failed",
+      "review_needs_fix",
+      "stalled",
+      "retarget_failed"
+    ],
+    "human_gated_qualities": [
+      "blocked_human_required",
+      "completion_closeout_failed"
+    ],
+    "deescalate_after_flawless_runs": 0,
+    "escalation": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "xhigh"
+    },
+    "caps": {
+      "allowed_models": [
+        "gpt-5.5"
+      ],
+      "max_reasoning_effort": "xhigh",
+      "allowed_providers": [
+        "openai"
+      ],
+      "allowed_cost_classes": [
+        "approved"
+      ]
+    }
+  }
+}

@@ -95,7 +95,7 @@ readback proves them.
   "configured_automation_reasoning_effort": null,
   "run_count": 0,
   "stalled_run_count": 0,
-  "max_stalled_runs": 3,
+  "max_stalled_runs": 2,
   "last_progress_signature": null,
   "last_progress_at": null,
   "last_operator_alert": null,
@@ -122,7 +122,7 @@ automations. Ask for, or infer only from explicit operator setup answers:
 - default reasoning effort
 - optional per-phase model/reasoning overrides
 - finalization model and reasoning effort
-- `max_stalled_runs`, normally `3`
+- `max_stalled_runs`, normally `2`
 - notification mode, normally `alert_file`
 - adaptive model policy, disabled by default unless the operator selected
   escalation/de-escalation behavior
@@ -141,7 +141,7 @@ Minimum generated policy:
 ```json
 {
   "schema_version": 1,
-  "max_stalled_runs": 3,
+  "max_stalled_runs": 2,
   "notification": {
     "mode": "alert_file",
     "fallback": "alert_file"

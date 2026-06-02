@@ -1,0 +1,32 @@
+title: "[Compatibility]: "
+labels:
+  - compatibility
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share safe host compatibility observations only. Do not post tokens, private paths, automation logs, review transcripts, or unpublished release bundles.
+  - type: textarea
+    id: host
+    attributes:
+      label: Host and package
+      description: Name the host surface, package path, and local version or commit if safe to share.
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: Observation
+      description: What worked, failed, or differed from the documented compatibility boundary?
+    validations:
+      required: true
+  - type: textarea
+    id: safe_evidence
+    attributes:
+      label: Safe evidence
+      description: Add redacted command output, screenshots, or package metadata.
+  - type: textarea
+    id: docs
+    attributes:
+      label: Relevant docs
+      description: Link the install, adapter, or compatibility docs that informed the report.

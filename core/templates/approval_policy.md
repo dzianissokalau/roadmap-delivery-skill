@@ -16,8 +16,8 @@ Use this template for `automation/<roadmap-slug>/approval_policy.json`.
     "pause_saved_automation": false,
     "push_current_phase_branch": false
   },
-  "pause_automation_on_completion": false,
-  "pause_automation_on_stall": false,
+  "pause_automation_on_completion": true,
+  "pause_automation_on_stall": true,
   "never_auto": [
     "force_push",
     "git_reset_hard",
@@ -39,6 +39,8 @@ Setup wizard output must default to `conservative`. Delegated modes are valid
 only when explicitly selected by the operator and recorded in this file.
 
 `pause_automation_on_completion` and `pause_automation_on_stall` are
-context-specific safety approvals. Delegated modes normally allow them through
-`pause_saved_automation`; conservative mode may set one of these flags to
-`true` as an explicit setup choice without approving unrelated runner edits.
+context-specific safety approvals. They default to `true` so completed or
+repeatedly stalled automations do not keep waking up forever. Conservative mode
+still keeps broad saved-runner edits gated because `pause_saved_automation`
+remains `false`; set either flag to `false` only when the operator explicitly
+wants the scheduler to keep running after that terminal condition.

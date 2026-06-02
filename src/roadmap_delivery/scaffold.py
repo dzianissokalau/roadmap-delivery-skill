@@ -23,6 +23,7 @@ DEFAULT_REASONING_EFFORT = "xhigh"
 DEFAULT_PHASE = "Phase 0 - Scope Confirmation"
 DEFAULT_CADENCE = "manual"
 DEFAULT_EXECUTION_ENVIRONMENT = "local"
+DEFAULT_MAX_STALLED_RUNS = 2
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,9 @@ class ScaffoldOptions:
     execution_environment: str = DEFAULT_EXECUTION_ENVIRONMENT
     host_target: str = "codex"
     branch_prefix: str = "codex/"
+    max_stalled_runs: int = DEFAULT_MAX_STALLED_RUNS
+    pause_on_completion: Optional[bool] = None
+    pause_on_stall: Optional[bool] = None
 
 
 def utc_now() -> str:
@@ -55,7 +59,13 @@ def status_from_findings(report: Dict[str, Any]) -> str:
     return "ok"
 
 
-def build_approval_policy(mode: str, approval_operations: Iterable[str]) -> tuple[Dict[str, Any], List[Dict[str, str]]]:
+def build_approval_policy(
+    mode: str,
+    approval_operations: Iterable[str],
+    *,
+    pause_on_completion: Optional[bool] = None,
+    pause_on_stall: Optional[bool] = None,
+) -> tuple[Dict[str, Any], List[Dict[str, str]]]:
     operations, errors = parse_operation_assignments(approval_operations)
     if mode != "custom" and operations:
         errors.append(
@@ -65,7 +75,12 @@ def build_approval_policy(mode: str, approval_operations: Iterable[str]) -> tupl
             }
         )
         operations = {}
-    policy = default_approval_policy(mode, operations if mode == "custom" else None)
+    policy = default_approval_policy(
+        mode,
+        operations if mode == "custom" else None,
+        pause_on_completion=pause_on_completion,
+        pause_on_stall=pause_on_stall,
+    )
     errors.extend(validate_approval_policy(policy))
     return policy, errors
 
@@ -73,7 +88,7 @@ def build_approval_policy(mode: str, approval_operations: Iterable[str]) -> tupl
 def build_phase_model_policy(options: ScaffoldOptions) -> Dict[str, Any]:
     return {
         "schema_version": 1,
-        "max_stalled_runs": 3,
+        "max_stalled_runs": options.max_stalled_runs,
         "notification": {"mode": "alert_file", "fallback": "alert_file"},
         "defaults": {
             "model": options.initial_model,
@@ -192,11 +207,23 @@ def build_scaffold_plan(options: ScaffoldOptions, *, command: str = "scaffold") 
                 "message": f"Reasoning effort must be one of {sorted(ALLOWED_REASONING_EFFORTS)!r}.",
             }
         )
+    if not isinstance(options.max_stalled_runs, int) or isinstance(options.max_stalled_runs, bool) or options.max_stalled_runs < 1:
+        errors.append(
+            {
+                "code": "invalid_max_stalled_runs",
+                "message": "max_stalled_runs must be a positive integer.",
+            }
+        )
     automation_dir = repo_root / "automation" / slug_dir
     roadmap_default = repo_root / "roadmaps" / f"not_started_{slug_dir}_roadmap.md"
     roadmap_path = _resolve_repo_child(repo_root, options.roadmap_path, roadmap_default, errors)
     approval_policy_path = automation_dir / "approval_policy.json"
-    approval_policy, approval_errors = build_approval_policy(options.approval_mode, options.approval_operations)
+    approval_policy, approval_errors = build_approval_policy(
+        options.approval_mode,
+        options.approval_operations,
+        pause_on_completion=options.pause_on_completion,
+        pause_on_stall=options.pause_on_stall,
+    )
     errors.extend(approval_errors)
     model_policy = build_phase_model_policy(options)
     planned_paths = [
@@ -436,7 +463,7 @@ def _delivery_state(report: Dict[str, Any], timestamp: str) -> Dict[str, Any]:
         },
         "run_count": 0,
         "stalled_run_count": 0,
-        "max_stalled_runs": 3,
+        "max_stalled_runs": report["model_policy"]["policy"]["max_stalled_runs"],
         "last_progress_signature": None,
         "last_progress_at": None,
         "last_operator_alert": None,

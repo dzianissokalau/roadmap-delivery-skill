@@ -13,6 +13,7 @@ from .policy import ALLOWED_REASONING_EFFORTS
 from .reports import inspect as inspect_state
 from .reports import build_evidence_benchmark, print_benchmark_text
 from .scaffold import (
+    DEFAULT_MAX_STALLED_RUNS,
     ScaffoldOptions,
     apply_scaffold_plan as apply_scaffold_artifact_plan,
     build_scaffold_plan as build_scaffold_artifact_plan,
@@ -181,6 +182,9 @@ def run_scaffold(args: argparse.Namespace) -> int:
         automation_id=args.automation_id,
         approval_mode=args.approval_mode,
         approval_operations=args.approval_operation,
+        max_stalled_runs=args.max_stalled_runs,
+        pause_on_completion=args.pause_on_completion,
+        pause_on_stall=args.pause_on_stall,
     )
     report = build_scaffold_artifact_plan(options, command="scaffold")
     report["dry_run"] = bool(args.dry_run)
@@ -225,6 +229,9 @@ def run_wizard(args: argparse.Namespace) -> int:
         execution_environment=args.execution_environment,
         host_target=args.host_target,
         branch_prefix=args.branch_prefix,
+        max_stalled_runs=args.max_stalled_runs,
+        pause_on_completion=args.pause_on_completion,
+        pause_on_stall=args.pause_on_stall,
         write=args.write,
         force=args.force,
     )
@@ -365,6 +372,46 @@ def add_strict_flags(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def add_setup_safety_flags(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--max-stalled-runs",
+        type=int,
+        default=DEFAULT_MAX_STALLED_RUNS,
+        help=(
+            "Consecutive no-progress runs before blocking and safety-pausing "
+            f"the saved automation. Default: {DEFAULT_MAX_STALLED_RUNS}."
+        ),
+    )
+    completion_group = parser.add_mutually_exclusive_group()
+    completion_group.add_argument(
+        "--pause-on-completion",
+        dest="pause_on_completion",
+        action="store_true",
+        default=None,
+        help="Allow completion safety pause. This is the default.",
+    )
+    completion_group.add_argument(
+        "--no-pause-on-completion",
+        dest="pause_on_completion",
+        action="store_false",
+        help="Disable completion safety pause in the generated policy.",
+    )
+    stall_group = parser.add_mutually_exclusive_group()
+    stall_group.add_argument(
+        "--pause-on-stall",
+        dest="pause_on_stall",
+        action="store_true",
+        default=None,
+        help="Allow stalled-run safety pause. This is the default.",
+    )
+    stall_group.add_argument(
+        "--no-pause-on-stall",
+        dest="pause_on_stall",
+        action="store_false",
+        help="Disable stalled-run safety pause in the generated policy.",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="roadmap-delivery", description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -402,6 +449,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="OPERATION=allow|deny",
         help="Custom operation decision for --approval-mode custom. May be repeated.",
     )
+    add_setup_safety_flags(scaffold_parser)
     scaffold_parser.add_argument("--dry-run", action="store_true", help="Plan files without writing them.")
     add_strict_flags(scaffold_parser)
     scaffold_parser.set_defaults(func=run_scaffold, parser=scaffold_parser)
@@ -442,6 +490,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Host target label to record without creating a live automation.",
     )
     wizard_parser.add_argument("--branch-prefix", default="codex/", help="Phase branch prefix to record.")
+    add_setup_safety_flags(wizard_parser)
     wizard_mode = wizard_parser.add_mutually_exclusive_group()
     wizard_mode.add_argument("--dry-run", action="store_true", help="Preview files without writing. This is the default.")
     wizard_mode.add_argument("--write", action="store_true", help="Write repository-local artifacts.")

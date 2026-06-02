@@ -24,8 +24,10 @@ Key docs:
 - Onboarding quickstart: `docs/quickstart.md`
 - Onboarding wizard contract: `docs/onboarding-wizard.md`
 - Privacy and release sanitization: `docs/privacy-and-sanitization.md`
+- Release process: `docs/release-process.md`
 - Release notes: `docs/release-notes-0.1.0.md`
 - Security policy: `SECURITY.md`
+- Trademark and licensing: `docs/trademark-and-licensing.md`
 - Who this is for: `docs/who-this-is-for.md`
 
 ## Quickstart
@@ -193,7 +195,7 @@ Codex package.
 | Approval policy | Supported | `approval_policy.json` selects conservative, delegated, or custom operation permissions. Missing policy falls back to conservative behavior. |
 | Adaptive model policy | Supported | Run quality can retarget the next run within explicit policy caps and saved automation readback. |
 | Provider role config | Supported example | `config/providers.example.yaml` documents reusable role-to-model mappings; runner readback remains authoritative. |
-| Completion and stall self-pause | Supported with approval | Pause can be automatic only when approval policy or explicit operator approval allows it and saved automation readback confirms `PAUSED`. |
+| Completion and stall self-pause | Default safety behavior | Generated policies pause completed automations and pause stalled automations after 2 no-progress runs by default, with opt-out policy flags and saved automation readback. |
 | Adapter generation | Supported | `scripts/build_adapters.py --check` verifies committed Codex and Claude output. |
 | Release artifacts | Local only | Build and verify locally; publication requires explicit human approval. |
 | Claude adapter | Supported locally | Generated Claude plugin package, reviewer agent, hooks, install docs, and offline smoke tests ship as local release artifacts; live Claude binary checks remain optional. |
@@ -202,31 +204,37 @@ Codex package.
 
 ## Roadmaps
 
-- `roadmaps/delivered_autonomous-roadmap-delivery-skill-phased-roadmap.md`: delivered
-  original Codex roadmap and repository skill snapshot.
-- `roadmaps/delivered_phase_model_policy_and_stall_control_roadmap.md`:
-  delivered model-aware automation retargeting, stalled-run handling, and local
-  operator alerts.
-- `roadmaps/delivered_framework_core_and_release_readiness_roadmap.md`:
-  delivered framework hardening roadmap for the canonical core, schemas, shared
-  library, CLI, generated Codex adapter, CI, privacy, release, and closeout.
-- `roadmaps/delivered_multi_host_adapter_and_claude_plugin_roadmap.md`:
-  completed companion roadmap for generated host adapters and Claude packaging;
-  the saved automation is paused.
-- `roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md`:
-  completed roadmap for autonomy modes, adaptive model escalation, and
-  automatic pause behavior; the saved automation is paused.
-- `roadmaps/not_started_release_install_and_distribution_trust_roadmap.md`:
-  planned roadmap for first tagged release readiness, install/distribution
-  trust, licensing/trademark guidance, marketplace-native preparation, and
-  public project governance surfaces.
-- `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`:
-  completed roadmap for setup wizard generation, golden-path demos, quickstart
-  fit guidance, and measurable delivery-evidence proof; the saved automation is
-  paused.
-- `roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md`:
-  planned roadmap for optional live host smoke checks, capability metadata, and
-  a GitHub Action validation/review-evidence companion.
+| Status | Roadmap | Public summary |
+|---|---|---|
+| Delivered | `roadmaps/delivered_autonomous-roadmap-delivery-skill-phased-roadmap.md` | Original Codex roadmap and repository skill snapshot. |
+| Delivered | `roadmaps/delivered_phase_model_policy_and_stall_control_roadmap.md` | Model-aware automation retargeting, stalled-run handling, and local operator alerts. |
+| Delivered | `roadmaps/delivered_framework_core_and_release_readiness_roadmap.md` | Framework hardening for the canonical core, schemas, shared library, CLI, generated Codex adapter, CI, privacy, release, and closeout. |
+| Delivered | `roadmaps/delivered_multi_host_adapter_and_claude_plugin_roadmap.md` | Companion roadmap for generated host adapters and Claude packaging; the saved automation is paused. |
+| Delivered | `roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md` | Autonomy modes, adaptive model escalation, and automatic pause behavior; the saved automation is paused. |
+| Delivered | `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md` | Setup wizard generation, golden-path demos, quickstart fit guidance, and measurable delivery-evidence proof; the saved automation is paused. |
+| Delivered | `roadmaps/delivered_release_install_and_distribution_trust_roadmap.md` | First tagged release readiness, install and distribution trust, licensing/trademark guidance, marketplace-native preparation, public governance surfaces, and local closeout evidence. |
+| Planned, not yet configured | `roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md` | Optional live host smoke checks, capability metadata, and a GitHub Action validation or review-evidence companion. |
+
+Roadmap status describes local delivery evidence only. It does not promise
+delivery dates, paid support, hosted services, marketplace acceptance, or
+publication.
+
+## Public Contribution Entry Points
+
+Use the repository templates for public-safe contributions:
+
+- Bug reports, installation help, roadmap requests, and documentation gaps use
+  `.github/ISSUE_TEMPLATE/`.
+- Ideas, usage reports, and host compatibility observations use
+  `.github/DISCUSSION_TEMPLATE/` when GitHub Discussions is enabled.
+- Pull requests should use `.github/PULL_REQUEST_TEMPLATE.md` and include
+  verification, privacy, adapter drift, and release-impact notes.
+- Security or vulnerability details should follow `SECURITY.md` and should not
+  be posted in public issues or discussions.
+
+Do not post credentials, private paths, local automation logs, review
+transcripts, or unpublished release bundles in public contribution surfaces.
+The project does not provide guaranteed response times.
 
 ## Operating Model
 
@@ -398,6 +406,11 @@ fi
 The repository release version is stored in `VERSION`. The Python package
 metadata stays unpublished until a separate publication phase, so local
 release artifacts use `VERSION` for archive names, manifests, and checksums.
+Use `docs/release-process.md` as the release-readiness checklist and as the
+boundary between a local release candidate and a published release.
+Exact checksum values are generated output and belong in the manifest,
+checksum file, and roadmap closeout evidence; do not hardcode them into docs
+that are included in the source archive.
 
 `scripts/build_release.py` builds these deterministic local artifacts:
 
@@ -454,4 +467,7 @@ installable while moving source-of-truth behavior into `core/`, `schemas/`,
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE). Generated
+package snapshots and local release archives use the same project license unless
+a file says otherwise. Vendor names are used only as compatibility labels; see
+`docs/trademark-and-licensing.md` for package and endorsement boundaries.

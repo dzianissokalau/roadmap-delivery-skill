@@ -2,7 +2,7 @@
 
 All notable local framework release changes are recorded here.
 
-## 0.1.0 - 2026-06-01
+## 0.1.0 - 2026-06-02
 
 Initial framework-core and multi-host adapter release candidate.
 
@@ -18,6 +18,10 @@ Initial framework-core and multi-host adapter release candidate.
   documentation-only generic markdown pack.
 - CI, release-check, demo smoke, privacy, and release artifact gates.
 - Deterministic local release artifacts with checksums and manifest metadata.
+- Release candidate closeout guidance that ties release notes, changelog,
+  manifest output, checksum output, privacy scans, adapter checks, install
+  smoke checks, full test output, and final deep-review prompts together for
+  human review.
 
 ### Compatibility Notes
 
@@ -33,3 +37,15 @@ Initial framework-core and multi-host adapter release candidate.
   schema validators allow it.
 - Publication to external release channels remains a separate human-approved
   action.
+
+### Release Candidate Limitations
+
+- Local release artifacts are preparation outputs, not a published release.
+- Live Codex and Claude binary checks remain optional maintainer smoke checks
+  when those host binaries are installed.
+- The generic markdown pack remains documentation-only and does not claim
+  runtime support for future named hosts.
+- Marketplace submission, package registry upload, tag creation, branch push,
+  installed-skill sync, live plugin sync, credentials, pricing, paid support,
+  hosted-service packaging, and commercial terms are outside this release
+  candidate.

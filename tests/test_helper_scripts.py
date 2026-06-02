@@ -27,7 +27,7 @@ class DeliveryFixture:
         *,
         defaults_model="gpt-5.5",
         defaults_reasoning="xhigh",
-        max_stalled_runs=3,
+        max_stalled_runs=2,
         notification=None,
         phases=None,
     ):
@@ -72,10 +72,10 @@ class DeliveryFixture:
         policy_reasoning="xhigh",
         automation_model="gpt-5.5",
         automation_reasoning="xhigh",
-        policy_max_stalled_runs=3,
+        policy_max_stalled_runs=2,
         state_run_count=0,
         state_stalled_run_count=0,
-        state_max_stalled_runs=3,
+        state_max_stalled_runs=2,
         state_last_progress_signature=None,
         state_last_progress_at=None,
         state_schema_version=1,
@@ -567,7 +567,7 @@ class HelperScriptTests(unittest.TestCase):
 
     def test_stall_threshold_marks_state_blocked(self):
         with tempfile.TemporaryDirectory() as tmp:
-            fixture = DeliveryFixture(tmp, write_model_policy=True, state_run_count=5, state_stalled_run_count=2)
+            fixture = DeliveryFixture(tmp, write_model_policy=True, state_run_count=5, state_stalled_run_count=1)
             self.set_last_progress_signature_to_current(fixture)
 
             progress = self.run_progress(fixture, "--record-run", "--timestamp", "2026-05-21T12:03:00Z")
@@ -575,9 +575,9 @@ class HelperScriptTests(unittest.TestCase):
 
             self.assertFalse(progress["progress_detected"])
             self.assertTrue(progress["threshold_reached"])
-            self.assertEqual(progress["stalled_run_count"], 3)
+            self.assertEqual(progress["stalled_run_count"], 2)
             self.assertEqual(state["status"], "blocked")
-            self.assertIn("Stalled after 3 consecutive runs", state["blocked_reason"])
+            self.assertIn("Stalled after 2 consecutive runs", state["blocked_reason"])
 
     def test_custom_policy_stall_threshold_is_used(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -628,7 +628,7 @@ class HelperScriptTests(unittest.TestCase):
                 "--kind",
                 "stalled",
                 "--reason",
-                "Stalled after 3 consecutive runs without durable progress.",
+                "Stalled after 2 consecutive runs without durable progress.",
                 "--next-action",
                 "Inspect the stalled run and repair the blocker.",
                 "--timestamp",
@@ -758,7 +758,7 @@ class HelperScriptTests(unittest.TestCase):
                 self.assertEqual(decisions["promote_to_main"]["decision"], "forbidden")
             self.assertEqual(inspect["autonomy_mode"], "conservative")
             self.assertIn("run_verification", inspect["allowed_operations"])
-            self.assertEqual(inspect["pause_status"]["completion_pause_decision"]["decision"], "ask")
+            self.assertEqual(inspect["pause_status"]["completion_pause_decision"]["decision"], "allowed")
             self.assertIsNone(inspect["last_run_quality"])
             self.assertIsNone(inspect["adaptive_model_decision"]["run_quality"])
 
@@ -1012,7 +1012,7 @@ class HelperScriptTests(unittest.TestCase):
             self.assertIn("completed_state_active_automation", self.warning_codes(inspect))
             self.assertTrue(validate["completion_flow"]["completion_pause_required"])
             self.assertIn("completed_state_active_with_hard_stop", self.warning_codes(validate))
-            self.assertEqual(validate["errors"], [])
+            self.assertIn("completed_state_pause_readback_missing", self.error_codes(validate))
 
     def test_completed_missing_completed_alert_is_error(self):
         with tempfile.TemporaryDirectory() as tmp:

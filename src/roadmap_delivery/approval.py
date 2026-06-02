@@ -27,6 +27,9 @@ SAFETY_PAUSE_FLAGS = (
     "pause_automation_on_stall",
 )
 
+DEFAULT_PAUSE_ON_COMPLETION = True
+DEFAULT_PAUSE_ON_STALL = True
+
 BASE_LOCAL_OPERATIONS = frozenset(
     {
         "edit_phase_owned_files",
@@ -152,24 +155,44 @@ def approval_decisions_for_operations(operations: Dict[str, bool]) -> Dict[str, 
     }
 
 
-def pause_flags_for_operations(operations: Dict[str, bool]) -> Dict[str, bool]:
+def pause_flags_for_operations(
+    operations: Dict[str, bool],
+    *,
+    pause_on_completion: Optional[bool] = None,
+    pause_on_stall: Optional[bool] = None,
+) -> Dict[str, bool]:
     pause_allowed = operations.get("pause_saved_automation") is True
     return {
-        "pause_automation_on_completion": pause_allowed,
-        "pause_automation_on_stall": pause_allowed,
+        "pause_automation_on_completion": (
+            bool(pause_on_completion)
+            if pause_on_completion is not None
+            else (pause_allowed or DEFAULT_PAUSE_ON_COMPLETION)
+        ),
+        "pause_automation_on_stall": (
+            bool(pause_on_stall)
+            if pause_on_stall is not None
+            else (pause_allowed or DEFAULT_PAUSE_ON_STALL)
+        ),
     }
 
 
 def default_approval_policy(
     mode: str = "conservative",
     custom_operations: Optional[Dict[str, bool]] = None,
+    *,
+    pause_on_completion: Optional[bool] = None,
+    pause_on_stall: Optional[bool] = None,
 ) -> Dict[str, Any]:
     operations = approved_operations_for_mode(mode, custom_operations)
     return {
         "schema_version": 1,
         "approval_mode": mode,
         "operations": operations,
-        **pause_flags_for_operations(operations),
+        **pause_flags_for_operations(
+            operations,
+            pause_on_completion=pause_on_completion,
+            pause_on_stall=pause_on_stall,
+        ),
         "never_auto": list(NEVER_AUTO_OPERATIONS),
     }
 

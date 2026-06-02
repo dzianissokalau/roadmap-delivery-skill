@@ -10,8 +10,8 @@ Use `../roadmaps/` for human-facing documents:
 - `../roadmaps/delivered_framework_core_and_release_readiness_roadmap.md`
 - `../roadmaps/delivered_multi_host_adapter_and_claude_plugin_roadmap.md`
 - `../roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md`
-- `../roadmaps/not_started_release_install_and_distribution_trust_roadmap.md`
-- `../roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md`
+- `../roadmaps/delivered_release_install_and_distribution_trust_roadmap.md`
+- `../roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`
 - `../roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md`
 
 Use this folder for automation templates, state, logs, review outputs, and
@@ -49,8 +49,9 @@ in the project root or `../roadmaps/`.
 | `../roadmaps/delivered_phase_model_policy_and_stall_control_roadmap.md` | Delivered | Complete | `phase-model-policy-and-stall-control` hourly, PAUSED | `phase-model-policy-and-stall-control/delivery_state.json` |
 | `../roadmaps/delivered_framework_core_and_release_readiness_roadmap.md` | Completed | Complete | `framework-core-and-release-readiness` hourly, PAUSED | `framework-core-and-release-readiness/delivery_state.json` |
 | `../roadmaps/delivered_multi_host_adapter_and_claude_plugin_roadmap.md` | Completed | Complete | `multi-host-adapter-and-claude-plugin` hourly, PAUSED | `multi-host-adapter-and-claude-plugin/delivery_state.json` |
-| `../roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md` | Completed Pending Pause | Complete | `autonomous-operation-modes-and-adaptive-control` hourly, ACTIVE | `autonomous-operation-modes-and-adaptive-control/delivery_state.json` |
-| `../roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md` | Active | Phase 1 | `onboarding-wizard-and-proof-demos` hourly, ACTIVE | `onboarding-wizard-and-proof-demos/delivery_state.json` |
+| `../roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md` | Completed | Complete | `autonomous-operation-modes-and-adaptive-control` hourly, PAUSED | `autonomous-operation-modes-and-adaptive-control/delivery_state.json` |
+| `../roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md` | Completed | Complete | `onboarding-wizard-and-proof-demos` hourly, PAUSED | `onboarding-wizard-and-proof-demos/delivery_state.json` |
+| `../roadmaps/delivered_release_install_and_distribution_trust_roadmap.md` | Completed | Complete | `release-install-and-distribution-trust` hourly, PAUSED | `release-install-and-distribution-trust/delivery_state.json` |
 
 ## Planned Roadmaps
 
@@ -59,8 +60,15 @@ saved automation has been configured yet.
 
 | Roadmap | Status | Suggested Slug |
 |---|---|---|
-| `../roadmaps/not_started_release_install_and_distribution_trust_roadmap.md` | Not Started | `release-install-and-distribution-trust` |
 | `../roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md` | Not Started | `host-validation-and-github-action-companion` |
+
+## Release Trust Roadmap Notes
+
+`release-install-and-distribution-trust` is configured for phase-gated local
+delivery. It may prepare release readiness evidence and repository-local docs,
+but publishing tags, GitHub Releases, package registry uploads, marketplace
+submissions, branch pushes, repository setting changes, credential use, and
+installed-skill sync remain explicit human-approved operations.
 
 ## Migration Notes
 

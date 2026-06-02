@@ -30,8 +30,8 @@ Use this template for `automation/<roadmap-slug>/delivery_state.json`.
       "create_or_switch_phase_branch",
       "run_verification"
     ],
-    "pause_automation_on_completion": false,
-    "pause_automation_on_stall": false,
+    "pause_automation_on_completion": true,
+    "pause_automation_on_stall": true,
     "fallback_reason": null
   },
   "required_model": "<required-model-or-null>",
@@ -40,7 +40,7 @@ Use this template for `automation/<roadmap-slug>/delivery_state.json`.
   "configured_automation_reasoning_effort": "<configured-reasoning-or-null>",
   "run_count": 0,
   "stalled_run_count": 0,
-  "max_stalled_runs": 3,
+  "max_stalled_runs": 2,
   "last_progress_signature": null,
   "last_progress_at": null,
   "last_operator_alert": null,

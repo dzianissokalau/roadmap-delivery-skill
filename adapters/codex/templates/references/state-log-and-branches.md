@@ -28,7 +28,7 @@ Recommended fields:
   "configured_automation_reasoning_effort": null,
   "run_count": 0,
   "stalled_run_count": 0,
-  "max_stalled_runs": 3,
+  "max_stalled_runs": 2,
   "last_progress_signature": null,
   "last_progress_at": null,
   "last_operator_alert": null,
@@ -64,7 +64,7 @@ ACTIVE before phase work resumes.
 During new automation setup, resolve `required_model` and
 `required_reasoning_effort` from `phase_model_policy.json` for the first current
 phase before saving `delivery_state.json`. Set `max_stalled_runs` from policy,
-defaulting to `3` only when policy omits it.
+defaulting to `2` only when policy omits it.
 
 Set `configured_automation_model` and
 `configured_automation_reasoning_effort` only from saved automation readback or

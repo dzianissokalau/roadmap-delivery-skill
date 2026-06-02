@@ -53,6 +53,7 @@ class CodexAdapterGenerationTests(unittest.TestCase):
         self.assertTrue(codex["output_committed"])
         self.assertEqual(codex["capability_file"], "host-capabilities/codex.yaml")
         self.assertEqual(codex["output_dir"], str(REPO_ROOT / "skill" / "roadmap-delivery-skill"))
+        self.assertEqual(codex["marketplace_readiness"]["status"], "ok")
 
     def test_rendered_package_matches_snapshot(self):
         _, codex = self.run_build_check()
@@ -100,6 +101,16 @@ class CodexAdapterGenerationTests(unittest.TestCase):
         self.assertIn("pause_automation_on_completion", skill)
         self.assertIn("pause_automation_on_stall", skill)
         self.assertIn("completed_pending_pause", skill)
+
+    def test_skill_records_package_readiness_boundary(self):
+        self.run_build_check()
+        skill = (REPO_ROOT / "skill" / "roadmap-delivery-skill" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("## Package Readiness", skill)
+        self.assertIn("local skill package", skill)
+        self.assertIn("host capability metadata", skill)
+        self.assertIn("marketplace submission", skill)
+        self.assertIn("human-approved operations", skill)
 
     def test_output_root_regeneration_is_deterministic(self):
         with tempfile.TemporaryDirectory() as tmp:

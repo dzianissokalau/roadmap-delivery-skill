@@ -156,6 +156,9 @@ class CliTests(unittest.TestCase):
                     "run_verification",
                 ],
             )
+            self.assertTrue(report["approval_policy"]["policy"]["pause_automation_on_completion"])
+            self.assertTrue(report["approval_policy"]["policy"]["pause_automation_on_stall"])
+            self.assertEqual(report["model_policy"]["policy"]["max_stalled_runs"], 2)
             self.assertFalse((repo_root / "automation" / "new_roadmap").exists())
 
     def test_scaffold_write_mode_creates_files(self):
@@ -185,14 +188,45 @@ class CliTests(unittest.TestCase):
             model_policy = json.loads((automation_dir / "phase_model_policy.json").read_text(encoding="utf-8"))
             state = json.loads((automation_dir / "delivery_state.json").read_text(encoding="utf-8"))
             self.assertEqual(policy["approval_mode"], "conservative")
+            self.assertTrue(policy["pause_automation_on_completion"])
+            self.assertTrue(policy["pause_automation_on_stall"])
             self.assertFalse(model_policy["adaptive_model_policy"]["enabled"])
+            self.assertEqual(model_policy["max_stalled_runs"], 2)
             self.assertEqual(state["roadmap_slug"], "new-roadmap")
             self.assertEqual(state["approval_policy_path"], "automation/new_roadmap/approval_policy.json")
             self.assertEqual(state["approval_mode"], "conservative")
+            self.assertEqual(state["max_stalled_runs"], 2)
+            self.assertTrue(state["last_approval_policy_readback"]["pause_automation_on_completion"])
+            self.assertTrue(state["last_approval_policy_readback"]["pause_automation_on_stall"])
             self.assertEqual(state["last_approval_policy_readback"]["status"], "valid")
             self.assertIsNone(state["last_run_quality"])
             self.assertEqual(state["adaptive_flawless_streak"], 0)
             self.assertIn(str((automation_dir / "delivery_state.json").resolve()), report["created"])
+
+    def test_scaffold_can_disable_safety_pauses_and_change_stall_threshold(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+
+            proc = self.run_cli(
+                "scaffold",
+                "--repo-root",
+                str(repo_root),
+                "--roadmap-slug",
+                "new-roadmap",
+                "--max-stalled-runs",
+                "5",
+                "--no-pause-on-completion",
+                "--no-pause-on-stall",
+                "--dry-run",
+                "--json",
+            )
+            report = json.loads(proc.stdout)
+            policy = report["approval_policy"]["policy"]
+
+            self.assertEqual(report["model_policy"]["policy"]["max_stalled_runs"], 5)
+            self.assertFalse(policy["pause_automation_on_completion"])
+            self.assertFalse(policy["pause_automation_on_stall"])
 
     def test_scaffold_custom_approval_policy_reports_selected_operations(self):
         with tempfile.TemporaryDirectory() as tmp:

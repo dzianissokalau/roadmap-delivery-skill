@@ -5,6 +5,12 @@ different AI coding hosts. Canonical behavior stays in `core/`, `schemas/`, and
 `src/roadmap_delivery/`; adapter directories only describe how a host receives
 that workflow.
 
+Adapter and host names are descriptive compatibility labels. Generated package
+snapshots are Apache-2.0 repository artifacts unless a file says otherwise, and
+no adapter README, manifest, or release note should imply vendor endorsement,
+certification, sponsorship, or official status. See
+`docs/trademark-and-licensing.md`.
+
 ## Current Adapter Set
 
 | Adapter | Status | Default build | Purpose |
@@ -59,3 +65,22 @@ Use this minimum path for a new host:
 
 Do not add a host to the default build until its package is meant to be treated
 as a concrete maintained adapter.
+
+## Marketplace Preparation
+
+Marketplace preparation means collecting enough local package evidence for a
+human to decide whether to submit a package. It is not publication approval,
+host endorsement, installed package synchronization, or a claim that a live
+host marketplace has accepted the project.
+
+| Adapter | Required metadata | Package contents | Compatibility and privacy limits | Submission blockers |
+|---|---|---|---|---|
+| Codex | Skill frontmatter in `skill/roadmap-delivery-skill/SKILL.md`, release notes, release manifest, Apache-2.0 license, and checksums. | `SKILL.md`, `agents/openai.yaml`, canonical references, and helper scripts generated from `adapters/codex/package_manifest.json`. | File-backed roadmap state, local validators, saved automation readback when available, privacy scan, and optional live Codex binary smoke only. | Marketplace submission, package registry upload, branch or tag push, installed-skill sync, credentials, and repository setting changes. |
+| Claude | `.claude-plugin/plugin.json`, generated README, release notes, release manifest, Apache-2.0 license, and checksums. | Plugin manifest, README, packaged skill, read-only reviewer agent, safety hooks, and canonical references generated from `adapters/claude/package.py`. | Local Claude Code plugin package, repository validators, safety reminders, privacy scan, and optional live Claude binary smoke only. | Marketplace submission, package registry upload, branch or tag push, installed-plugin sync, credentials, and repository setting changes. |
+| Generic | Generic pack metadata in the release manifest when built explicitly. | Documentation and schema planning bundle only. | Future-host planning; no runtime support or named host parity claim. | Any named-host support claim before capability metadata, tests, docs, and smoke checks exist. |
+
+`scripts/build_adapters.py --check --json` reports marketplace-readiness
+checks for the supported Codex and Claude package outputs. Those checks cover
+required generated files, host capability metadata, install documentation,
+compatibility limits, privacy limits, and submission blockers. A readiness
+check failure is an adapter check failure, not an instruction to publish.

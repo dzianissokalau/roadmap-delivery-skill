@@ -64,6 +64,18 @@ class CompletionPausePolicyTests(unittest.TestCase):
         self.assertEqual(completion["source"], "pause_automation_on_completion")
         self.assertEqual(stall["decision"], "ask")
 
+    def test_default_conservative_policy_allows_safety_pauses_only(self):
+        policy = default_approval_policy("conservative")
+
+        completion = approval_decision_for_pause_context(policy, "completion")
+        stall = approval_decision_for_pause_context(policy, "stall")
+
+        self.assertFalse(policy["operations"]["pause_saved_automation"])
+        self.assertTrue(policy["pause_automation_on_completion"])
+        self.assertTrue(policy["pause_automation_on_stall"])
+        self.assertEqual(completion["decision"], "allowed")
+        self.assertEqual(stall["decision"], "allowed")
+
     def test_validation_errors_when_completed_active_despite_allowed_pause(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

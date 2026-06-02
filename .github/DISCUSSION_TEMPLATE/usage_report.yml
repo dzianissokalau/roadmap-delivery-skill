@@ -1,0 +1,32 @@
+title: "[Usage report]: "
+labels:
+  - usage-report
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share public-safe usage notes only. Do not include private repository names, credentials, local home paths, automation logs, review transcripts, or sensitive release artifacts.
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow
+      description: What roadmap, install, validation, or release-check workflow did you try?
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result
+      description: What worked, what was unclear, and what would help the next user?
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Checks run
+      description: List redacted local commands or validation output if relevant.
+  - type: textarea
+    id: follow_up
+    attributes:
+      label: Follow-up idea
+      description: Optional documentation, template, or test improvement.

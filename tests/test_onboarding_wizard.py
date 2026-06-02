@@ -55,6 +55,9 @@ class OnboardingWizardTests(unittest.TestCase):
             self.assertEqual(report["approval_mode"], "conservative")
             self.assertEqual(report["model_policy"]["default_model"], "gpt-5.5")
             self.assertEqual(report["model_policy"]["default_reasoning_effort"], "xhigh")
+            self.assertEqual(report["setup_choices"]["max_stalled_runs"], 2)
+            self.assertTrue(report["setup_choices"]["pause_automation_on_completion"])
+            self.assertTrue(report["setup_choices"]["pause_automation_on_stall"])
             self.assertFalse(report["live_automation"]["created"])
             self.assertIn(str(repo_root.resolve() / "automation" / "pilot_roadmap" / "delivery_state.json"), report["would_create"])
             self.assertEqual(report["planned_create"], report["would_create"])
@@ -115,6 +118,13 @@ class OnboardingWizardTests(unittest.TestCase):
             self.assertTrue((automation_dir / "approval_policy.json").is_file())
             self.assertTrue((automation_dir / "phase_model_policy.json").is_file())
             self.assertTrue((automation_dir / "reviews" / ".gitkeep").is_file())
+            policy = json.loads((automation_dir / "approval_policy.json").read_text(encoding="utf-8"))
+            model_policy = json.loads((automation_dir / "phase_model_policy.json").read_text(encoding="utf-8"))
+            state = json.loads((automation_dir / "delivery_state.json").read_text(encoding="utf-8"))
+            self.assertTrue(policy["pause_automation_on_completion"])
+            self.assertTrue(policy["pause_automation_on_stall"])
+            self.assertEqual(model_policy["max_stalled_runs"], 2)
+            self.assertEqual(state["max_stalled_runs"], 2)
 
             validate = self.run_cli(
                 "validate",
@@ -166,6 +176,32 @@ class OnboardingWizardTests(unittest.TestCase):
             self.assertTrue(operations["retarget_saved_automation"])
             self.assertTrue(operations["pause_saved_automation"])
             self.assertFalse(operations["push_current_phase_branch"])
+
+    def test_wizard_can_override_safety_pause_defaults(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            repo_root.mkdir()
+
+            proc = self.run_cli(
+                "wizard",
+                "--repo-root",
+                str(repo_root),
+                "--roadmap-slug",
+                "pilot-roadmap",
+                "--max-stalled-runs",
+                "4",
+                "--no-pause-on-completion",
+                "--no-pause-on-stall",
+                "--dry-run",
+                "--json",
+                env=self.env_for(tmp),
+            )
+            report = json.loads(proc.stdout)
+
+            self.assertEqual(report["setup_choices"]["max_stalled_runs"], 4)
+            self.assertFalse(report["setup_choices"]["pause_automation_on_completion"])
+            self.assertFalse(report["setup_choices"]["pause_automation_on_stall"])
+            self.assertEqual(report["model_policy"]["policy"]["max_stalled_runs"], 4)
 
     def test_wizard_write_refuses_existing_artifacts_without_force(self):
         with tempfile.TemporaryDirectory() as tmp:

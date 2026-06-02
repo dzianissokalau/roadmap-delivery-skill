@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "roadmap": "roadmaps/delivered_release_install_and_distribution_trust_roadmap.md",
+  "roadmap_slug": "release-install-and-distribution-trust",
+  "current_phase": "Complete",
+  "branch": "codex/release-install-and-distribution-trust-phase-5",
+  "status": "completed",
+  "review_iterations": 1,
+  "max_review_iterations": 3,
+  "last_verification": {
+    "phase": "Phase 5 - Release Candidate Evidence And Closeout",
+    "verified_at": "2026-06-02T19:51:23Z",
+    "status": "passed",
+    "commands": [
+      {
+        "command": "python3 -m unittest discover -s tests -v",
+        "status": "passed",
+        "summary": "185 tests ran; 1 expected optional Claude binary smoke skipped because the binary is not installed"
+      },
+      {
+        "command": "python3 scripts/build_adapters.py --check --json",
+        "status": "passed",
+        "summary": "Codex and Claude generated package outputs reported status ok with zero diffs, zero errors, and marketplace-readiness status ok"
+      },
+      {
+        "command": "python3 scripts/build_release.py --check --json",
+        "status": "passed",
+        "summary": "Version 0.1.0 artifacts were reproducible across two builds; package artifact validators passed; embedded privacy scan findings were 0",
+        "artifacts": [
+          {
+            "filename": "roadmap-delivery-0.1.0-source.tar.gz",
+            "sha256": "be047674724bf4e40609534be295fc7fa2138b112c2be4d01edbe3b5a5e0ffcf"
+          },
+          {
+            "filename": "roadmap-delivery-codex-skill-0.1.0.tar.gz",
+            "sha256": "fc0bad470528cf7e1d9cdc35404d6d87c7240d310a795029e4ed7274259e82c0"
+          },
+          {
+            "filename": "roadmap-delivery-claude-plugin-0.1.0.tar.gz",
+            "sha256": "9f6443e43b796787e7c2ad23c292673270f82ae7a121493b7205ebab0a81d4ef"
+          },
+          {
+            "filename": "roadmap-delivery-schemas-0.1.0.tar.gz",
+            "sha256": "34b6b8e28fbc9152f325cc40804fdd5fd70c9b731e40bb3b785ce022e742abee"
+          },
+          {
+            "filename": "roadmap-delivery-cli-0.1.0.tar.gz",
+            "sha256": "ea360b8aa7812e947b08363e54e63d63ca5dcd93a4fb5dfe12f2b2cf541744f2"
+          },
+          {
+            "filename": "roadmap-delivery-generic-markdown-pack-0.1.0.tar.gz",
+            "sha256": "c240d91f97f3121a432d2738b3e457b3d31fd05cd077742105ec5bd253e170e2"
+          },
+          {
+            "filename": "roadmap-delivery-0.1.0-manifest.json",
+            "sha256": "8863117d051623fd8b3795d37b5a9d269beae70f09bc4222427070d24c587d9d"
+          },
+          {
+            "filename": "roadmap-delivery-0.1.0-checksums.sha256",
+            "sha256": "669b315b8addaba4deccfa3363e3439081b39b914ad402bf0424fd30fa7b5e71"
+          }
+        ]
+      },
+      {
+        "command": "python3 scripts/check_release_privacy.py --repo-root .",
+        "status": "passed",
+        "summary": "125 files scanned, 0 findings, 0 errors"
+      },
+      {
+        "command": "git diff --check",
+        "status": "passed"
+      }
+    ]
+  },
+  "last_review": {
+    "phase": "Phase 5 - Release Candidate Evidence And Closeout",
+    "file": "automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-5-review-iteration-1.md",
+    "verdict": "delivered",
+    "reviewed_at": "2026-06-02T18:24:46Z",
+    "reviewer_context": "same_context",
+    "summary": "No blocking findings; final deep-review prompt prepared for fresh-context or human review"
+  },
+  "last_delivered_phase": "Phase 5 - Release Candidate Evidence And Closeout",
+  "blocked_reason": null,
+  "last_blocker_repair": {
+    "repaired_at": "2026-06-02T15:23:42Z",
+    "classification": "automation-config",
+    "repair": "Accepted saved ACTIVE readback as operator/manual activation because cwd, model, reasoning, execution environment, state-resolved prompt references, hard-stop guard, and blocked-remediation guard all matched. Updated repository-local durable artifacts without editing the saved automation config."
+  },
+  "approval_policy_path": "automation/release-install-and-distribution-trust/approval_policy.json",
+  "approval_mode": "conservative",
+  "last_approval_policy_readback": {
+    "read_at": "2026-06-02T18:24:46Z",
+    "path": "automation/release-install-and-distribution-trust/approval_policy.json",
+    "status": "valid",
+    "approval_mode": "conservative",
+    "approved_operations": [
+      "edit_phase_owned_files",
+      "write_state_log_review_artifacts",
+      "create_or_switch_phase_branch",
+      "run_verification"
+    ],
+    "pause_automation_on_completion": false,
+    "pause_automation_on_stall": false,
+    "fallback_reason": null
+  },
+  "required_model": "gpt-5.5",
+  "required_reasoning_effort": "xhigh",
+  "configured_automation_model": "gpt-5.5",
+  "configured_automation_reasoning_effort": "xhigh",
+  "configured_automation_status": "PAUSED",
+  "configured_execution_environment": "local",
+  "automation": {
+    "id": "release-install-and-distribution-trust",
+    "kind": "cron",
+    "status": "PAUSED",
+    "rrule": "FREQ=HOURLY;INTERVAL=1",
+    "execution_environment": "local",
+    "cwd": "/Users/dzianissokalau/Documents/projects/roadmap-delivery-automation",
+    "prompt_roadmap": "state:automation/release-install-and-distribution-trust/delivery_state.json",
+    "prompt_artifact_dir": "automation/release-install-and-distribution-trust",
+    "readback_at": "2026-06-02T19:34:22Z",
+    "prompt_path_strategy": "state_resolved",
+    "initial_status_drift": {
+      "requested_status": "PAUSED",
+      "first_readback_status": "ACTIVE",
+      "repair": "Updated the saved app automation to PAUSED and confirmed readback before activation or delivery."
+    }
+  },
+  "last_activation": {
+    "activated_at": "2026-06-02T15:23:42Z",
+    "source": "saved_automation_readback",
+    "status": "ACTIVE"
+  },
+  "last_lifecycle_repair": {
+    "completed_at": "2026-06-02T15:31:36Z",
+    "previous_roadmap": "roadmaps/not_started_release_install_and_distribution_trust_roadmap.md",
+    "new_roadmap": "roadmaps/in_progress_release_install_and_distribution_trust_roadmap.md",
+    "repair": "Renamed the roadmap to the in-progress lifecycle path and updated repository-local references after Phase 0 delivery advanced the roadmap to Phase 1.",
+    "saved_prompt_retarget": "not_required_state_resolved_prompt"
+  },
+  "run_count": 14,
+  "stalled_run_count": 0,
+  "max_stalled_runs": 3,
+  "last_progress_signature": "sha256:e58ad278f40ec4dc8b737357e5dec271515b17ddcefbc80baa7451f707c97779",
+  "last_progress_at": "2026-06-02T19:51:23Z",
+  "last_operator_alert": {
+    "kind": "completed",
+    "file": "automation/release-install-and-distribution-trust/alerts/2026-06-02T18-27-47Z-completed.md",
+    "timestamp": "2026-06-02T18:27:47Z",
+    "reason": "All release install and distribution trust roadmap phases are delivered, final verification passed, the final deep-review prompt is prepared, and the operator manually paused the saved automation.",
+    "next_human_action": "Run the final deep-review prompt from the GitHub review branch before merge review or publication planning.",
+    "notification_sink": "alert_file",
+    "notification_status": "local_alert_only"
+  },
+  "last_automation_pause": {
+    "context": "completion",
+    "decided_at": "2026-06-02T19:34:22Z",
+    "approval_decision": {
+      "context": "completion",
+      "decision": "approved-by-human",
+      "operation": "pause_saved_automation",
+      "reason": "The operator manually paused the saved release-install-and-distribution-trust automation.",
+      "source": "operator_manual_pause"
+    },
+    "status": "paused",
+    "readback_status": "PAUSED",
+    "result": {
+      "paused": true,
+      "status": "paused",
+      "readback_status": "PAUSED",
+      "source": "operator_manual_pause"
+    }
+  },
+  "last_run_quality": "flawless",
+  "last_adaptive_action": {
+    "action": "disabled",
+    "reason": "Adaptive model policy is disabled or absent.",
+    "run_quality": "flawless",
+    "target": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "xhigh"
+    },
+    "target_phase": "finalization"
+  },
+  "model_history": [
+    {
+      "phase": "Phase 0 - Release Trust Contract And Scope",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "disabled",
+      "recorded_at": "2026-06-02T15:28:23Z"
+    },
+    {
+      "phase": "Phase 1 - Licensing Trademark And Support Boundary",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "disabled",
+      "recorded_at": "2026-06-02T15:40:21Z"
+    },
+    {
+      "phase": "Phase 2 - Release Asset And Install Path Hardening",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "high",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "disabled",
+      "recorded_at": "2026-06-02T17:43:18Z"
+    },
+    {
+      "phase": "Phase 3 - Marketplace-Native Package Preparation",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "high",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "disabled",
+      "recorded_at": "2026-06-02T17:57:29Z"
+    },
+    {
+      "phase": "Phase 4 - Public Project Governance Surfaces",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "medium",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "disabled",
+      "recorded_at": "2026-06-02T18:06:28Z"
+    },
+    {
+      "phase": "Phase 5 - Release Candidate Evidence And Closeout",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "disabled",
+      "recorded_at": "2026-06-02T18:24:46Z"
+    }
+  ],
+  "adaptive_escalation_count": 0,
+  "adaptive_deescalation_count": 0,
+  "adaptive_flawless_streak": 0,
+  "auto_advance_after_delivered_review": true,
+  "commit_delivered_phase_locally": false,
+  "push_to_github": true,
+  "github_review_branch": "codex/release-install-and-distribution-trust-phase-5",
+  "github_review_branch_url": "https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/release-install-and-distribution-trust-phase-5",
+  "deep_review_prompt_github_url": "https://github.com/dzianissokalau/roadmap-delivery-skill/blob/codex/release-install-and-distribution-trust-phase-5/automation/release-install-and-distribution-trust/final-deep-review-prompt.md",
+  "all_phases_complete": true,
+  "deep_review_prompt": "automation/release-install-and-distribution-trust/final-deep-review-prompt.md",
+  "final_deep_review_prompt_prepared": true,
+  "final_deep_review_prompt_file": "automation/release-install-and-distribution-trust/final-deep-review-prompt.md",
+  "final_deep_review_status": "prompt-prepared",
+  "final_deep_review_waiver_reason": null,
+  "updated_at": "2026-06-02T19:51:23Z"
+}

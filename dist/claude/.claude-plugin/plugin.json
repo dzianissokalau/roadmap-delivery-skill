@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "roadmap-delivery",
   "displayName": "Roadmap Delivery Skill",
-  "description": "Phase-gated roadmap delivery workflow for Claude Code.",
+  "description": "Local file-backed roadmap delivery workflow package for Claude Code compatibility.",
   "version": "0.1.0",
   "author": {
     "name": "Roadmap Delivery"

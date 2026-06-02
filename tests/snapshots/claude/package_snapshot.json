@@ -3,18 +3,18 @@
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
-      "sha256": "b4b5836c6c282f9f7053834df9f780f0c63bf779ac26826ff24c7d0dee71f1ad",
-      "size": 328
+      "sha256": "23b834611b81f537ec1e7b93e2e872ab65a69aa82c9d4306edd155906d99d2b8",
+      "size": 356
     },
     {
       "path": "README.md",
-      "sha256": "f6a4518a4ae19f009582bcd60e92b1eedf6d7d3ebe30834df6922088309fce66",
-      "size": 1447
+      "sha256": "235efc53bf35679b49126d90df648ac3e2b63d9757a8da2f1e2c5ca086056650",
+      "size": 3069
     },
     {
       "path": "skills/roadmap-delivery-skill/SKILL.md",
-      "sha256": "ce21bdea7f89c7527965f0135ddde2940f469e0af478b5ba371bdf5118052490",
-      "size": 4828
+      "sha256": "5ebb410aef5ed50284f2ab6cd9384ba1462eedfd44d6ec95fc96165feff4e87d",
+      "size": 5536
     },
     {
       "path": "agents/reviewer.md",
@@ -41,11 +41,11 @@
       "size": 3262
     },
     {
-      "core_sha256": "5eb1a4cf17de1b161f5572da67e3b61614c53701590c56b114a97b93ef17d625",
+      "core_sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
       "core_size": 7819,
       "core_source": "core/references/model-policy-and-stall-control.md",
       "path": "skills/roadmap-delivery-skill/references/model-policy-and-stall-control.md",
-      "sha256": "5eb1a4cf17de1b161f5572da67e3b61614c53701590c56b114a97b93ef17d625",
+      "sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
       "size": 7819
     },
     {

@@ -5,15 +5,57 @@ local Claude Code plugin package snapshot. The package includes the roadmap
 delivery skill, canonical references, a read-only reviewer agent, and safety
 hook reminders.
 
-## Check The Generated Package
+The generated Claude plugin package is an Apache-2.0 repository artifact. Claude,
+Claude Code, and Anthropic names in these instructions describe compatibility
+and install targets; they do not imply endorsement, certification, sponsorship,
+or official vendor status. See `docs/trademark-and-licensing.md` for the full
+boundary.
+
+## Short Path
+
+Build the local release artifacts, extract the Claude plugin package into a
+temporary plugin directory, and run the offline validation commands before
+touching an active plugin directory:
+
+```bash
+export SMOKE_HOME="$(mktemp -d)"
+python3 scripts/build_release.py --output-dir dist --json
+mkdir -p "$SMOKE_HOME/claude/plugins/roadmap-delivery"
+tar -xzf dist/roadmap-delivery-claude-plugin-0.1.0.tar.gz \
+  -C "$SMOKE_HOME/claude/plugins/roadmap-delivery" \
+  --strip-components=1
+```
+
+## Verification Path
 
 From the repository root:
 
 ```bash
 python3 scripts/build_adapters.py --adapter claude --check
-python3 scripts/build_release.py --check
+python3 scripts/build_release.py --check --json
+python3 scripts/check_release_privacy.py --repo-root .
+python3 -m unittest tests.test_install_smoke -v
 python3 -m json.tool dist/claude/.claude-plugin/plugin.json >/dev/null
 ```
+
+## Marketplace Readiness Checklist
+
+Use this checklist when evaluating whether the Claude plugin package is ready
+for a human-approved marketplace, registry, or public distribution submission.
+The automation may prepare this evidence locally, but it must not submit,
+publish, sync an installed plugin, or use credentials.
+
+| Area | Claude package evidence |
+|---|---|
+| Required metadata | `dist/claude/.claude-plugin/plugin.json` declares plugin identity, version `0.1.0`, author, description, and Apache-2.0 license; release notes and the release manifest record checksums and package identity. |
+| Package contents | `.claude-plugin/plugin.json`, `README.md`, `skills/roadmap-delivery-skill/`, `agents/reviewer.md`, and `hooks/` are generated from adapter metadata and checked by `python3 scripts/build_adapters.py --adapter claude --check`. |
+| Compatibility limits | Support is limited to the generated local Claude Code plugin package, file-backed validators, repository-local review artifacts, safety hook reminders, and optional live `claude --help` smoke coverage. |
+| Privacy limits | Release-bound packages must exclude `automation/`, `roadmaps/`, `.git/`, `.codex/`, local alerts, review transcripts, private paths, and credentials; run `python3 scripts/check_release_privacy.py --repo-root .`. |
+| Submission blockers | Marketplace submission, package registry upload, branch or tag pushes, repository setting changes, installed-plugin synchronization, and credential use require explicit human approval. |
+
+The native Claude path for this repository is the generated local plugin
+package. Manual fallback is direct staging into an isolated `CLAUDE_PLUGIN_DIR`
+after the checks above pass.
 
 ## Stage An Isolated Plugin
 
@@ -46,6 +88,10 @@ CLAUDE_PLUGIN_DIR="$SMOKE_HOME/claude/plugins" claude --help
 
 If `claude` is not installed, skip only the host binary check. The plugin
 structure and file-backed runtime checks still run offline.
+
+The supported behavior is limited to the generated local plugin package,
+repository validators, documented staging flow, and offline smoke coverage.
+Optional live binary checks do not prove full host feature parity.
 
 ## Prepare Demo Automation Readback
 
@@ -105,6 +151,19 @@ python3 -m roadmap_delivery.cli validate \
 
 For blocked-remediation and model-policy-mismatch fixtures, follow
 `examples/demo-roadmap/runtime-checklist.md` in a temporary copy of the fixture.
+
+## Rollback Or Cleanup
+
+Remove the temporary smoke home when validation is complete:
+
+```bash
+rm -rf "$SMOKE_HOME"
+```
+
+If you later choose to update an active Claude plugin directory, keep a backup
+of the previous `roadmap-delivery` plugin directory. Roll back by restoring that
+backup or by removing only the staged `roadmap-delivery` plugin; do not delete
+unrelated local plugins.
 
 ## Updating An Active Plugin
 

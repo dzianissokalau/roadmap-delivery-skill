@@ -3,8 +3,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "42560b3ab8c7aa6f2953f1add312a3bd82945c2206fc71e63650e355ba9839aa",
-      "size": 4117
+      "sha256": "9020e02bf033365366ac992edbedb28e7eceba41ac1bbe9dbf4dd19378f55f67",
+      "size": 4908
     },
     {
       "path": "agents/openai.yaml",
@@ -20,11 +20,11 @@
       "size": 8441
     },
     {
-      "core_sha256": "5eb1a4cf17de1b161f5572da67e3b61614c53701590c56b114a97b93ef17d625",
+      "core_sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
       "core_size": 7819,
       "core_source": "core/references/model-policy-and-stall-control.md",
       "path": "references/model-policy-and-stall-control.md",
-      "sha256": "9fb694bc4e0ba7938de36b00349f90dee3959e2497d15ffe99ac78715d91ee78",
+      "sha256": "6ba61895dffd38554b7b7c39f92982121a1fbdfec4dca9a88324c7bcfaeb197e",
       "size": 16939
     },
     {
@@ -48,7 +48,7 @@
       "core_size": 5176,
       "core_source": "core/references/setup-automation.md",
       "path": "references/setup-automation.md",
-      "sha256": "4ddc9590603d1f9f78942025418f846bf0a655b0d3c3a25e3e31c0dbfecce176",
+      "sha256": "97c792b0dbaebf807a48e68fb5a88c5bd0809d092dfbd937de722352b56a7fd0",
       "size": 17809
     },
     {
@@ -56,7 +56,7 @@
       "core_size": 3187,
       "core_source": "core/references/state-log-and-branches.md",
       "path": "references/state-log-and-branches.md",
-      "sha256": "0e8b7b8161c2b13ca6503dec15b24cde54a9b41e85ed5d5347c5983956f46993",
+      "sha256": "e2d5e3ef98a89d8b8daf6ea7bb8491f8c3731271ab207dfe7d061b4eac60607a",
       "size": 10919
     },
     {
