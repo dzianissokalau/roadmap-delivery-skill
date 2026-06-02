@@ -692,11 +692,19 @@ git diff --check
   https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/release-install-and-distribution-trust-phase-5
 - Direct final deep-review prompt:
   https://github.com/dzianissokalau/roadmap-delivery-skill/blob/codex/release-install-and-distribution-trust-phase-5/automation/release-install-and-distribution-trust/final-deep-review-prompt.md
+- External deep-review result:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-final-deep-review-external.md`
+- External deep-review verdict: `ready-for-human-merge-review`.
+- External deep-review fixes: generated `.egg-info` / `.dist-info` metadata is
+  excluded from source archives, and operator-local workspace paths are
+  redacted from release-trust automation artifacts.
+- Post-fix full test suite result: 188 tests ran with 1 expected optional
+  Claude binary smoke skipped because the binary is not installed.
 
 ## Human Follow-Up
 
-- Run the final deep-review prompt in a fresh context from the GitHub review
-  branch before merge review or publication planning.
-- Decide separately whether to merge, tag, publish a GitHub Release, submit
+- The external deep review is complete and the two actionable findings are
+  fixed. The operator approved pushing the branch and merging it to `main`.
+- Decide separately whether to tag, publish a GitHub Release, submit
   marketplace packages, sync installed skills/plugins, or use credentials.
-  None of those actions are implied by the review branch push.
+  None of those actions are implied by the merge.

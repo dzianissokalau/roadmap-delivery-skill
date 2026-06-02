@@ -1,5 +1,6 @@
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -109,6 +110,29 @@ class ReleaseBuilderTests(unittest.TestCase):
             manifest = json.loads((output_dir / "roadmap-delivery-0.1.0-manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["compatibility"]["supported_host_packages"], ["codex", "claude"])
             self.assertEqual(manifest["compatibility"]["claude_plugin_path"], "dist/claude")
+
+    def test_source_archives_ignore_generated_package_metadata(self):
+        egg_info = REPO_ROOT / "src" / "roadmap_delivery_release_test.egg-info"
+        self.assertFalse(egg_info.exists(), f"Test fixture path already exists: {egg_info}")
+        try:
+            egg_info.mkdir()
+            (egg_info / "PKG-INFO").write_text("Name: roadmap-delivery-release-test\n", encoding="utf-8")
+            (egg_info / "SOURCES.txt").write_text("generated metadata\n", encoding="utf-8")
+            with tempfile.TemporaryDirectory() as tmp:
+                output_dir = Path(tmp) / "dist"
+                report = self.build_release(output_dir)
+                artifacts = {item["kind"]: Path(item["path"]) for item in report["artifacts"]}
+
+                for kind in ("source_archive", "cli_source_package"):
+                    with self.subTest(kind=kind):
+                        with tarfile.open(artifacts[kind], "r:gz") as archive:
+                            names = archive.getnames()
+                        self.assertFalse(
+                            any(".egg-info/" in name or name.endswith(".egg-info") for name in names),
+                            f"{kind} should exclude generated egg-info metadata",
+                        )
+        finally:
+            shutil.rmtree(egg_info, ignore_errors=True)
 
     def test_manifest_records_release_notes_packages_and_capabilities(self):
         with tempfile.TemporaryDirectory() as tmp:

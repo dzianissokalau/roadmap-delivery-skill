@@ -37,7 +37,7 @@ Automation: `release-install-and-distribution-trust`
 - Model: `gpt-5.5`
 - Reasoning effort: `xhigh`
 - Execution environment: `local`
-- Workspace: `/Users/dzianissokalau/Documents/projects/roadmap-delivery-automation`
+- Workspace: `<local-repo-root>`
 
 ### Repository Artifacts
 
@@ -60,7 +60,7 @@ Automation: `release-install-and-distribution-trust`
 
 - Saved status: `PAUSED`
 - Saved cwd:
-  `/Users/dzianissokalau/Documents/projects/roadmap-delivery-automation`
+  `<local-repo-root>`
 - Saved model: `gpt-5.5`
 - Saved reasoning effort: `xhigh`
 - Saved execution environment: `local`
@@ -99,7 +99,7 @@ Branch: `codex/release-install-and-distribution-trust-phase-0`
 
 - Saved automation TOML readback: `ACTIVE`, local execution, `gpt-5.5`,
   `xhigh`, cwd
-  `/Users/dzianissokalau/Documents/projects/roadmap-delivery-automation`.
+  `<local-repo-root>`.
 - Prompt references stable automation artifacts and resolves the roadmap from
   `delivery_state.json`.
 - Prompt includes Blocked Remediation Mode and completed-state hard-stop
@@ -873,6 +873,74 @@ Branch: `codex/release-install-and-distribution-trust-phase-5`
 - `python3 scripts/check_release_privacy.py --repo-root .`: passed; 125 files
   scanned, 0 findings, 0 errors.
 - `git diff --check`: passed.
-- `python3 skill/roadmap-delivery-skill/scripts/validate_delivery_artifacts.py --repo-root /Users/dzianissokalau/Documents/projects/roadmap-delivery-automation --roadmap-slug release-install-and-distribution-trust --automation-id release-install-and-distribution-trust --json`:
+- `python3 skill/roadmap-delivery-skill/scripts/validate_delivery_artifacts.py --repo-root . --roadmap-slug release-install-and-distribution-trust --automation-id release-install-and-distribution-trust --json`:
   passed with zero errors and the expected `worktree_dirty` warning before the
   review branch commit.
+
+## External Deep Review Fixes - 2026-06-02T20:41:08Z
+
+Status: completed
+Branch: `codex/release-install-and-distribution-trust-phase-5`
+
+### Review Result
+
+- External final deep-review verdict: `ready-for-human-merge-review`.
+- Sanitized review artifact:
+  `automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-final-deep-review-external.md`.
+- `final_deep_review_status` is now `review-complete`.
+
+### Fixes
+
+- Fixed the medium release hermeticity finding by excluding generated
+  `.egg-info` and `.dist-info` directories from release source archive file
+  collection.
+- Added a regression test that creates temporary `src/*.egg-info/` metadata and
+  asserts both source archive variants omit it.
+- Fixed the low privacy finding by replacing operator-local workspace paths in
+  release-trust automation state/log evidence with `<local-repo-root>`.
+- Added a regression test that scans release-trust automation JSON, Markdown,
+  and JSONL artifacts for unsanitized operator home path prefixes.
+
+### Verification
+
+- `python3 -m unittest discover -s tests -v`: passed; 188 tests ran with 1
+  expected optional Claude binary smoke skipped because the binary is not
+  installed.
+- `python3 scripts/build_adapters.py --check --json`: passed; Codex and Claude
+  generated package outputs reported status `ok`, zero diffs, zero errors, and
+  marketplace-readiness status `ok`.
+- `python3 scripts/build_release.py --check --json`: passed; version `0.1.0`
+  artifacts were reproducible across two builds, package artifact validators
+  passed, and embedded privacy scan findings were 0.
+- Latest release artifact fingerprints:
+  `roadmap-delivery-0.1.0-source.tar.gz`
+  `3ef3d0066d20befdc2dd34b9133e997b4f0676af4344270bf7772db094226374`;
+  `roadmap-delivery-codex-skill-0.1.0.tar.gz`
+  `fc0bad470528cf7e1d9cdc35404d6d87c7240d310a795029e4ed7274259e82c0`;
+  `roadmap-delivery-claude-plugin-0.1.0.tar.gz`
+  `9f6443e43b796787e7c2ad23c292673270f82ae7a121493b7205ebab0a81d4ef`;
+  `roadmap-delivery-schemas-0.1.0.tar.gz`
+  `34b6b8e28fbc9152f325cc40804fdd5fd70c9b731e40bb3b785ce022e742abee`;
+  `roadmap-delivery-cli-0.1.0.tar.gz`
+  `ea360b8aa7812e947b08363e54e63d63ca5dcd93a4fb5dfe12f2b2cf541744f2`;
+  `roadmap-delivery-generic-markdown-pack-0.1.0.tar.gz`
+  `c240d91f97f3121a432d2738b3e457b3d31fd05cd077742105ec5bd253e170e2`;
+  `roadmap-delivery-0.1.0-manifest.json`
+  `5ceeaa2955dd3dd05c4a9e5ac091dfc727e4bd823098495d938379cde600f994`;
+  and `roadmap-delivery-0.1.0-checksums.sha256`
+  `477daa02493265eb2534bdfe646385d726d703ce76fd9c95f1335f8158380241`.
+- `python3 scripts/check_release_privacy.py --repo-root .`: passed; 125 files
+  scanned, 0 findings, 0 errors.
+- `git diff --check`: passed.
+- `python3 skill/roadmap-delivery-skill/scripts/validate_delivery_artifacts.py --repo-root . --roadmap-slug release-install-and-distribution-trust --automation-id release-install-and-distribution-trust --json`:
+  passed with zero errors and the expected `worktree_dirty` warning before this
+  review-fix commit.
+
+### Boundary
+
+- Operator explicitly approved branch push and merge to `main` after these
+  fixes.
+- No release tag, GitHub Release, package publication, marketplace submission,
+  credential use, repository setting change, force push, destructive git
+  operation, or installed skill/plugin sync was performed by this review-fix
+  pass.

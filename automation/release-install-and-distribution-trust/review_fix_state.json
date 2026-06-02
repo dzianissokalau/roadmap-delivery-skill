@@ -7,10 +7,17 @@
   "max_review_iterations": 3,
   "active_review_file": null,
   "last_verdict": "delivered",
-  "last_review_file": "automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-phase-5-review-iteration-1.md",
+  "last_review_file": "automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-final-deep-review-external.md",
   "last_delivered_phase": "Phase 5 - Release Candidate Evidence And Closeout",
   "blocked_reason": null,
-  "updated_at": "2026-06-02T19:34:22Z",
+  "updated_at": "2026-06-02T20:41:08Z",
   "final_deep_review_prompt_file": "automation/release-install-and-distribution-trust/final-deep-review-prompt.md",
-  "final_deep_review_status": "prompt-prepared"
+  "final_deep_review_status": "review-complete",
+  "external_deep_review": {
+    "file": "automation/release-install-and-distribution-trust/reviews/release-install-and-distribution-trust-final-deep-review-external.md",
+    "verdict": "ready-for-human-merge-review",
+    "recorded_at": "2026-06-02T20:41:08Z",
+    "fixed_findings": 2,
+    "informational_findings_recorded": 2
+  }
 }

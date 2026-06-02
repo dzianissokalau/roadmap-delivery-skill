@@ -191,7 +191,8 @@ def release_notes_path(version: str) -> str:
 
 
 def should_skip_file(path: Path) -> bool:
-    return path.name == ".DS_Store" or path.suffix == ".pyc" or "__pycache__" in path.parts
+    generated_metadata = any(part.endswith((".egg-info", ".dist-info")) for part in path.parts)
+    return path.name == ".DS_Store" or path.suffix == ".pyc" or "__pycache__" in path.parts or generated_metadata
 
 
 def iter_release_files(repo_root: Path, paths: Sequence[str]) -> Iterable[Tuple[Path, Path]]:

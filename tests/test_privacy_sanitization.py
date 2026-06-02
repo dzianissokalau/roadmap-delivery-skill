@@ -82,6 +82,19 @@ class PrivacySanitizationTests(unittest.TestCase):
         self.assertEqual(report["findings"][0]["code"], "aws_access_key")
         self.assertEqual(report["findings"][0]["match"], "<redacted>")
 
+    def test_release_trust_automation_artifacts_redact_operator_paths(self):
+        automation_dir = REPO_ROOT / "automation" / "release-install-and-distribution-trust"
+        self.assertTrue(automation_dir.is_dir(), automation_dir)
+        checked = []
+
+        for path in sorted(automation_dir.rglob("*")):
+            if path.is_file() and path.suffix in {".json", ".md", ".jsonl"}:
+                checked.append(path.relative_to(REPO_ROOT).as_posix())
+                text = path.read_text(encoding="utf-8")
+                self.assertNotIn("/Users/", text, path)
+
+        self.assertGreater(len(checked), 10)
+
     def test_bundle_scan_rejects_forbidden_release_paths(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
