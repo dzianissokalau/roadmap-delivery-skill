@@ -1,8 +1,9 @@
 # Evidence Benchmark
 
 This document defines the proof metrics for onboarding demos and benchmark
-artifacts. It does not claim measured outcomes yet; later phases build the
-fixtures and harness that report these metrics from repository artifacts.
+artifacts. The repository-local harness reports measured outcomes from fixture
+scenarios only; it does not claim productivity, ROI, compliance, model speed,
+or vendor comparison results.
 
 The benchmark should measure evidence quality and gate behavior, not generic
 productivity.
@@ -90,6 +91,50 @@ A benchmark or case study should record:
 The safe demo benchmark must run without network access, credentials, or live
 host automation. Optional live host checks may be reported separately and must
 not be required for the local score.
+
+## Local Benchmark Command
+
+Run the benchmark from the repository root:
+
+```bash
+python3 -m roadmap_delivery.cli benchmark \
+  --repo-root . \
+  --json \
+  --output /tmp/roadmap-delivery-evidence-benchmark.json
+```
+
+The command copies `examples/demo-roadmap/` into temporary repositories,
+creates temporary saved automation configs, runs `validate` and `inspect`, and
+emits a JSON report. It does not edit live Codex automations, use credentials,
+publish telemetry, or mutate the source fixture.
+
+## Measured Case Study
+
+Current fixture results:
+
+| Field | Result |
+|---|---:|
+| Scenarios | 5 |
+| Invalid scenarios | 4 |
+| Invalid advancement caught | 4 of 4 |
+| Invalid advancement caught by validation errors | 1 |
+| Evidence completeness score | 7 of 10 |
+| Clean-fixture false-positive warnings | 0 |
+
+Measured scenarios:
+
+| Scenario | Detection |
+|---|---|
+| Clean delivery evidence | `validate` and `inspect` pass with no warnings. |
+| Missing review artifact | Evidence check reports `review_artifact_missing`; validation also warns `empty_review_dir`. |
+| Stale lifecycle filename | Validation errors with `roadmap_lifecycle_filename_mismatch`. |
+| Mismatched automation status | Evidence check reports `automation_status_mismatch`. |
+| Insufficient verification evidence | Evidence check reports `verification_evidence_missing`. |
+
+The evidence completeness score is intentionally not perfect because several
+invalid fixtures keep some control-plane fields intact while one required field
+is missing or contradictory. The result should be read as a fixture coverage
+report, not a claim about all possible roadmap failures.
 
 ## Reporting Language
 

@@ -18,7 +18,8 @@ publication, promotion, or destructive git operations.
 
 ## Path 1: Safe Demo First
 
-Run these commands from the repository root:
+Start with Demo A, the normal evidence trail. Run these commands from the
+repository root:
 
 ```bash
 python3 -m roadmap_delivery.cli validate \
@@ -47,6 +48,24 @@ warn that no live saved automation config exists in your home directory. That
 is acceptable for the fixture because the smoke tests use a temporary home and
 the committed sample config under `examples/demo-roadmap/automation-config/`.
 
+For a strict run with saved automation readback in a temporary home, follow
+`examples/demo-roadmap/README.md#demo-a-normal-evidence-trail`. The fields to
+look for are `current_phase`, `last_delivered_phase`, `allowed_operations`,
+`required_model`, `required_reasoning_effort`,
+`configured_automation_model`, and `blocked_remediation_required: false`.
+
+Then run Demo B, the policy-mismatch recovery path:
+
+```bash
+less examples/demo-roadmap/README.md
+```
+
+Demo B intentionally validates a temporary saved automation config with the
+wrong model and reasoning effort, then repairs only that temporary config. The
+first report should include `automation_model_mismatch` and
+`automation_reasoning_mismatch`; the repaired strict validation should return
+`status: ok` with no findings.
+
 Use the runtime checklist when you want a fuller offline exercise:
 
 ```bash
@@ -56,6 +75,29 @@ less examples/demo-roadmap/runtime-checklist.md
 The checklist copies the demo into a temporary directory, stages generated
 Codex and Claude package snapshots in temporary homes, and triggers blocked-run
 and model-policy mismatch scenarios without changing a live install.
+
+The setup wizard has its own safe local fixture recipes:
+
+```bash
+less examples/onboarding-wizard/README.md
+```
+
+Those commands preview or write starter artifacts inside temporary repository
+roots and leave live host automation creation disabled.
+
+To see the measured proof artifact for the local fixtures:
+
+```bash
+python3 -m roadmap_delivery.cli benchmark \
+  --repo-root . \
+  --json \
+  --output /tmp/roadmap-delivery-evidence-benchmark.json
+```
+
+The benchmark copies fixture data into temporary repositories, creates
+temporary saved automation configs, and reports exactly which invalid
+advancement scenarios were caught. Treat it as local fixture evidence, not a
+claim about every possible roadmap or release.
 
 ## Path 2: Real-Project Scaffold Dry Run
 

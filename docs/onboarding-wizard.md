@@ -219,11 +219,25 @@ contract.
 
 The wizard should offer a demo route before real-project writes:
 
-- validate `examples/demo-roadmap`
-- inspect `examples/demo-roadmap`
-- show the blocked-remediation fixture
-- show the model-policy mismatch fixture
-- show the scaffold dry-run output
+- Demo A: validate and inspect `examples/demo-roadmap` so the user can see a
+  normal evidence trail with one delivered phase, one current phase, approval
+  operations, model policy, saved automation readback, and no required blocked
+  remediation.
+- Demo B: run the model-policy mismatch fixture in a temporary home, confirm
+  validation blocks advancement with `automation_model_mismatch` and
+  `automation_reasoning_mismatch`, repair only the temporary saved config, and
+  confirm strict validation returns `status: ok`.
+- Wizard preview: run `wizard --dry-run --json` in a temporary repository and
+  verify `planned_create` matches `would_create` while
+  `live_automation.created` remains false.
+- Wizard write: run `wizard --write --json` in a temporary git checkout and
+  verify readback records expected setup warnings without creating live host
+  automation.
+- Scaffold dry run: run `scaffold --dry-run --json` and confirm it writes
+  nothing.
 
 The demo route must not require a live host binary. If a host binary is present,
 live checks may be offered as optional follow-up only.
+
+Executable recipes live in `examples/demo-roadmap/README.md` and
+`examples/onboarding-wizard/README.md`.

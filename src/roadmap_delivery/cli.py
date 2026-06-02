@@ -11,6 +11,7 @@ from . import __version__
 from .approval import APPROVAL_MODES, read_approval_policy
 from .policy import ALLOWED_REASONING_EFFORTS
 from .reports import inspect as inspect_state
+from .reports import build_evidence_benchmark, print_benchmark_text
 from .scaffold import (
     ScaffoldOptions,
     apply_scaffold_plan as apply_scaffold_artifact_plan,
@@ -257,6 +258,35 @@ def run_wizard(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_benchmark(args: argparse.Namespace) -> int:
+    repo_root = _repo_root(args.repo_root)
+    fixture_root = Path(args.fixture_root).expanduser()
+    if not fixture_root.is_absolute():
+        fixture_root = repo_root / fixture_root
+    report = build_evidence_benchmark(
+        repo_root,
+        fixture_root=fixture_root,
+        roadmap_slug=args.roadmap_slug,
+        automation_id=args.automation_id,
+    )
+    report["cli_schema_version"] = CLI_SCHEMA_VERSION
+    report["command"] = "benchmark"
+
+    if args.output:
+        output_path = Path(args.output).expanduser()
+        if not output_path.is_absolute():
+            output_path = repo_root / output_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        report["output_path"] = str(output_path)
+        output_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    if args.json:
+        _print_json(report)
+    else:
+        print_benchmark_text(report)
+    return 0 if report.get("status") == "passed" else 1
+
+
 def build_package_plan(args: argparse.Namespace) -> Dict[str, Any]:
     repo_root = _repo_root(args.repo_root)
     adapter = args.adapter
@@ -418,6 +448,18 @@ def build_parser() -> argparse.ArgumentParser:
     wizard_parser.add_argument("--force", action="store_true", help="Allow writing into existing artifact paths.")
     add_strict_flags(wizard_parser)
     wizard_parser.set_defaults(func=run_wizard, parser=wizard_parser)
+
+    benchmark_parser = subparsers.add_parser("benchmark", help="Run local evidence benchmark fixture scenarios.")
+    add_common_flags(benchmark_parser)
+    benchmark_parser.add_argument(
+        "--fixture-root",
+        default="examples/demo-roadmap",
+        help="Repository-local fixture root to copy for scenario runs.",
+    )
+    benchmark_parser.add_argument("--roadmap-slug", default="demo-roadmap", help="Fixture roadmap slug.")
+    benchmark_parser.add_argument("--automation-id", default="demo-roadmap-delivery", help="Fixture automation id.")
+    benchmark_parser.add_argument("--output", help="Optional path for a JSON benchmark report.")
+    benchmark_parser.set_defaults(func=run_benchmark, parser=benchmark_parser)
 
     package_parser = subparsers.add_parser("package", help="Plan host package rendering without writing files.")
     add_common_flags(package_parser)

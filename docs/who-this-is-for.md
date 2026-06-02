@@ -67,6 +67,10 @@ to review the generated contract before using it for real project work.
 Before using the workflow on a real project, answer these questions:
 
 - Can the safe demo path run locally without credentials or live host edits?
+- Can the normal evidence demo show delivered review evidence and model-policy
+  readback from local fixture files?
+- Can the policy-mismatch demo block advancement and then recover by changing
+  only temporary fixture config?
 - Can each phase name the files it owns?
 - Can verification run from the repository checkout?
 - Can a reviewer decide `delivered`, `needs-fix`, or `blocked` from local

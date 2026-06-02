@@ -1,19 +1,19 @@
 {
-  "roadmap": "roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md",
+  "roadmap": "roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md",
   "roadmap_slug": "onboarding-wizard-and-proof-demos",
-  "current_phase": "Phase 2 - Wizard Implementation And Scaffold Integration",
-  "status": "not_started",
-  "review_iterations": 0,
+  "current_phase": "Complete",
+  "status": "completed",
+  "review_iterations": 1,
   "max_review_iterations": 3,
   "active_review_file": null,
   "last_verdict": "delivered",
-  "last_review_file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-phase-1-review-iteration-1.md",
-  "last_delivered_phase": "Phase 1 - Setup Wizard UX And CLI Contract",
+  "last_review_file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md",
+  "last_delivered_phase": "Phase 5 - Quickstart Documentation And Closeout",
   "blocked_reason": null,
   "last_blocked_remediation": {
-    "checked_at": "2026-06-02T10:05:28Z",
+    "checked_at": "2026-06-02T10:31:03Z",
     "classification": "external-decision-local-repair",
-    "result": "Operator requested xhigh reasoning for all stages; roadmap and phase_model_policy.json now match saved automation readback, so no saved automation retarget is required."
+    "result": "Operator instruction unblocked branch drift; active workflow switched back to the Phase 2 branch and Phase 2 review iteration 2 delivered."
   },
-  "updated_at": "2026-06-02T10:05:28Z"
+  "updated_at": "2026-06-02T12:23:56Z"
 }

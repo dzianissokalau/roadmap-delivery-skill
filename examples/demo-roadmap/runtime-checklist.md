@@ -165,3 +165,31 @@ python3 -m roadmap_delivery.cli validate \
 
 The validate command should return nonzero and report
 `automation_model_mismatch` plus `automation_reasoning_mismatch`.
+
+Repair only the temporary saved config and validate again:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import os
+
+repo = Path(os.environ["SMOKE_REPO"]).resolve()
+home = Path(os.environ["SMOKE_HOME"])
+source = repo / "automation-config" / "demo-roadmap-delivery" / "automation.toml"
+target = home / ".codex" / "automations" / "demo-roadmap-delivery" / "automation.toml"
+text = source.read_text(encoding="utf-8")
+text = text.replace('cwds = ["."]', f'cwds = ["{repo}"]')
+target.write_text(text, encoding="utf-8")
+PY
+
+AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR="$SMOKE_HOME/.codex/automations" \
+PYTHONPATH="$PWD/src" \
+python3 -m roadmap_delivery.cli validate \
+  --repo-root "$SMOKE_REPO" \
+  --roadmap-slug demo-roadmap \
+  --automation-id demo-roadmap-delivery \
+  --strict \
+  --json
+```
+
+The repaired report should return `status: ok` and no findings.

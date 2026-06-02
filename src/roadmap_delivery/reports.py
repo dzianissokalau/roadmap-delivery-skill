@@ -7,7 +7,9 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sys
+import tempfile
 from typing import Any, Dict, List, Optional
 
 from .adaptive import adaptive_target_from_state, validate_adaptive_model_policy
@@ -36,12 +38,50 @@ from .policy import (
     reasoning_effort_satisfies,
 )
 from .progress import ProgressSignatureError, build_run_result
-from .state import JsonObjectError, load_json_object
+from .state import JsonObjectError, load_json_object, write_json_object
 from .toml import parse_minimal_toml
 
 
 DEFAULT_AUTOMATIONS_DIR = Path.home() / ".codex" / "automations"
 AUTOMATIONS_DIR = Path(os.environ.get("AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR", str(DEFAULT_AUTOMATIONS_DIR))).expanduser()
+EVIDENCE_BENCHMARK_SCHEMA_VERSION = 1
+EVIDENCE_BENCHMARK_SCENARIOS = (
+    {
+        "id": "clean_delivery",
+        "name": "Clean delivery evidence",
+        "expected_valid": True,
+        "expected_issue_codes": [],
+        "description": "The committed demo fixture should validate and inspect cleanly.",
+    },
+    {
+        "id": "missing_review_artifact",
+        "name": "Missing review artifact",
+        "expected_valid": False,
+        "expected_issue_codes": ["review_artifact_missing"],
+        "description": "State points at a delivered review file that is absent from the fixture.",
+    },
+    {
+        "id": "stale_lifecycle_filename",
+        "name": "Stale lifecycle filename",
+        "expected_valid": False,
+        "expected_issue_codes": ["roadmap_lifecycle_filename_mismatch"],
+        "description": "An active Phase 1 roadmap is recorded under a not_started lifecycle filename.",
+    },
+    {
+        "id": "mismatched_automation_status",
+        "name": "Mismatched automation status",
+        "expected_valid": False,
+        "expected_issue_codes": ["automation_status_mismatch"],
+        "description": "State records ACTIVE while the saved temporary automation config reads PAUSED.",
+    },
+    {
+        "id": "insufficient_verification_evidence",
+        "name": "Insufficient verification evidence",
+        "expected_valid": False,
+        "expected_issue_codes": ["verification_evidence_missing"],
+        "description": "The delivered state keeps a passed verification record without concrete checks.",
+    },
+)
 DEEP_REVIEW_FILENAMES = (
     "deep_review_prompt.md",
     "deep_review_prompt.txt",
@@ -77,8 +117,557 @@ FINAL_DEEP_REVIEW_WAIVER_REASON_KEYS = (
 LIFECYCLE_ACTIVE_STATE_STATUSES = {"active", "in progress", "in-progress"}
 
 
+class EvidenceBenchmarkError(RuntimeError):
+    """Raised when the local evidence benchmark cannot build a fixture."""
+
+
 def add_warning(warnings: List[Dict[str, str]], code: str, message: str) -> None:
     warnings.append({"code": code, "message": message})
+
+
+def report_status(report: Dict[str, Any]) -> str:
+    if report.get("errors"):
+        return "error"
+    if report.get("warnings"):
+        return "warning"
+    return "ok"
+
+
+def finding_codes(report: Dict[str, Any], section: str) -> List[str]:
+    return [str(item.get("code")) for item in report.get(section, []) if item.get("code")]
+
+
+def finding_issues(report: Dict[str, Any]) -> List[Dict[str, Any]]:
+    issues: List[Dict[str, Any]] = []
+    for section, source in (("errors", "validation_error"), ("warnings", "validation_warning")):
+        for item in report.get(section, []):
+            code = str(item.get("code") or "unknown")
+            issues.append(
+                {
+                    "code": code,
+                    "source": source,
+                    "message": str(item.get("message") or ""),
+                    "path": item.get("path"),
+                    "next_action": next_action_for_issue(code),
+                }
+            )
+    return issues
+
+
+def next_action_for_issue(code: str) -> str:
+    actions = {
+        "review_artifact_missing": "Restore the referenced delivered review artifact before advancing.",
+        "roadmap_lifecycle_filename_mismatch": "Align roadmap lifecycle filename with roadmap status and current phase.",
+        "automation_status_mismatch": "Read back the saved automation status and update state or config before delivery.",
+        "verification_evidence_missing": "Rerun required verification and record concrete command evidence.",
+        "automation_model_mismatch": "Retarget the saved automation or update approved model policy before implementation.",
+        "automation_reasoning_mismatch": "Run with sufficient reasoning or change approved model policy before implementation.",
+    }
+    return actions.get(code, "Inspect the cited artifact and repair it before phase advancement.")
+
+
+def relative_path(repo_root: Path, path: Optional[Path]) -> Optional[str]:
+    if path is None:
+        return None
+    try:
+        return str(path.resolve().relative_to(repo_root.resolve()))
+    except ValueError:
+        return str(path)
+
+
+def rewrite_toml_string(text: str, key: str, value: str) -> str:
+    replacement = f"{key} = {json.dumps(value)}"
+    pattern = re.compile(rf"^{re.escape(key)}\s*=.*$", re.MULTILINE)
+    if pattern.search(text):
+        return pattern.sub(replacement, text)
+    suffix = "" if text.endswith("\n") else "\n"
+    return f"{text}{suffix}{replacement}\n"
+
+
+def write_benchmark_automation_config(
+    fixture_root: Path,
+    fixture_repo: Path,
+    automations_dir: Path,
+    automation_id: str,
+    *,
+    status: Optional[str] = None,
+) -> None:
+    source = fixture_root / "automation-config" / automation_id / "automation.toml"
+    if not source.exists():
+        raise EvidenceBenchmarkError(f"Benchmark automation config is missing: {source}")
+    text = source.read_text(encoding="utf-8")
+    text = text.replace('cwds = ["."]', "cwds = [" + json.dumps(str(fixture_repo)) + "]")
+    if status:
+        text = rewrite_toml_string(text, "status", status)
+    target = automations_dir / automation_id
+    target.mkdir(parents=True, exist_ok=True)
+    (target / "automation.toml").write_text(text, encoding="utf-8")
+
+
+def run_benchmark_git(repo_root: Path, args: List[str], reason: str) -> None:
+    proc = run_git(repo_root, args)
+    if proc.returncode != 0:
+        detail = proc.stderr.strip() or proc.stdout.strip() or "git command failed"
+        raise EvidenceBenchmarkError(f"{reason}: {detail}")
+
+
+def prepare_benchmark_repo(fixture_root: Path, destination: Path) -> None:
+    shutil.copytree(fixture_root, destination)
+    run_benchmark_git(destination, ["init", "-b", "codex/demo-roadmap-phase-1"], "Cannot initialize benchmark fixture repo")
+    run_benchmark_git(destination, ["add", "."], "Cannot stage benchmark fixture repo")
+    run_benchmark_git(
+        destination,
+        [
+            "-c",
+            "user.name=Benchmark",
+            "-c",
+            "user.email=benchmark.invalid",
+            "commit",
+            "-m",
+            "benchmark fixture",
+        ],
+        "Cannot commit benchmark fixture repo",
+    )
+
+
+def commit_benchmark_repo(repo_root: Path, message: str) -> None:
+    run_benchmark_git(repo_root, ["add", "-A"], "Cannot stage benchmark scenario")
+    proc = run_git(repo_root, ["diff", "--cached", "--quiet"])
+    if proc.returncode == 0:
+        return
+    run_benchmark_git(
+        repo_root,
+        [
+            "-c",
+            "user.name=Benchmark",
+            "-c",
+            "user.email=benchmark.invalid",
+            "commit",
+            "-m",
+            message,
+        ],
+        "Cannot commit benchmark scenario",
+    )
+
+
+def demo_state_file(repo_root: Path) -> Path:
+    return repo_root / "automation" / "demo_roadmap" / "delivery_state.json"
+
+
+def mutate_benchmark_scenario(
+    scenario_id: str,
+    fixture_root: Path,
+    fixture_repo: Path,
+    automations_dir: Path,
+    automation_id: str,
+) -> bool:
+    if scenario_id == "clean_delivery":
+        return False
+    if scenario_id == "mismatched_automation_status":
+        write_benchmark_automation_config(fixture_root, fixture_repo, automations_dir, automation_id, status="PAUSED")
+        return False
+
+    state_path = demo_state_file(fixture_repo)
+    state = load_json_object(state_path)
+    if scenario_id == "missing_review_artifact":
+        last_review = state.get("last_review") if isinstance(state.get("last_review"), dict) else {}
+        review_path = resolve_repo_path(fixture_repo, str(last_review.get("file") or ""))
+        if review_path and review_path.exists():
+            review_path.unlink()
+        return True
+    if scenario_id == "stale_lifecycle_filename":
+        old_path = resolve_repo_path(fixture_repo, str(state.get("roadmap") or ""))
+        if not old_path or not old_path.exists():
+            raise EvidenceBenchmarkError("Cannot mutate lifecycle scenario because the roadmap path is missing.")
+        new_path = old_path.with_name("not_started_demo_roadmap.md")
+        old_path.rename(new_path)
+        state["roadmap"] = relative_path(fixture_repo, new_path)
+        write_json_object(state_path, state)
+        return True
+    if scenario_id == "insufficient_verification_evidence":
+        state["last_verification"] = {
+            "phase": state.get("last_delivered_phase"),
+            "completed_at": "2026-05-25T08:00:00Z",
+            "status": "passed",
+            "checks": [],
+        }
+        write_json_object(state_path, state)
+        return True
+    raise EvidenceBenchmarkError(f"Unknown benchmark scenario: {scenario_id}")
+
+
+def evidence_check(check_id: str, passed: bool, *, path: Optional[str] = None, details: str = "") -> Dict[str, Any]:
+    return {
+        "id": check_id,
+        "passed": bool(passed),
+        "path": path,
+        "details": details,
+    }
+
+
+def benchmark_evidence_checks(
+    repo_root: Path,
+    validate_report: Dict[str, Any],
+    inspect_report: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    checks: List[Dict[str, Any]] = []
+    state_path = Path(str(validate_report.get("state_file") or demo_state_file(repo_root)))
+    state = load_json_object(state_path) if state_path.exists() else {}
+    state_dir = state_path.parent
+    delivery_log = state_dir / "delivery_log.md"
+    last_review = state.get("last_review") if isinstance(state.get("last_review"), dict) else {}
+    review_path = resolve_repo_path(repo_root, str(last_review.get("file") or "")) if last_review else None
+    last_verification = state.get("last_verification") if isinstance(state.get("last_verification"), dict) else {}
+    verification_checks = last_verification.get("checks") if isinstance(last_verification, dict) else None
+    automation_state = state.get("automation") if isinstance(state.get("automation"), dict) else {}
+    state_status = state.get("configured_automation_status") or automation_state.get("status")
+    actual_status = inspect_report.get("automation_status")
+    expected_branch = inspect_report.get("expected_branch") or state.get("branch")
+    current_branch = inspect_report.get("current_branch")
+    progress_tracking = validate_report.get("progress_tracking")
+
+    checks.append(evidence_check("delivery_state_present", bool(state), path=relative_path(repo_root, state_path)))
+    checks.append(evidence_check("delivery_log_present", delivery_log.exists(), path=relative_path(repo_root, delivery_log)))
+    checks.append(
+        evidence_check(
+            "review_artifact_present",
+            bool(review_path and review_path.exists()),
+            path=relative_path(repo_root, review_path),
+        )
+    )
+    checks.append(
+        evidence_check(
+            "review_verdict_delivered",
+            str(last_review.get("verdict") or "").lower() == "delivered",
+            path=relative_path(repo_root, review_path),
+            details=f"verdict={last_review.get('verdict')!r}",
+        )
+    )
+    checks.append(
+        evidence_check(
+            "verification_checks_recorded",
+            isinstance(verification_checks, list)
+            and bool(verification_checks)
+            and all(str(item.get("status") or "").lower() == "passed" for item in verification_checks if isinstance(item, dict)),
+            path=relative_path(repo_root, state_path),
+            details=f"checks={len(verification_checks) if isinstance(verification_checks, list) else 0}",
+        )
+    )
+    checks.append(
+        evidence_check(
+            "branch_matches_state",
+            bool(expected_branch and current_branch and expected_branch == current_branch),
+            details=f"current={current_branch!r}, expected={expected_branch!r}",
+        )
+    )
+    checks.append(
+        evidence_check(
+            "model_policy_satisfied",
+            not bool(inspect_report.get("model_mismatch")) and bool(inspect_report.get("reasoning_satisfied")),
+            details=(
+                f"required={inspect_report.get('required_model')}/{inspect_report.get('required_reasoning_effort')}, "
+                f"configured={inspect_report.get('configured_automation_model')}/"
+                f"{inspect_report.get('configured_automation_reasoning_effort')}"
+            ),
+        )
+    )
+    checks.append(
+        evidence_check(
+            "automation_status_matches_state",
+            bool(actual_status and state_status and str(actual_status).upper() == str(state_status).upper()),
+            details=f"state={state_status!r}, readback={actual_status!r}",
+        )
+    )
+    checks.append(
+        evidence_check(
+            "progress_tracking_available",
+            isinstance(progress_tracking, dict) and bool(progress_tracking.get("progress_signature")),
+            path=relative_path(repo_root, state_path),
+        )
+    )
+    return checks
+
+
+def evidence_issues(checks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    issue_codes = {
+        "review_artifact_present": "review_artifact_missing",
+        "verification_checks_recorded": "verification_evidence_missing",
+        "automation_status_matches_state": "automation_status_mismatch",
+    }
+    issues: List[Dict[str, Any]] = []
+    for check in checks:
+        if check.get("passed"):
+            continue
+        code = issue_codes.get(str(check.get("id") or ""))
+        if not code:
+            continue
+        issues.append(
+            {
+                "code": code,
+                "source": "evidence_check",
+                "message": str(check.get("details") or check.get("id") or ""),
+                "path": check.get("path"),
+                "next_action": next_action_for_issue(code),
+            }
+        )
+    return issues
+
+
+def score_evidence_checks(checks: List[Dict[str, Any]]) -> int:
+    if not checks:
+        return 0
+    passed = sum(1 for check in checks if check.get("passed"))
+    if passed == len(checks):
+        return 2
+    if passed:
+        return 1
+    return 0
+
+
+def scenario_scores(scenario: Dict[str, Any], issues: List[Dict[str, Any]], checks: List[Dict[str, Any]]) -> Dict[str, int]:
+    expected_valid = bool(scenario["expected_valid"])
+    invalid_caught = (not expected_valid and bool(issues)) or (expected_valid and not issues)
+    recovery_has_next_action = expected_valid or all(issue.get("next_action") for issue in issues)
+    return {
+        "invalid_advancement_caught": 2 if invalid_caught else 0,
+        "evidence_completeness": score_evidence_checks(checks),
+        "recovery_path_clarity": 2 if recovery_has_next_action else 0,
+        "verification_reproducibility": 2,
+    }
+
+
+def run_evidence_benchmark_scenario(
+    scenario: Dict[str, Any],
+    *,
+    fixture_root: Path,
+    roadmap_slug: str,
+    automation_id: str,
+) -> Dict[str, Any]:
+    from . import validation as validation_module
+
+    with tempfile.TemporaryDirectory(prefix=f"roadmap-evidence-{scenario['id']}-") as tmp:
+        tmp_path = Path(tmp)
+        fixture_repo = tmp_path / "demo-roadmap"
+        automations_dir = tmp_path / "home" / ".codex" / "automations"
+        prepare_benchmark_repo(fixture_root, fixture_repo)
+        write_benchmark_automation_config(fixture_root, fixture_repo, automations_dir, automation_id)
+        repo_changed = mutate_benchmark_scenario(str(scenario["id"]), fixture_root, fixture_repo, automations_dir, automation_id)
+        if repo_changed:
+            commit_benchmark_repo(fixture_repo, f"benchmark scenario {scenario['id']}")
+
+        old_reports_automation_dir = globals()["AUTOMATIONS_DIR"]
+        old_validation_automation_dir = validation_module.AUTOMATIONS_DIR
+        try:
+            globals()["AUTOMATIONS_DIR"] = automations_dir
+            validation_module.AUTOMATIONS_DIR = automations_dir
+            validate_report = validation_module.validate(fixture_repo, roadmap_slug, automation_id)
+            validate_report["status"] = report_status(validate_report)
+            inspect_args = argparse.Namespace(repo_root=str(fixture_repo), roadmap_slug=roadmap_slug, automation_id=automation_id)
+            inspect_report = inspect(inspect_args)
+            inspect_report["status"] = report_status(inspect_report)
+        finally:
+            globals()["AUTOMATIONS_DIR"] = old_reports_automation_dir
+            validation_module.AUTOMATIONS_DIR = old_validation_automation_dir
+
+        checks = benchmark_evidence_checks(fixture_repo, validate_report, inspect_report)
+        issues = finding_issues(validate_report) + evidence_issues(checks)
+        issue_codes = {str(issue.get("code")) for issue in issues}
+        expected_codes = {str(code) for code in scenario.get("expected_issue_codes", [])}
+        expectation_met = not issues if scenario["expected_valid"] else bool(issue_codes.intersection(expected_codes))
+        scores = scenario_scores(scenario, issues, checks)
+        validation_error_codes = finding_codes(validate_report, "errors")
+        commands = [
+            {
+                "command": (
+                    "python3 -m roadmap_delivery.cli validate "
+                    f"--repo-root {fixture_repo} --roadmap-slug {roadmap_slug} "
+                    f"--automation-id {automation_id} --json"
+                ),
+                "status": "failed" if validate_report.get("errors") else "passed",
+                "exit_status": 1 if validate_report.get("errors") else 0,
+                "error_codes": validation_error_codes,
+                "warning_codes": finding_codes(validate_report, "warnings"),
+            },
+            {
+                "command": (
+                    "python3 -m roadmap_delivery.cli inspect "
+                    f"--repo-root {fixture_repo} --roadmap-slug {roadmap_slug} "
+                    f"--automation-id {automation_id} --json"
+                ),
+                "status": "failed" if inspect_report.get("errors") else "passed",
+                "exit_status": 1 if inspect_report.get("errors") else 0,
+                "error_codes": finding_codes(inspect_report, "errors"),
+                "warning_codes": finding_codes(inspect_report, "warnings"),
+            },
+        ]
+        return {
+            "id": scenario["id"],
+            "name": scenario["name"],
+            "description": scenario["description"],
+            "expected_valid": scenario["expected_valid"],
+            "expected_issue_codes": list(scenario["expected_issue_codes"]),
+            "expectation_met": expectation_met,
+            "validation_caught": bool(validation_error_codes),
+            "status": "passed" if expectation_met else "failed",
+            "validate": {
+                "status": validate_report["status"],
+                "error_codes": validation_error_codes,
+                "warning_codes": finding_codes(validate_report, "warnings"),
+            },
+            "inspect": {
+                "status": inspect_report["status"],
+                "error_codes": finding_codes(inspect_report, "errors"),
+                "warning_codes": finding_codes(inspect_report, "warnings"),
+                "current_phase": inspect_report.get("current_phase"),
+                "current_branch": inspect_report.get("current_branch"),
+                "expected_branch": inspect_report.get("expected_branch"),
+            },
+            "detected_issues": issues,
+            "evidence_checks": checks,
+            "scores": scores,
+            "commands": commands,
+            "fixture": {
+                "source": str(fixture_root),
+                "temporary_repo": str(fixture_repo),
+                "temporary_automations_dir": str(automations_dir),
+            },
+        }
+
+
+def build_evidence_benchmark(
+    repo_root: Path,
+    *,
+    fixture_root: Optional[Path] = None,
+    roadmap_slug: str = "demo-roadmap",
+    automation_id: str = "demo-roadmap-delivery",
+) -> Dict[str, Any]:
+    repo_root = repo_root.expanduser().resolve()
+    fixture_root = fixture_root or repo_root / "examples" / "demo-roadmap"
+    if not fixture_root.is_absolute():
+        fixture_root = repo_root / fixture_root
+    fixture_root = fixture_root.resolve()
+    errors: List[Dict[str, str]] = []
+    warnings: List[Dict[str, str]] = []
+    if not fixture_root.is_dir():
+        errors.append({"code": "benchmark_fixture_missing", "message": f"Fixture root does not exist: {fixture_root}"})
+        return {
+            "benchmark_schema_version": EVIDENCE_BENCHMARK_SCHEMA_VERSION,
+            "status": "failed",
+            "repo_root": str(repo_root),
+            "fixture_root": str(fixture_root),
+            "roadmap_slug": roadmap_slug,
+            "automation_id": automation_id,
+            "scenarios": [],
+            "summary": {},
+            "errors": errors,
+            "warnings": warnings,
+        }
+
+    scenarios: List[Dict[str, Any]] = []
+    for scenario in EVIDENCE_BENCHMARK_SCENARIOS:
+        try:
+            scenarios.append(
+                run_evidence_benchmark_scenario(
+                    scenario,
+                    fixture_root=fixture_root,
+                    roadmap_slug=roadmap_slug,
+                    automation_id=automation_id,
+                )
+            )
+        except EvidenceBenchmarkError as exc:
+            errors.append({"code": "benchmark_scenario_failed", "message": str(exc), "scenario": str(scenario["id"])})
+
+    invalid_scenarios = [scenario for scenario in scenarios if not scenario.get("expected_valid")]
+    invalid_caught = [scenario for scenario in invalid_scenarios if scenario.get("detected_issues")]
+    validation_caught = [scenario for scenario in invalid_scenarios if scenario.get("validation_caught")]
+    clean_warnings = sum(
+        len(scenario.get("validate", {}).get("warning_codes", [])) + len(scenario.get("inspect", {}).get("warning_codes", []))
+        for scenario in scenarios
+        if scenario.get("expected_valid")
+    )
+    evidence_score = sum(int(scenario.get("scores", {}).get("evidence_completeness", 0)) for scenario in scenarios)
+    evidence_max = len(scenarios) * 2
+    expectation_failures = [scenario for scenario in scenarios if not scenario.get("expectation_met")]
+    if expectation_failures:
+        errors.append(
+            {
+                "code": "benchmark_expectation_failed",
+                "message": "One or more benchmark scenarios did not expose the expected evidence.",
+            }
+        )
+    if invalid_scenarios and not validation_caught:
+        errors.append(
+            {
+                "code": "benchmark_validation_caught_none",
+                "message": "No invalid-advancement scenario was caught by validation errors.",
+            }
+        )
+
+    status = "failed" if errors else "passed"
+    return {
+        "benchmark_schema_version": EVIDENCE_BENCHMARK_SCHEMA_VERSION,
+        "status": status,
+        "repo_root": str(repo_root),
+        "fixture_root": str(fixture_root),
+        "roadmap_slug": roadmap_slug,
+        "automation_id": automation_id,
+        "scenario_count": len(scenarios),
+        "scenario_ids": [str(scenario["id"]) for scenario in scenarios],
+        "summary": {
+            "invalid_scenarios": len(invalid_scenarios),
+            "invalid_advancement_caught": len(invalid_caught),
+            "invalid_advancement_caught_by_validation": len(validation_caught),
+            "evidence_completeness_score": evidence_score,
+            "evidence_completeness_max": evidence_max,
+            "false_positive_warnings": clean_warnings,
+            "verification_reproducible": bool(scenarios) and all(
+                command.get("status") in {"passed", "failed"}
+                for scenario in scenarios
+                for command in scenario.get("commands", [])
+            ),
+            "claim_boundary": "Results apply only to repository-local fixture scenarios.",
+        },
+        "metrics": {
+            "invalid_advancement_caught": {
+                "score": len(invalid_caught),
+                "max": len(invalid_scenarios),
+                "validation_caught": len(validation_caught),
+            },
+            "evidence_completeness": {
+                "score": evidence_score,
+                "max": evidence_max,
+            },
+            "false_positive_warnings": {
+                "score": clean_warnings,
+                "max": 0,
+            },
+        },
+        "scenarios": scenarios,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def print_benchmark_text(report: Dict[str, Any]) -> None:
+    summary = report.get("summary") or {}
+    print(f"status: {report.get('status')}")
+    print(f"fixture_root: {report.get('fixture_root')}")
+    print(f"scenario_count: {report.get('scenario_count', 0)}")
+    print(
+        "invalid_advancement_caught: "
+        f"{summary.get('invalid_advancement_caught')} of {summary.get('invalid_scenarios')}"
+    )
+    print(
+        "invalid_advancement_caught_by_validation: "
+        f"{summary.get('invalid_advancement_caught_by_validation')}"
+    )
+    print(
+        "evidence_completeness_score: "
+        f"{summary.get('evidence_completeness_score')} of {summary.get('evidence_completeness_max')}"
+    )
+    print(f"false_positive_warnings: {summary.get('false_positive_warnings')}")
+    for scenario in report.get("scenarios", []):
+        print(f"- {scenario.get('id')}: {scenario.get('status')}")
 
 
 def first_finalization_value(state: Optional[Dict[str, Any]], keys: tuple[str, ...]) -> Any:

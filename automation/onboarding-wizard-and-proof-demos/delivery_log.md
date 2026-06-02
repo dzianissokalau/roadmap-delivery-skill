@@ -1,7 +1,7 @@
 # Onboarding Wizard And Proof Demos Delivery Log
 
-Status: Active
-Roadmap: `roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md`
+Status: Completed
+Roadmap: `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`
 State file: `automation/onboarding-wizard-and-proof-demos/delivery_state.json`
 Review directory: `automation/onboarding-wizard-and-proof-demos/reviews`
 Policy file: `automation/onboarding-wizard-and-proof-demos/phase_model_policy.json`
@@ -374,3 +374,471 @@ Branch: `codex/onboarding-wizard-and-proof-demos-phase-2`
 - Reason: Phase 1 delivered, but Phase 2 requires saved automation retarget from gpt-5.5/xhigh to gpt-5.5/high. retarget_saved_automation is not pre-approved in approval_policy.json.
 - Notification sink: `alert_file`
 - Notification status: `local_alert_only`
+
+## Phase 2 - 2026-06-02 - Delivery Pass 1
+
+Status: blocked after verification
+Branch: `main` (state expected `codex/onboarding-wizard-and-proof-demos-phase-2`)
+
+### Scope
+
+- Attempted Phase 2 only: Wizard Implementation And Scaffold Integration.
+- Owned implementation files covered:
+  `src/roadmap_delivery/wizard.py`, `src/roadmap_delivery/scaffold.py`,
+  `src/roadmap_delivery/cli.py`, `src/roadmap_delivery/reports.py`,
+  `docs/onboarding-wizard.md`, `tests/test_onboarding_wizard.py`,
+  `tests/test_cli.py`, and `tests/test_library_units.py`.
+
+### Changes Verified
+
+- Wizard and scaffold planning now share the structured scaffold module.
+- Wizard JSON includes automation/docs preview groups, `planned_create`, and
+  write-mode validate/inspect readback evidence.
+- Write mode fails when generated artifacts do not validate.
+- Inspection readback now honors the same automation-directory override as
+  validation.
+- Tests cover dry-run/write parity, conservative defaults, delegated mode,
+  outside-repo path refusal, existing artifact protection, and readback
+  validation failure.
+
+### Tests And Verification
+
+- `python3 -m unittest tests.test_onboarding_wizard tests.test_cli tests.test_library_units tests.test_schema_validation -v`:
+  passed, 30 tests.
+- `python3 -m roadmap_delivery.cli scaffold --help`: passed.
+- `git diff --check`: passed.
+
+### Review
+
+- Review file:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-phase-2-review-iteration-1.md`
+- Verdict: blocked.
+
+### Blocker
+
+- Classification: destructive-risk / external-decision.
+- `delivery_state.json` expects
+  `codex/onboarding-wizard-and-proof-demos-phase-2`, but `git status` now
+  reports `main`.
+- Reflog evidence shows `main` was checked out and fast-forwarded to the Phase
+  2 branch at 2026-06-02 11:18:48 +0100.
+- The approval policy and automation prompt forbid promotion to `main` without
+  explicit human approval. Repairing `main` would require an approved git
+  repair path; accepting the state also requires a human decision.
+- Local alert:
+  `automation/onboarding-wizard-and-proof-demos/alerts/2026-06-02T10-20-13Z-branch-drift-blocked.md`
+
+### Next Action
+
+- Human must decide whether to accept the fast-forwarded `main` state or
+  approve a specific git repair path. Phase 2 must not advance until that
+  decision is recorded and branch/state reconciliation passes.
+
+## Blocked Remediation - 2026-06-02T10:31:03Z
+
+Status: repaired
+Branch: `codex/onboarding-wizard-and-proof-demos-phase-2`
+
+### Classification
+
+- Type: external-decision/local-repair.
+- Operator decision: "unblock it" accepted the already-fast-forwarded local
+  `main` state as an approved outcome.
+- Repair action: switched the active workflow back to
+  `codex/onboarding-wizard-and-proof-demos-phase-2`.
+- No destructive git, push, saved automation edit, publication, promotion, or
+  global tool sync was performed.
+
+### Validation
+
+- Branch/state reconciliation passed after the switch; only expected dirty
+  bookkeeping remained before final phase advancement.
+- `python3 -m unittest tests.test_onboarding_wizard tests.test_cli tests.test_library_units tests.test_schema_validation -v`:
+  passed, 30 tests.
+- `python3 -m roadmap_delivery.cli scaffold --help`: passed.
+- `git diff --check`: passed.
+
+## Phase 2 - 2026-06-02 - Delivery Pass 2
+
+Status: delivered
+Branch: `codex/onboarding-wizard-and-proof-demos-phase-2`
+
+### Scope
+
+- Delivered Phase 2 only: Wizard Implementation And Scaffold Integration.
+
+### Changes
+
+- Routed `scaffold` and `wizard` through the shared structured scaffold
+  planner.
+- Added deterministic wizard JSON preview fields for planned creates,
+  automation artifacts, and documentation artifacts.
+- Added write-mode validate/inspect readback and command failure on readback
+  validation errors.
+- Aligned inspection readback with validation's automation-directory override.
+- Updated onboarding wizard docs and tests for preview/write parity, path
+  safety, conflict protection, delegated mode selection, and validation
+  failure handling.
+
+### Tests And Verification
+
+- `python3 -m unittest tests.test_onboarding_wizard tests.test_cli tests.test_library_units tests.test_schema_validation -v`:
+  passed, 30 tests.
+- `python3 -m roadmap_delivery.cli scaffold --help`: passed.
+- `git diff --check`: passed.
+
+### Review
+
+- Review file:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-phase-2-review-iteration-2.md`
+- Verdict: delivered.
+
+### End-Run Retarget Gate
+
+- Delivered phase:
+  `Phase 2 - Wizard Implementation And Scaffold Integration`
+- Next phase: `Phase 3 - Golden Path Demo Fixtures`
+- Phase 3 policy target: `gpt-5.5` with `xhigh` reasoning.
+- Saved automation readback: `gpt-5.5` with `xhigh` reasoning.
+- Result: no saved automation retarget is required.
+
+### Residual Risks
+
+- Review was same-context rather than delegated fresh-context review.
+- The previously fast-forwarded `main` / `origin/main` state was accepted by
+  operator instruction; no history rewrite or repair was attempted.
+
+### Next Action
+
+- State advanced to Phase 3. Stop before Phase 3 implementation.
+
+## Phase 3 - 2026-06-02 - Delivery Pass 1
+
+Status: delivered
+Branch: `codex/onboarding-wizard-and-proof-demos-phase-3`
+
+### Scope
+
+- Delivered Phase 3 only: Golden Path Demo Fixtures.
+- Owned files:
+  `examples/demo-roadmap/`, `examples/onboarding-wizard/`,
+  `examples/evidence-benchmark/`, `docs/quickstart.md`,
+  `docs/who-this-is-for.md`, `docs/onboarding-wizard.md`, and
+  `tests/test_smoke_demo.py`.
+- No live automation config, credentials, network service, publication,
+  promotion, push, commit, destructive git operation, or global tool sync was
+  used.
+
+### Changes
+
+- Added Demo A documentation for the normal evidence trail, including a
+  temporary-home saved automation readback path and expected report fields.
+- Added Demo B documentation and runtime-checklist steps for a safe
+  model-policy mismatch that blocks advancement, then repairs only the
+  temporary saved automation config.
+- Added `examples/onboarding-wizard/README.md` with wizard dry-run and
+  temporary write/readback demo recipes.
+- Added `examples/evidence-benchmark/README.md` as a Phase 4 fixture contract
+  that names evidence fields without claiming benchmark results early.
+- Updated quickstart, fit guidance, and onboarding wizard docs to point users
+  at the two safe local demos before real-project writes.
+- Extended smoke tests to verify clean demo evidence fields and the
+  policy-mismatch repair path in temporary checkouts.
+
+### Tests And Verification
+
+- `python3 -m unittest tests.test_smoke_demo tests.test_onboarding_wizard tests.test_privacy_sanitization -v`:
+  passed, 17 tests.
+- `python3 scripts/check_release_privacy.py --repo-root .`: passed, 123 files
+  scanned, 0 findings.
+- `git diff --check`: passed.
+- `python3 scripts/check_release_privacy.py --repo-root . --release-path examples --json`:
+  passed, 22 files scanned, 0 findings.
+
+### Review
+
+- Review file:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-phase-3-review-iteration-1.md`
+- Verdict: delivered.
+- Review limitation: same-context review; no delegated fresh-context review was
+  used.
+
+### End-Run Retarget Gate
+
+- Delivered phase: `Phase 3 - Golden Path Demo Fixtures`
+- Next phase: `Phase 4 - Evidence Benchmark Harness`
+- Phase 4 policy target: `gpt-5.5` with `xhigh` reasoning.
+- Saved automation readback: `gpt-5.5` with `xhigh` reasoning.
+- Result: no saved automation retarget is required.
+
+### Residual Risks
+
+- Demo docs intentionally avoid long transcripts; users inspect full JSON by
+  running the local commands.
+- Phase 4 still owns measured benchmark scenarios and proof claims.
+
+### Next Action
+
+- State advanced to Phase 4. Stop before Phase 4 implementation.
+
+## Phase 4 - 2026-06-02 - Delivery Pass 1
+
+Status: delivered
+Branch: `codex/onboarding-wizard-and-proof-demos-phase-4`
+
+### Scope
+
+- Delivered Phase 4 only: Evidence Benchmark Harness.
+- Owned files:
+  `examples/evidence-benchmark/`, `docs/evidence-benchmark.md`,
+  `src/roadmap_delivery/reports.py`, `src/roadmap_delivery/progress.py`,
+  `tests/test_evidence_benchmark.py`, and `tests/test_smoke_demo.py`.
+- No live automation config, credentials, network service, publication,
+  promotion, push, commit, destructive git operation, or global tool sync was
+  used.
+
+### Changes
+
+- Added a local `roadmap-delivery benchmark` command that copies
+  `examples/demo-roadmap/` into temporary repositories, creates temporary
+  saved automation configs, and runs validation/inspection reports for five
+  fixture scenarios.
+- Added structured benchmark output with scenario ids, detected issues,
+  evidence checks, command evidence, scenario scores, aggregate metrics, and a
+  local fixture claim boundary.
+- Covered clean delivery, missing review artifact, stale lifecycle filename,
+  mismatched automation status, and insufficient verification evidence.
+- Added tests for scenario coverage, validation-caught evidence, clean-fixture
+  false-positive warnings, and optional JSON report output.
+- Updated evidence benchmark docs and example notes with measured local
+  results and limitations.
+
+### Tests And Verification
+
+- `python3 -m unittest tests.test_evidence_benchmark tests.test_smoke_demo tests.test_quality_gates -v`:
+  passed, 13 tests.
+- `git diff --check`: passed.
+- `python3 -m roadmap_delivery.cli benchmark --repo-root . --json --output /tmp/roadmap-delivery-evidence-benchmark.json`:
+  passed; report status `passed`, 5 scenarios, 4 of 4 invalid scenarios
+  caught, 1 caught by validation errors, evidence completeness 7 of 10, and 0
+  clean-fixture false-positive warnings.
+- `PYTHONPYCACHEPREFIX=/tmp/roadmap-delivery-pycache python3 -m py_compile src/roadmap_delivery/reports.py src/roadmap_delivery/cli.py`:
+  passed. A prior compile attempt without `PYTHONPYCACHEPREFIX` failed because
+  macOS tried to write bytecode under a non-writable user cache path.
+
+### Review
+
+- Review file:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-phase-4-review-iteration-1.md`
+- Verdict: delivered.
+- Review limitation: same-context review; no delegated fresh-context review was
+  used.
+
+### End-Run Retarget Gate
+
+- Delivered phase: `Phase 4 - Evidence Benchmark Harness`
+- Next phase: `Phase 5 - Quickstart Documentation And Closeout`
+- Phase 5 policy target: `gpt-5.5` with `xhigh` reasoning.
+- Saved automation readback: `gpt-5.5` with `xhigh` reasoning.
+- Result: no saved automation retarget is required.
+
+### Residual Risks
+
+- Same-context review only.
+- The benchmark validates committed local fixture scenarios, not every possible
+  roadmap automation failure mode.
+- Scenario command evidence records temporary fixture paths that are valid for
+  the benchmark run; reproducibility comes from rerunning the benchmark command
+  against repository-local fixtures.
+
+### Next Action
+
+- State advanced to Phase 5. Stop before Phase 5 implementation.
+
+## Phase 5 - 2026-06-02 - Delivery Pass 1
+
+Status: delivered
+Branch: `codex/onboarding-wizard-and-proof-demos-finalization`
+
+### Scope
+
+- Delivered Phase 5 only: Quickstart Documentation And Closeout.
+- Owned files: `README.md`, `docs/quickstart.md`,
+  `docs/who-this-is-for.md`, `docs/onboarding-wizard.md`,
+  `docs/evidence-benchmark.md`, `examples/`,
+  `automation/onboarding-wizard-and-proof-demos/`, and
+  `roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md`.
+- No live automation config, credentials, network service, publication,
+  promotion, push, commit, destructive git operation, or global tool sync was
+  used.
+
+### Changes
+
+- Updated README first-use guidance so the path starts with fit guidance, safe
+  demo, demo fixture inspection, wizard preview, and only then real-project
+  setup.
+- Updated quickstart closeout guidance to include Demo A, Demo B, wizard
+  fixture recipes, and the measured local benchmark proof before real-project
+  scaffolding.
+- Added
+  `automation/onboarding-wizard-and-proof-demos/final_deep_review_prompt.md`
+  for whole-roadmap review before finalization and human merge review.
+- Verified the existing onboarding wizard, demo, and benchmark docs against
+  implementation and measured fixture output.
+
+### Tests And Verification
+
+- `python3 -m unittest discover -s tests -v`: passed, 175 tests, 1 optional
+  Claude binary smoke skipped.
+- `python3 scripts/build_adapters.py --check --json`: passed for Codex and
+  Claude adapters with no diffs.
+- `python3 scripts/build_release.py --check --json`: passed; release artifact
+  generation is reproducible and privacy scan reported 0 findings.
+- `python3 scripts/check_release_privacy.py --repo-root .`: passed, 123 files
+  scanned, 0 findings.
+- `git diff --check`: passed.
+- `python3 -m roadmap_delivery.cli wizard --repo-root /tmp/roadmap-delivery-wizard-doc-check --roadmap-slug demo-onboarding --automation-id demo-onboarding-delivery --dry-run --json`: passed and confirmed the documented `planned_create`, `would_create`, and `live_automation.created: false` fields.
+- `python3 -m roadmap_delivery.cli benchmark --repo-root . --json --output /tmp/roadmap-delivery-phase5-benchmark-precheck.json`: passed; report status `passed`, 5 scenarios, 4 of 4 invalid scenarios caught, 1 caught by validation errors, evidence completeness 7 of 10, and 0 clean-fixture false-positive warnings.
+- `python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --json`: passed with no errors and only the expected `worktree_dirty` warning.
+- `python3 -m roadmap_delivery.cli inspect --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --json`: passed with no errors and only the expected `worktree_dirty` warning; final deep-review prompt file exists.
+
+### Review
+
+- Review file:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-phase-5-review-iteration-1.md`
+- Verdict: delivered.
+- Review limitation: same-context review; no delegated fresh-context review was
+  used.
+
+### End-Run Retarget Gate
+
+- Delivered phase: `Phase 5 - Quickstart Documentation And Closeout`
+- Next phase: `finalization`
+- Finalization policy target: `gpt-5.5` with `xhigh` reasoning.
+- Saved automation readback: `gpt-5.5` with `xhigh` reasoning.
+- Result: no saved automation retarget is required.
+
+### Residual Risks
+
+- Same-context review only.
+- Final deep-review prompt is prepared but not yet executed; finalization owns
+  the whole-roadmap review or human waiver, completion alert, delivered
+  lifecycle rename, and completion/pause handling.
+- The saved automation remains `ACTIVE`; this is not a completed state yet and
+  the hard-stop guard remains in the saved prompt.
+
+### Next Action
+
+- State advanced to finalization. Stop before finalization implementation.
+
+## Finalization - 2026-06-02 - Closeout Pass 1
+
+Status: completed
+Branch: `codex/onboarding-wizard-and-proof-demos-finalization`
+
+### Scope
+
+- Finalized the Onboarding Wizard And Proof Demos roadmap after all numbered
+  phases delivered.
+- Owned files: roadmap lifecycle/status, automation guide, delivery state,
+  delivery log, review/fix state and log, final deep-review prompt, final review
+  artifact, and completion alert.
+- No saved automation config, credentials, network service, publication,
+  promotion, push, commit, destructive git operation, or installed skill/plugin
+  sync was used.
+
+### Changes
+
+- Wrote finalization review artifact:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md`.
+- Recorded final deep-review status as `review-complete` with verdict
+  `ready-for-finalization`.
+- Renamed the roadmap lifecycle path to
+  `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`.
+- Updated durable state and review/fix state to `completed_pending_pause`
+  during closeout because the saved automation initially remained `ACTIVE` and
+  pause approval was not pre-approved by `approval_policy.json`.
+- Repaired durable completion metadata after saved automation TOML later read
+  back `PAUSED`; this run did not edit saved automation config.
+
+### Tests And Verification
+
+- `python3 -m unittest discover -s tests -v`: passed, 175 tests, 1 optional
+  Claude binary smoke skipped.
+- `python3 scripts/build_adapters.py --check --json`: passed for Codex and
+  Claude adapters with no generated package diffs.
+- `python3 scripts/build_release.py --check --json`: passed with reproducible
+  release artifacts and 0 privacy findings.
+- `python3 scripts/check_release_privacy.py --repo-root .`: passed, 123 files
+  scanned, 0 findings, 0 errors.
+- `git diff --check`: passed.
+- `python3 -m roadmap_delivery.cli wizard --repo-root /tmp/roadmap-delivery-wizard-finalization-check --roadmap-slug demo-onboarding --automation-id demo-onboarding-delivery --dry-run --json`:
+  passed and confirmed planned creation fields, `would_create`, and
+  `live_automation.created: false`.
+- `python3 -m roadmap_delivery.cli benchmark --repo-root . --json --output /tmp/roadmap-delivery-finalization-benchmark.json`:
+  passed; report status `passed`, 5 scenarios, 4 of 4 invalid scenarios
+  caught, 1 caught by validation errors, evidence completeness 7 of 10, and 0
+  clean-fixture false-positive warnings.
+- `python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --json`:
+  passed before completion with no errors and only the expected
+  `worktree_dirty` warning.
+- `python3 -m roadmap_delivery.cli inspect --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --json`:
+  passed before completion with no errors and only the expected
+  `worktree_dirty` warning.
+
+### Review
+
+- Review file:
+  `automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md`
+- Verdict: delivered.
+- Final deep-review verdict: ready-for-finalization.
+- Review limitation: same-context review; no delegated fresh-context review was
+  spawned because explicit delegation authorization was not present.
+
+### Completion And Pause
+
+- Saved automation readback: `PAUSED`, local, `gpt-5.5`, `xhigh`.
+- Completion hard-stop guard: present in the saved prompt.
+- Completion pause decision: `ask`; `pause_saved_automation` is not
+  pre-approved by the conservative approval policy.
+- Result: state is `completed`; pause was confirmed by saved automation TOML
+  readback rather than an edit performed by this run.
+
+### Residual Risks
+
+- The saved automation is paused by readback.
+- Worktree remains dirty by design with uncommitted roadmap delivery and
+  completion bookkeeping.
+- Publication, promotion to `main`, branch push, local commit, release
+  publication, credential use, and installed skill/plugin sync remain
+  human-approved follow-up actions.
+
+### Next Action
+
+- Review the pushed branch and keep promotion, publication, commits,
+  credentials, and installed-skill sync human-approved. Do not start any more
+  phase work.
+
+## Operator Alert - 2026-06-02T12:10:41Z - Completed
+
+- Alert file: `automation/onboarding-wizard-and-proof-demos/alerts/2026-06-02T12-10-41Z-completed.md`
+- Reason: All roadmap phases and finalization are delivered, final verification passed, and the saved automation is PAUSED by readback.
+- Notification sink: `alert_file`
+- Notification status: `local_alert_only`
+
+## Completed-State Readback - 2026-06-02T12:11:25Z
+
+- `python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --strict --allow-warning worktree_dirty --json`:
+  passed with only the allowed `worktree_dirty` warning; saved automation
+  readback is `PAUSED`.
+- `python3 -m roadmap_delivery.cli inspect --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --strict --allow-warning worktree_dirty --json`:
+  passed with only the allowed `worktree_dirty` warning; state is `completed`
+  and saved automation readback is `PAUSED`.
+- `git diff --check`: passed after completion bookkeeping.
+
+## Completion Pause Readback - 2026-06-02T12:23:56Z
+
+- Saved automation TOML readback: `PAUSED`, local, `gpt-5.5`, `xhigh`.
+- Repair scope: updated repository-local completion metadata only.
+- Saved automation config edit by this run: no.
+- State status updated from `completed_pending_pause` to `completed`.

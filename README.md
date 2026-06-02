@@ -34,6 +34,30 @@ For a first-use path that starts with the safe demo fixture and then moves to a
 real-project scaffold dry run, use `docs/quickstart.md`. For fit guidance, use
 `docs/who-this-is-for.md`.
 
+Recommended first-use order:
+
+1. Read `docs/who-this-is-for.md` to check fit and non-fit cases.
+2. Run the safe demo path in `docs/quickstart.md`; it uses local fixtures and
+   temporary homes before any real project setup.
+3. Inspect `examples/demo-roadmap/README.md` for the normal evidence trail and
+   the policy-mismatch recovery demo.
+4. Preview starter artifacts with `python3 -m roadmap_delivery.cli wizard
+   --dry-run --json` or the recipes in `examples/onboarding-wizard/README.md`.
+5. Use the real-project scaffold or wizard write mode only after reviewing the
+   generated approval policy, model policy, state, log, and validation output.
+
+The benchmark proof is local too:
+
+```bash
+python3 -m roadmap_delivery.cli benchmark \
+  --repo-root . \
+  --json \
+  --output /tmp/roadmap-delivery-evidence-benchmark.json
+```
+
+It reports fixture evidence quality and invalid-advancement detection without
+claiming productivity, ROI, compliance, model speed, or vendor comparisons.
+
 ### Install In Codex
 
 The installable Codex skill package is committed in this repository:
@@ -196,9 +220,10 @@ Codex package.
   planned roadmap for first tagged release readiness, install/distribution
   trust, licensing/trademark guidance, marketplace-native preparation, and
   public project governance surfaces.
-- `roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md`:
-  active roadmap for setup wizard generation, golden-path demos, quickstart
-  fit guidance, and measurable delivery-evidence proof.
+- `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`:
+  completed roadmap for setup wizard generation, golden-path demos, quickstart
+  fit guidance, and measurable delivery-evidence proof; the saved automation is
+  paused.
 - `roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md`:
   planned roadmap for optional live host smoke checks, capability metadata, and
   a GitHub Action validation/review-evidence companion.

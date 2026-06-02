@@ -1,10 +1,11 @@
 # Onboarding Wizard And Proof Demos Roadmap
 
-Status: Active
-Current phase: Phase 2 - Wizard Implementation And Scaffold Integration
-Last completed phase: Phase 1 - Setup Wizard UX And CLI Contract
+Status: Delivered
+Current phase: Complete
+Last completed phase: Phase 5 - Quickstart Documentation And Closeout
 Last updated: 2026-06-02
-Next action: Deliver Phase 2.
+Next action: Pause the saved automation or explicitly keep the completed-state
+hard-stop guard active.
 Blocked by: None.
 
 ## Purpose
@@ -33,7 +34,7 @@ value, not a buyer pitch.
 Recommended automation setup:
 
 ```text
-ROADMAP_PATH=roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md
+ROADMAP_PATH=roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md
 ROADMAP_SLUG=onboarding-wizard-and-proof-demos
 AUTOMATION_DIR=automation/onboarding-wizard-and-proof-demos
 AUTOMATION_ID=onboarding-wizard-and-proof-demos
@@ -104,7 +105,7 @@ tests/
   test_onboarding_wizard.py
   test_evidence_benchmark.py
 roadmaps/
-  in_progress_onboarding_wizard_and_proof_demos_roadmap.md
+  delivered_onboarding_wizard_and_proof_demos_roadmap.md
 ```
 
 Do not add commercial pricing, paid support paths, hosted onboarding services,
@@ -142,7 +143,7 @@ evidence metrics before implementing a wizard or benchmark.
 ### Owned Files
 
 ```text
-roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md
+roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md
 docs/quickstart.md
 docs/who-this-is-for.md
 docs/onboarding-wizard.md
@@ -497,7 +498,7 @@ docs/onboarding-wizard.md
 docs/evidence-benchmark.md
 examples/
 automation/<roadmap-slug>/
-roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md
+roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md
 ```
 
 ### Inputs

@@ -1,42 +1,83 @@
 {
   "schema_version": 1,
-  "roadmap": "roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md",
+  "roadmap": "roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md",
   "roadmap_slug": "onboarding-wizard-and-proof-demos",
-  "current_phase": "Phase 2 - Wizard Implementation And Scaffold Integration",
-  "branch": "codex/onboarding-wizard-and-proof-demos-phase-2",
-  "status": "not_started",
-  "review_iterations": 0,
+  "current_phase": "Complete",
+  "branch": "codex/onboarding-wizard-and-proof-demos-finalization",
+  "status": "completed",
+  "review_iterations": 1,
   "max_review_iterations": 3,
   "last_verification": {
-    "phase": "Phase 1 - Setup Wizard UX And CLI Contract",
-    "completed_at": "2026-06-02T09:55:29Z",
+    "phase": "finalization",
+    "completed_at": "2026-06-02T12:25:22Z",
     "status": "passed",
     "checks": [
       {
-        "command": "python3 -m unittest tests.test_cli tests.test_onboarding_wizard tests.test_schema_validation -v",
+        "command": "python3 -m unittest discover -s tests -v",
         "status": "passed",
-        "details": "21 tests passed."
+        "details": "175 tests passed; 1 optional Claude binary smoke skipped."
       },
       {
-        "command": "python3 -m roadmap_delivery.cli scaffold --help",
+        "command": "python3 scripts/build_adapters.py --check --json",
         "status": "passed",
-        "details": "Help output rendered successfully."
+        "details": "Codex and Claude adapter checks passed with no generated package diffs."
+      },
+      {
+        "command": "python3 scripts/build_release.py --check --json",
+        "status": "passed",
+        "details": "Release check passed with reproducible artifacts and 0 privacy findings."
+      },
+      {
+        "command": "python3 scripts/check_release_privacy.py --repo-root .",
+        "status": "passed",
+        "details": "123 files scanned, 0 findings, 0 errors."
       },
       {
         "command": "git diff --check",
         "status": "passed",
         "details": "No whitespace errors were found."
+      },
+      {
+        "command": "python3 -m roadmap_delivery.cli wizard --repo-root /tmp/roadmap-delivery-wizard-finalization-check --roadmap-slug demo-onboarding --automation-id demo-onboarding-delivery --dry-run --json",
+        "status": "passed",
+        "details": "Dry-run JSON confirmed planned_create, would_create, and live_automation.created false fields."
+      },
+      {
+        "command": "python3 -m roadmap_delivery.cli benchmark --repo-root . --json --output /tmp/roadmap-delivery-finalization-benchmark.json",
+        "status": "passed",
+        "details": "Benchmark report passed: 5 scenarios, 4 of 4 invalid scenarios caught, 1 caught by validation errors, evidence completeness 7 of 10, 0 clean-fixture false-positive warnings."
+      },
+      {
+        "command": "python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --json",
+        "status": "passed",
+        "details": "Pre-completion artifact validation passed with no errors and only the expected worktree_dirty warning."
+      },
+      {
+        "command": "python3 -m roadmap_delivery.cli inspect --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --json",
+        "status": "passed",
+        "details": "Pre-completion inspection passed with no errors and only the expected worktree_dirty warning; final deep-review prompt file exists."
+      },
+      {
+        "command": "python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --strict --allow-warning worktree_dirty --json",
+        "status": "passed",
+        "details": "Completed-state validation passed with only the allowed worktree_dirty warning; saved automation readback is PAUSED."
+      },
+      {
+        "command": "python3 -m roadmap_delivery.cli inspect --repo-root . --roadmap-slug onboarding-wizard-and-proof-demos --automation-id onboarding-wizard-and-proof-demos --strict --allow-warning worktree_dirty --json",
+        "status": "passed",
+        "details": "Completed-state inspection passed with only the allowed worktree_dirty warning; state is completed and saved automation readback is PAUSED."
       }
     ]
   },
   "last_review": {
-    "phase": "Phase 1 - Setup Wizard UX And CLI Contract",
-    "file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-phase-1-review-iteration-1.md",
+    "phase": "finalization",
+    "file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md",
     "verdict": "delivered",
-    "reviewed_at": "2026-06-02T09:55:29Z",
-    "reviewer_context": "same_context"
+    "reviewed_at": "2026-06-02T12:07:46Z",
+    "reviewer_context": "same_context",
+    "final_deep_review_verdict": "ready-for-finalization"
   },
-  "last_delivered_phase": "Phase 1 - Setup Wizard UX And CLI Contract",
+  "last_delivered_phase": "Phase 5 - Quickstart Documentation And Closeout",
   "blocked_reason": null,
   "approval_policy_path": "automation/onboarding-wizard-and-proof-demos/approval_policy.json",
   "approval_mode": "conservative",
@@ -59,25 +100,27 @@
   "required_reasoning_effort": "xhigh",
   "configured_automation_model": "gpt-5.5",
   "configured_automation_reasoning_effort": "xhigh",
-  "configured_automation_status": "ACTIVE",
+  "configured_automation_status": "PAUSED",
   "configured_execution_environment": "local",
   "automation": {
     "id": "onboarding-wizard-and-proof-demos",
     "kind": "cron",
-    "status": "ACTIVE",
+    "status": "PAUSED",
     "rrule": "FREQ=HOURLY;INTERVAL=1",
     "execution_environment": "local",
     "cwd": "/Users/dzianissokalau/Documents/projects/roadmap-delivery-automation",
     "prompt_roadmap": "state:automation/onboarding-wizard-and-proof-demos/delivery_state.json",
     "prompt_artifact_dir": "automation/onboarding-wizard-and-proof-demos",
-    "readback_at": "2026-06-02T08:06:27Z",
+    "readback_at": "2026-06-02T12:23:56Z",
     "prompt_path_strategy": "state_resolved",
     "saved_prompt_lifecycle_path": "roadmaps/not_started_onboarding_wizard_and_proof_demos_roadmap.md",
     "initial_status_drift": {
       "requested_status": "PAUSED",
       "first_readback_status": "ACTIVE",
       "repair": "Updated saved app automation to PAUSED and confirmed readback before delivery."
-    }
+    },
+    "final_pause_confirmed_at": "2026-06-02T12:23:56Z",
+    "final_pause_source": "saved automation TOML readback; this run did not edit saved automation config."
   },
   "last_activation": {
     "activated_at": "2026-06-02T08:06:27Z",
@@ -85,18 +128,18 @@
     "evidence": "Saved automation TOML read back ACTIVE during an operator-triggered run; model, reasoning, cwd, roadmap prompt, hard-stop guard, and blocked-remediation guard matched."
   },
   "last_blocker_repair": {
-    "repaired_at": "2026-06-02T10:05:28Z",
+    "repaired_at": "2026-06-02T10:31:03Z",
     "classification": "external-decision-local-repair",
-    "repair": "Operator requested keeping xhigh reasoning for all roadmap stages. Updated roadmap phase guidance and phase_model_policy.json so Phase 2 and all later phases match saved automation readback without editing saved automation config.",
-    "verification": "Post-repair validation passed with no errors; the only remaining validator warning is the expected dirty worktree from uncommitted phase artifacts."
+    "repair": "Operator instructed 'unblock it', accepting the already-fast-forwarded local main state as the missing human decision. Switched active workflow back to codex/onboarding-wizard-and-proof-demos-phase-2 without destructive git, then completed Phase 2 review.",
+    "verification": "Required Phase 2 verification passed after remediation: 30 targeted tests, scaffold help, and git diff --check."
   },
   "last_blocked_remediation": {
-    "checked_at": "2026-06-02T10:05:28Z",
+    "checked_at": "2026-06-02T10:31:03Z",
     "classification": "external-decision-local-repair",
-    "result": "Retarget-failed blocker cleared by changing repository-local roadmap and phase model policy to keep xhigh reasoning for all stages. Saved automation already matched gpt-5.5/xhigh.",
-    "approval_decision": "No saved automation edit required.",
-    "validation": "Post-repair validation passed with no errors; the only remaining validator warning is worktree_dirty.",
-    "next_human_action": "None before Phase 2; next run may deliver Phase 2."
+    "result": "Branch/promotion drift blocker cleared by operator unblock instruction and non-destructive switch back to the Phase 2 branch. Phase 2 then passed review iteration 2.",
+    "approval_decision": "Operator accepted the already-fast-forwarded local main state; no destructive repair was attempted.",
+    "validation": "Required Phase 2 verification passed after remediation.",
+    "next_human_action": "None before Phase 3; next run may deliver Phase 3."
   },
   "last_lifecycle_repair": {
     "completed_at": "2026-06-02T09:21:39Z",
@@ -106,33 +149,51 @@
     "repair": "Renamed the roadmap to the in-progress lifecycle path, updated repository-local references, advanced durable state to Phase 1, and treated the saved prompt as state-resolved because it references stable automation artifacts.",
     "saved_prompt_retarget": "not_required_state_resolved_prompt"
   },
-  "run_count": 5,
+  "run_count": 12,
   "stalled_run_count": 0,
   "max_stalled_runs": 3,
-  "last_progress_signature": "sha256:2d9d9510126aab6291dc50b20367e78236b62afd4e2c8448dc914e8d8a03c711",
-  "last_progress_at": "2026-06-02T10:05:28Z",
+  "last_progress_signature": "sha256:4a5c940683b161f5bbb714452ee2eb610a3282fa533abb3b0f073971b6ab8147",
+  "last_progress_at": "2026-06-02T12:25:22Z",
   "last_operator_alert": {
-    "kind": "retarget-failed",
-    "file": "automation/onboarding-wizard-and-proof-demos/alerts/2026-06-02T09-55-29Z-retarget-failed.md",
-    "timestamp": "2026-06-02T09:55:29Z",
-    "reason": "Phase 1 delivered, but Phase 2 requires saved automation retarget from gpt-5.5/xhigh to gpt-5.5/high. retarget_saved_automation is not pre-approved in approval_policy.json.",
-    "next_human_action": "Approve retargeting the saved automation reasoning effort to high for Phase 2, or update the phase model and approval policy with an explicit different decision.",
+    "kind": "completed",
+    "file": "automation/onboarding-wizard-and-proof-demos/alerts/2026-06-02T12-10-41Z-completed.md",
+    "timestamp": "2026-06-02T12:23:56Z",
+    "reason": "All roadmap phases and finalization are delivered, final verification passed, and the saved automation is PAUSED by readback.",
+    "next_human_action": "Review the pushed branch and keep promotion, publication, commits, credentials, and installed-skill sync human-approved.",
     "notification_sink": "alert_file",
-    "notification_status": "local_alert_superseded",
-    "superseded_at": "2026-06-02T10:05:28Z",
-    "superseded_by": "operator_xhigh_all_stages_policy_repair"
+    "notification_status": "local_alert_only"
   },
-  "last_automation_pause": null,
-  "last_run_quality": "blocked_local_repairable",
+  "last_automation_pause": {
+    "context": "completion",
+    "decided_at": "2026-06-02T12:23:56Z",
+    "approval_decision": {
+      "context": "completion",
+      "decision": "ask",
+      "operation": "pause_saved_automation",
+      "reason": "Approval policy does not pre-approve this operation.",
+      "source": "pause_automation_on_completion"
+    },
+    "status": "already_paused",
+    "result": {
+      "paused": true,
+      "readback_status": "PAUSED",
+      "source": "saved automation TOML readback",
+      "edited_by_this_run": false
+    },
+    "readback_status": "PAUSED",
+    "next_human_action": "Review the pushed branch and keep promotion, publication, commits, credentials, and installed-skill sync human-approved."
+  },
+  "last_run_quality": "flawless",
   "last_adaptive_action": {
     "action": "none",
-    "reason": "Operator policy decision keeps xhigh reasoning for all stages; saved automation already matches the required Phase 2 target and adaptive model policy is disabled.",
+    "reason": "Finalization verification and review delivered; saved automation now reads back PAUSED and adaptive model policy is disabled.",
     "target_changed": false,
     "target": {
       "model": "gpt-5.5",
       "reasoning_effort": "xhigh"
     },
-    "retarget_status": "not_required_policy_updated"
+    "target_phase": "Complete",
+    "retarget_status": "not_required_completed_state"
   },
   "model_history": [
     {
@@ -155,6 +216,65 @@
       "adaptive_action": "none",
       "recorded_at": "2026-06-02T09:55:29Z",
       "end_run_blocker": "Phase 2 saved automation retarget requires human approval."
+    },
+    {
+      "phase": "Phase 2 - Wizard Implementation And Scaffold Integration",
+      "run_quality": "delivered_with_fixes",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "none",
+      "recorded_at": "2026-06-02T10:31:03Z",
+      "repair": "Branch drift unblocked by operator instruction and non-destructive switch back to the phase branch."
+    },
+    {
+      "phase": "Phase 3 - Golden Path Demo Fixtures",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "none",
+      "recorded_at": "2026-06-02T11:04:00Z",
+      "review": "same-context review delivered with no findings."
+    },
+    {
+      "phase": "Phase 4 - Evidence Benchmark Harness",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "none",
+      "recorded_at": "2026-06-02T12:24:00Z",
+      "review": "same-context review delivered with no findings."
+    },
+    {
+      "phase": "Phase 5 - Quickstart Documentation And Closeout",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "none",
+      "recorded_at": "2026-06-02T11:59:01Z",
+      "review": "same-context review delivered with no findings.",
+      "final_deep_review_prompt": "automation/onboarding-wizard-and-proof-demos/final_deep_review_prompt.md"
+    },
+    {
+      "phase": "finalization",
+      "run_quality": "flawless",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "adaptive_action": "none",
+      "recorded_at": "2026-06-02T12:07:46Z",
+      "review": "same-context finalization review delivered with no findings.",
+      "completion_status": "completed",
+      "pause_status": "already_paused",
+      "pause_readback_at": "2026-06-02T12:23:56Z"
     }
   ],
   "adaptive_escalation_count": 0,
@@ -163,24 +283,39 @@
   "auto_advance_after_delivered_review": true,
   "commit_delivered_phase_locally": false,
   "push_to_github": false,
-  "all_phases_complete": false,
-  "deep_review_prompt": null,
-  "final_deep_review_prompt_prepared": false,
-  "final_deep_review_prompt_file": null,
-  "final_deep_review_status": null,
+  "all_phases_complete": true,
+  "deep_review_prompt": "automation/onboarding-wizard-and-proof-demos/final_deep_review_prompt.md",
+  "final_deep_review_prompt_prepared": true,
+  "final_deep_review_prompt_file": "automation/onboarding-wizard-and-proof-demos/final_deep_review_prompt.md",
+  "final_deep_review_status": "review-complete",
   "final_deep_review_waiver_reason": null,
-  "updated_at": "2026-06-02T10:05:28Z",
+  "updated_at": "2026-06-02T12:25:22Z",
   "last_phase_advance_blocker": {
-    "checked_at": "2026-06-02T10:05:28Z",
+    "checked_at": "2026-06-02T11:59:01Z",
     "classification": "resolved",
-    "delivered_phase": "Phase 1 - Setup Wizard UX And CLI Contract",
-    "next_phase": "Phase 2 - Wizard Implementation And Scaffold Integration",
+    "delivered_phase": "Phase 5 - Quickstart Documentation And Closeout",
+    "next_phase": "finalization",
     "required_model": "gpt-5.5",
     "required_reasoning_effort": "xhigh",
     "configured_automation_model": "gpt-5.5",
     "configured_automation_reasoning_effort": "xhigh",
     "approval_decision": "not_required",
     "blocked_operation": null,
-    "next_human_action": "None before Phase 2; saved automation already matches the xhigh policy target."
+    "next_human_action": "None before finalization; saved automation already matches the xhigh finalization target."
+  },
+  "final_deep_review_review_file": "automation/onboarding-wizard-and-proof-demos/reviews/onboarding-wizard-and-proof-demos-finalization-review-iteration-1.md",
+  "last_completion_closeout": {
+    "completed_at": "2026-06-02T12:23:56Z",
+    "status": "completed",
+    "roadmap_renamed_from": "roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md",
+    "roadmap_renamed_to": "roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md",
+    "completion_alert": "automation/onboarding-wizard-and-proof-demos/alerts/2026-06-02T12-10-41Z-completed.md",
+    "pause_status": "already_paused",
+    "automation_status_readback": "PAUSED",
+    "hard_stop_guard": true,
+    "completion_alert_status": "local_alert_only",
+    "completed_alert_written_at": "2026-06-02T12:10:41Z",
+    "pause_readback_at": "2026-06-02T12:23:56Z",
+    "pause_source": "saved automation TOML readback; this run did not edit saved automation config."
   }
 }

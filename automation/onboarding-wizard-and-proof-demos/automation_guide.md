@@ -1,7 +1,7 @@
 # Onboarding Wizard And Proof Demos Automation Guide
 
-Status: Active
-Roadmap: `roadmaps/in_progress_onboarding_wizard_and_proof_demos_roadmap.md`
+Status: Completed
+Roadmap: `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`
 Roadmap slug: `onboarding-wizard-and-proof-demos`
 State file: `automation/onboarding-wizard-and-proof-demos/delivery_state.json`
 Delivery log: `automation/onboarding-wizard-and-proof-demos/delivery_log.md`
@@ -14,13 +14,15 @@ Model: `gpt-5.5`
 Reasoning effort: `xhigh`
 Execution environment: local
 Activation: Operator/manual activation accepted on 2026-06-02.
-Saved readback: `ACTIVE`, local, `gpt-5.5`, `xhigh` at
-2026-06-02T08:06:27Z.
+Saved readback: `PAUSED`, local, `gpt-5.5`, `xhigh` at
+2026-06-02T12:23:56Z.
 Lifecycle repair: Phase 0 delivered; roadmap moved to the in-progress
 lifecycle path at 2026-06-02T09:21:39Z. Saved automation prompt retarget was
 not required because the prompt references stable state/guide/log artifacts
 and the framework treats `delivery_state.json` as the authoritative roadmap
 path.
+Completion: all phases delivered on 2026-06-02. The saved automation now reads
+back `PAUSED`; this run did not edit saved automation config.
 
 ## Operating Policy
 
