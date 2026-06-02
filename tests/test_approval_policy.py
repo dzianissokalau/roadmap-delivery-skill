@@ -88,6 +88,27 @@ class ApprovalPolicyTests(unittest.TestCase):
         self.assertEqual(report["operation_decisions"]["promote_to_main"]["decision"], "forbidden")
         self.assertEqual(report["errors"], [])
 
+    def test_existing_policy_without_pause_flags_inherits_safe_defaults(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            state_dir = repo_root / "automation" / "fixture"
+            state_dir.mkdir(parents=True)
+            state_file = state_dir / "delivery_state.json"
+            state = {"approval_policy_path": "automation/fixture/approval_policy.json"}
+            state_file.write_text(json.dumps(state), encoding="utf-8")
+            policy = default_approval_policy("conservative")
+            policy.pop("pause_automation_on_completion")
+            policy.pop("pause_automation_on_stall")
+            (state_dir / "approval_policy.json").write_text(json.dumps(policy), encoding="utf-8")
+
+            report = read_approval_policy(repo_root, state_file, state)
+
+        self.assertTrue(report["present"])
+        self.assertTrue(report["pause_automation_on_completion"])
+        self.assertTrue(report["pause_automation_on_stall"])
+        self.assertEqual(approval_decision_for_pause_context(report, "completion")["decision"], "allowed")
+        self.assertEqual(approval_decision_for_pause_context(report, "stall")["decision"], "allowed")
+
     def test_custom_policy_missing_operations_default_to_denied(self):
         policy = default_approval_policy("custom", {"push_current_phase_branch": True})
 
