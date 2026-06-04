@@ -93,6 +93,25 @@ The supported behavior is limited to the generated local plugin package,
 repository validators, documented staging flow, and offline smoke coverage.
 Optional live binary checks do not prove full host feature parity.
 
+## Run The Optional Smoke Harness
+
+Use the local smoke harness when you want one command that validates the Claude
+plugin package without touching an active Claude configuration:
+
+```bash
+python3 scripts/host_smoke.py --host claude --isolated-home --json
+```
+
+The harness stages `dist/claude/` under a temporary `CLAUDE_PLUGIN_DIR`, runs
+file-backed demo roadmap validation with temporary automation readback,
+verifies the generated hook guard asks before destructive git commands, and
+then runs `claude --help` only when the binary is available. Missing `claude`
+is reported as `skipped`; it is not treated as a passed live check.
+
+Hook checks are conservative guardrails and reminders. They are not complete
+DLP, host permission enforcement, marketplace certification, or proof of full
+Claude feature parity.
+
 ## Prepare Demo Automation Readback
 
 Copy the demo fixture into a temporary git checkout, then copy its committed

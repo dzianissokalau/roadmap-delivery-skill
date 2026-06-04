@@ -26,9 +26,28 @@ capabilities:
     parity_level: host_specific_enhancement
     status: generated_plugin_hooks
     fallback: repository validators, blocked state, and local alert files
+    limitation: guardrails and reminders only; not complete DLP or host permission enforcement
     evidence:
       - dist/claude/hooks/hooks.json
       - dist/claude/hooks/roadmap_delivery_safety.py
+      - tests/test_claude_hooks.py
+  live_smoke_harness:
+    parity_level: host_specific_enhancement
+    status: optional_local_smoke
+    default: offline_package_checks
+    offline_parity: plugin_layout_manifest_demo_fixture_hook_guard_validation
+    live_status_source: scripts/host_smoke.py live_status
+    skipped_result_visibility: required
+    nightly_workflow: .github/workflows/host-smoke-nightly.yml workflow_dispatch opt-in
+    live_binary_check: optional
+    skip_reason_when_missing: claude_binary_not_found
+    guard: requires temporary CLAUDE_PLUGIN_DIR and --isolated-home
+    fallback: package layout, manifest, demo fixture validation, and hook guard checks
+    evidence:
+      - scripts/host_smoke.py
+      - tests/test_host_smoke.py
+      - docs/host-smoke-checks.md
+      - docs/installing-claude.md
   recurring_automation:
     parity_level: unsupported_by_host
     status: not_assumed

@@ -1,0 +1,176 @@
+name: Roadmap Delivery Validate
+description: Offline roadmap delivery validation and review-evidence checks.
+
+inputs:
+  repo-root:
+    description: Repository checkout to validate.
+    required: false
+    default: "."
+  roadmap-slug:
+    description: Roadmap slug used by the validation CLI.
+    required: false
+    default: ""
+  automation-id:
+    description: Saved automation id when readback is available.
+    required: false
+    default: ""
+  roadmap-path:
+    description: Explicit roadmap path retained as contract metadata.
+    required: false
+    default: ""
+  automation-dir:
+    description: Explicit repository-local automation artifact directory.
+    required: false
+    default: ""
+  strict:
+    description: Return non-zero when unallowed validation warnings are present.
+    required: false
+    default: "false"
+  allow-warning:
+    description: Comma or newline separated validation warning codes to allow.
+    required: false
+    default: ""
+  privacy-scan:
+    description: Run release privacy guardrails.
+    required: false
+    default: "true"
+  adapter-check:
+    description: Run adapter drift checks.
+    required: false
+    default: "true"
+  release-check:
+    description: Run local release reproducibility checks without publication.
+    required: false
+    default: "false"
+  review-evidence:
+    description: Report whether review evidence is present.
+    required: false
+    default: "true"
+  report-format:
+    description: Report format to write, either text or json.
+    required: false
+    default: "text"
+  report-file:
+    description: Optional report output path.
+    required: false
+    default: ""
+  live-host-smoke:
+    description: Reserved action-level opt-in; use the host-smoke workflow for current live evidence.
+    required: false
+    default: "false"
+  live-hosts:
+    description: Reserved comma separated live host list.
+    required: false
+    default: ""
+
+outputs:
+  validation-status:
+    description: Validation result, passed, failed, or blocked.
+    value: ${{ steps.contract.outputs.validation-status }}
+  warnings-count:
+    description: Number of validation warnings reported by the CLI.
+    value: ${{ steps.contract.outputs.warnings-count }}
+  errors-count:
+    description: Number of validation errors reported by the CLI.
+    value: ${{ steps.contract.outputs.errors-count }}
+  review-evidence-status:
+    description: Review evidence result, present, missing, not-requested, or blocked.
+    value: ${{ steps.contract.outputs.review-evidence-status }}
+  adapter-status:
+    description: Adapter check result, passed, failed, or not-requested.
+    value: ${{ steps.contract.outputs.adapter-status }}
+  privacy-status:
+    description: Privacy check result, passed, failed, or not-requested.
+    value: ${{ steps.contract.outputs.privacy-status }}
+  release-status:
+    description: Release check result, passed, failed, or not-requested.
+    value: ${{ steps.contract.outputs.release-status }}
+  live-host-status:
+    description: Live host result, not-requested, skipped, passed, or failed.
+    value: ${{ steps.contract.outputs.live-host-status }}
+  skipped-live-hosts:
+    description: Comma separated skipped live host reasons.
+    value: ${{ steps.contract.outputs.skipped-live-hosts }}
+  report-file:
+    description: Path to the text or JSON report written by the action.
+    value: ${{ steps.contract.outputs.report-file }}
+
+runs:
+  using: composite
+  steps:
+    - id: contract
+      name: Run offline validation contract
+      shell: bash
+      env:
+        INPUT_REPO_ROOT: ${{ inputs.repo-root }}
+        INPUT_ROADMAP_SLUG: ${{ inputs.roadmap-slug }}
+        INPUT_AUTOMATION_ID: ${{ inputs.automation-id }}
+        INPUT_ROADMAP_PATH: ${{ inputs.roadmap-path }}
+        INPUT_AUTOMATION_DIR: ${{ inputs.automation-dir }}
+        INPUT_STRICT: ${{ inputs.strict }}
+        INPUT_ALLOW_WARNING: ${{ inputs.allow-warning }}
+        INPUT_PRIVACY_SCAN: ${{ inputs.privacy-scan }}
+        INPUT_ADAPTER_CHECK: ${{ inputs.adapter-check }}
+        INPUT_RELEASE_CHECK: ${{ inputs.release-check }}
+        INPUT_REVIEW_EVIDENCE: ${{ inputs.review-evidence }}
+        INPUT_REPORT_FORMAT: ${{ inputs.report-format }}
+        INPUT_REPORT_FILE: ${{ inputs.report-file }}
+        INPUT_LIVE_HOST_SMOKE: ${{ inputs.live-host-smoke }}
+        INPUT_LIVE_HOSTS: ${{ inputs.live-hosts }}
+      run: |
+        set -euo pipefail
+
+        truthy() {
+          case "${1,,}" in
+            1|true|yes|on) return 0 ;;
+            *) return 1 ;;
+          esac
+        }
+
+        args=(
+          "github-action"
+          "--repo-root" "${INPUT_REPO_ROOT:-.}"
+          "--report-format" "${INPUT_REPORT_FORMAT:-text}"
+        )
+
+        if [ -n "${INPUT_ROADMAP_SLUG}" ]; then
+          args+=("--roadmap-slug" "${INPUT_ROADMAP_SLUG}")
+        fi
+        if [ -n "${INPUT_AUTOMATION_ID}" ]; then
+          args+=("--automation-id" "${INPUT_AUTOMATION_ID}")
+        fi
+        if [ -n "${INPUT_ROADMAP_PATH}" ]; then
+          args+=("--roadmap-path" "${INPUT_ROADMAP_PATH}")
+        fi
+        if [ -n "${INPUT_AUTOMATION_DIR}" ]; then
+          args+=("--automation-dir" "${INPUT_AUTOMATION_DIR}")
+        fi
+        if [ -n "${INPUT_ALLOW_WARNING}" ]; then
+          args+=("--allow-warning" "${INPUT_ALLOW_WARNING}")
+        fi
+        if [ -n "${INPUT_REPORT_FILE}" ]; then
+          args+=("--report-file" "${INPUT_REPORT_FILE}")
+        fi
+        if truthy "${INPUT_STRICT}"; then
+          args+=("--strict")
+        fi
+        if ! truthy "${INPUT_PRIVACY_SCAN}"; then
+          args+=("--no-privacy-scan")
+        fi
+        if ! truthy "${INPUT_ADAPTER_CHECK}"; then
+          args+=("--no-adapter-check")
+        fi
+        if truthy "${INPUT_RELEASE_CHECK}"; then
+          args+=("--release-check")
+        fi
+        if ! truthy "${INPUT_REVIEW_EVIDENCE}"; then
+          args+=("--no-review-evidence")
+        fi
+        if truthy "${INPUT_LIVE_HOST_SMOKE}"; then
+          args+=("--live-host-smoke")
+        fi
+        if [ -n "${INPUT_LIVE_HOSTS}" ]; then
+          args+=("--live-hosts" "${INPUT_LIVE_HOSTS}")
+        fi
+
+        python3 -m roadmap_delivery.cli "${args[@]}"

@@ -35,6 +35,17 @@ python3 scripts/check_release_privacy.py --repo-root .
 python3 -m unittest tests.test_install_smoke -v
 ```
 
+Optional live-host smoke, only when a maintainer explicitly wants Codex runtime
+evidence:
+
+```bash
+python3 scripts/host_smoke.py --host codex --isolated-home --json
+```
+
+This command uses a temporary `CODEX_HOME`, validates the demo roadmap through
+the staged helper scripts, and reports a missing `codex` binary as `skipped`.
+It must not be used as a package sync step for the active Codex home.
+
 ## Marketplace Readiness Checklist
 
 Use this checklist when evaluating whether the Codex package is ready for a
@@ -91,6 +102,15 @@ layout and helper-script smoke checks still run offline.
 The supported behavior is limited to the generated package layout, helper
 scripts, documented install flow, and file-backed validation. Optional live
 binary checks do not prove full host feature parity.
+
+The scripted form is:
+
+```bash
+python3 scripts/host_smoke.py --host codex --isolated-home --json
+```
+
+It reports separate offline and live statuses so a skipped binary check cannot
+be mistaken for a successful live Codex run.
 
 ## Prepare Demo Automation Readback
 

@@ -26,6 +26,14 @@ capabilities:
     parity_level: future_work
     status: host_specific_adapter_required
     fallback: manual or separately scheduled CLI execution against repository artifacts
+  live_smoke_harness:
+    parity_level: future_work
+    status: host_specific_adapter_required
+    offline_parity: not_available_until_host_adapter_exists
+    live_status_source: future_host_smoke_report
+    skipped_result_visibility: required_for_future_support
+    nightly_workflow: .github/workflows/host-smoke-nightly.yml does not claim generic host coverage
+    fallback: file-backed inspection and local CLI validation until a host adapter owns smoke checks
   model_selection:
     parity_level: future_work
     status: host_specific_adapter_required

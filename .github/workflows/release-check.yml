@@ -28,6 +28,20 @@ jobs:
       - name: Install package
         run: python3 -m pip install -e .
 
+      - name: Run roadmap delivery release validation action
+        uses: ./.github/actions/roadmap-delivery-validate
+        with:
+          repo-root: .
+          roadmap-slug: framework-core-and-release-readiness
+          automation-id: framework-core-and-release-readiness
+          strict: 'true'
+          allow-warning: missing_automation_config,current_branch_name_mismatch,worktree_dirty
+          adapter-check: 'true'
+          privacy-scan: 'true'
+          release-check: 'true'
+          report-format: json
+          report-file: ${{ runner.temp }}/roadmap-delivery-release-validate.json
+
       - name: Run release checks
         run: |
           python3 -m unittest discover -s tests -v

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "approval_mode": "conservative",
+  "operations": {
+    "edit_phase_owned_files": true,
+    "write_state_log_review_artifacts": true,
+    "create_or_switch_phase_branch": true,
+    "run_verification": true,
+    "commit_delivered_phase_locally": false,
+    "retarget_saved_automation": false,
+    "pause_saved_automation": false,
+    "push_current_phase_branch": false
+  },
+  "pause_automation_on_completion": true,
+  "pause_automation_on_stall": true,
+  "never_auto": [
+    "force_push",
+    "git_reset_hard",
+    "delete_branches_or_tags",
+    "merge_or_promote_to_main",
+    "publish_releases_or_packages",
+    "use_unavailable_credentials",
+    "change_repository_security_or_billing",
+    "install_or_sync_global_tools",
+    "destructive_filesystem_outside_phase_scope"
+  ],
+  "notes": "Initial setup uses conservative mode. Completion and repeated-stall safety pauses are enabled by default; commits, pushes, saved automation retargets, broad saved automation edits, publication, promotion, credentials, destructive git, remote workflow activation, repository secret management, and installed skill sync remain explicit human-approved operations."
+}

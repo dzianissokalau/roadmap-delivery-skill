@@ -30,6 +30,21 @@ capabilities:
     parity_level: host_specific_enhancement
     status: supported_by_codex_app_automation
     fallback: manual codex exec or Codex app runs against the same repository artifacts
+  live_smoke_harness:
+    parity_level: host_specific_enhancement
+    status: optional_supported
+    default: offline_package_checks
+    offline_parity: package_layout_helper_scripts_demo_fixture_validation
+    live_status_source: scripts/host_smoke.py live_status
+    skipped_result_visibility: required
+    nightly_workflow: .github/workflows/host-smoke-nightly.yml workflow_dispatch opt-in
+    skip_reason_when_missing: codex_binary_not_found
+    guard: scripts/host_smoke.py must use --isolated-home and a temporary CODEX_HOME
+    fallback: offline package layout, helper script, and demo fixture validation
+    evidence:
+      - scripts/host_smoke.py
+      - tests/test_host_smoke.py
+      - docs/host-smoke-checks.md
   model_selection:
     parity_level: required_parity
     status: supported_by_runner_configuration

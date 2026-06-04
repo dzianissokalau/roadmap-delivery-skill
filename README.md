@@ -18,6 +18,8 @@ Key docs:
 - Compatibility: `docs/compatibility.md`
 - Contributor workflow: `docs/contributor-workflow.md`
 - Evidence benchmark contract: `docs/evidence-benchmark.md`
+- GitHub Action contract: `docs/github-action.md`
+- Host smoke check boundary: `docs/host-smoke-checks.md`
 - Codex install: `docs/installing-codex.md`
 - Claude install: `docs/installing-claude.md`
 - Migration guide: `docs/migration-guide.md`
@@ -198,6 +200,9 @@ Codex package.
 | Completion and stall self-pause | Default safety behavior | Generated policies pause completed automations and pause stalled automations after 2 no-progress runs by default, with opt-out policy flags and saved automation readback. |
 | Adapter generation | Supported | `scripts/build_adapters.py --check` verifies committed Codex and Claude output. |
 | Release artifacts | Local only | Build and verify locally; publication requires explicit human approval. |
+| GitHub Action companion | Supported local action | `.github/actions/roadmap-delivery-validate` delegates to the CLI, adapter check, privacy scan, release check, and review-evidence inspection without requiring secrets. |
+| Live host smoke checks | Supported optional evidence | `scripts/host_smoke.py` and the dispatch-only host smoke workflow keep Codex and Claude live status separate from offline validation and preserve skipped results. |
+| Nightly host smoke workflow | Opt-in template | `.github/workflows/host-smoke-nightly.yml` is manual-dispatch by default; scheduling or authenticated host setup remains human-approved. |
 | Claude adapter | Supported locally | Generated Claude plugin package, reviewer agent, hooks, install docs, and offline smoke tests ship as local release artifacts; live Claude binary checks remain optional. |
 | Generic markdown pack | Documentation template | Built only as an explicit release artifact for future adapter planning. |
 | Hosted control plane | Not included | This roadmap keeps state, logs, reviews, and alerts file-backed. |
@@ -213,7 +218,7 @@ Codex package.
 | Delivered | `roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md` | Autonomy modes, adaptive model escalation, and automatic pause behavior; the saved automation is paused. |
 | Delivered | `roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md` | Setup wizard generation, golden-path demos, quickstart fit guidance, and measurable delivery-evidence proof; the saved automation is paused. |
 | Delivered | `roadmaps/delivered_release_install_and_distribution_trust_roadmap.md` | First tagged release readiness, install and distribution trust, licensing/trademark guidance, marketplace-native preparation, public governance surfaces, and local closeout evidence. |
-| Planned, not yet configured | `roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md` | Optional live host smoke checks, capability metadata, and a GitHub Action validation or review-evidence companion. |
+| Delivered | `roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md` | Optional live host smoke checks, capability metadata, and a GitHub Action validation or review-evidence companion; final evidence is recorded and the saved automation is paused. |
 
 Roadmap status describes local delivery evidence only. It does not promise
 delivery dates, paid support, hosted services, marketplace acceptance, or
@@ -361,6 +366,14 @@ GitHub Actions run repository-local checks only. The optional Codex skill
 validator runs only when `CODEX_QUICK_VALIDATE` points at an available
 `quick_validate.py` script, so CI does not require private Codex directories or
 credentials.
+
+The local GitHub Action companion is documented in `docs/github-action.md` and
+is wired into CI and release-check workflows. Its default contract is offline
+validation that delegates to the existing CLI and helper scripts. Optional
+live Codex or Claude smoke checks are documented separately in
+`docs/host-smoke-checks.md` and exposed through a dispatch-only workflow; they
+must be explicitly enabled and must report missing prerequisites as skipped,
+not passed.
 
 Local equivalents for the CI workflow:
 

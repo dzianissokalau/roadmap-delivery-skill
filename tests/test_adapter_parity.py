@@ -18,6 +18,10 @@ CAPABILITIES = {
     "codex": REPO_ROOT / "host-capabilities" / "codex.yaml",
     "claude": REPO_ROOT / "host-capabilities" / "claude.yaml",
 }
+ALL_CAPABILITIES = {
+    **CAPABILITIES,
+    "generic": REPO_ROOT / "host-capabilities" / "generic.yaml",
+}
 
 SNAPSHOT_KEYS = {"path", "sha256", "size", "mode", "core_source", "core_sha256", "core_size"}
 
@@ -253,9 +257,24 @@ class AdapterParityTests(unittest.TestCase):
             for index, line in enumerate(lines):
                 if "parity_level: host_specific_enhancement" not in line and "parity_level: unsupported_by_host" not in line:
                     continue
-                context = "\n".join(lines[index : index + 8])
+                context = "\n".join(lines[index : index + 14])
                 with self.subTest(adapter=adapter, line=index + 1):
                     self.assertIn("fallback:", context)
+
+    def test_capability_metadata_records_host_smoke_reporting_contract(self):
+        required_terms = (
+            "live_smoke_harness:",
+            "offline_parity:",
+            "live_status_source:",
+            "skipped_result_visibility:",
+            "nightly_workflow:",
+            "fallback:",
+        )
+        for adapter, path in ALL_CAPABILITIES.items():
+            text = path.read_text(encoding="utf-8")
+            for term in required_terms:
+                with self.subTest(adapter=adapter, term=term):
+                    self.assertIn(term, text)
 
     def test_ci_discovers_parity_tests(self):
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")

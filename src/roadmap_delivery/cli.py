@@ -5,13 +5,23 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 from typing import Any, Dict, Iterable, List, Optional
 
 from . import __version__
 from .approval import APPROVAL_MODES, read_approval_policy
 from .policy import ALLOWED_REASONING_EFFORTS
 from .reports import inspect as inspect_state
-from .reports import build_evidence_benchmark, print_benchmark_text
+from .reports import (
+    build_evidence_benchmark,
+    build_github_action_report,
+    print_benchmark_text,
+    print_github_action_text,
+    resolve_action_report_file,
+    resolve_github_output_file,
+    write_github_action_outputs,
+    write_github_action_report,
+)
 from .scaffold import (
     DEFAULT_MAX_STALLED_RUNS,
     ScaffoldOptions,
@@ -294,6 +304,39 @@ def run_benchmark(args: argparse.Namespace) -> int:
     return 0 if report.get("status") == "passed" else 1
 
 
+def run_github_action(args: argparse.Namespace) -> int:
+    repo_root = _repo_root(args.repo_root)
+    report_format = str(args.report_format).strip().lower()
+    report_file = resolve_action_report_file(repo_root, args.report_file or "", report_format)
+    github_output = resolve_github_output_file(repo_root, args.github_output or "")
+    report = build_github_action_report(
+        repo_root=repo_root,
+        roadmap_slug=args.roadmap_slug or "",
+        automation_id=args.automation_id or "",
+        roadmap_path=args.roadmap_path or "",
+        automation_dir=args.automation_dir or "",
+        strict=bool(args.strict),
+        allow_warning=args.allow_warning,
+        privacy_scan=bool(args.privacy_scan),
+        adapter_check=bool(args.adapter_check),
+        release_check=bool(args.release_check),
+        review_evidence=bool(args.review_evidence),
+        report_file=report_file,
+        live_host_smoke=bool(args.live_host_smoke),
+        live_hosts=args.live_hosts,
+        python_executable=sys.executable,
+    )
+    report["report_format"] = report_format
+    report["github_output_file"] = str(github_output)
+    write_github_action_report(report, report_file, report_format)
+    write_github_action_outputs(github_output, report["outputs"])
+    if args.json:
+        _print_json(report)
+    else:
+        print_github_action_text(report)
+    return 0 if report.get("status") == "passed" else 1
+
+
 def build_package_plan(args: argparse.Namespace) -> Dict[str, Any]:
     repo_root = _repo_root(args.repo_root)
     adapter = args.adapter
@@ -431,6 +474,32 @@ def build_parser() -> argparse.ArgumentParser:
     add_state_flags(validate_parser)
     add_strict_flags(validate_parser)
     validate_parser.set_defaults(func=run_validate, parser=validate_parser)
+
+    action_parser = subparsers.add_parser("github-action", help="Run the GitHub Action companion report.")
+    add_common_flags(action_parser)
+    add_state_flags(action_parser)
+    add_strict_flags(action_parser)
+    action_parser.add_argument("--roadmap-path", default="", help="Roadmap path retained as action report metadata.")
+    action_parser.add_argument("--automation-dir", default="", help="Automation directory retained as action report metadata.")
+    action_parser.add_argument(
+        "--report-format",
+        default="text",
+        choices=("text", "json"),
+        help="Report file format to write.",
+    )
+    action_parser.add_argument("--report-file", default="", help="Optional report output path.")
+    action_parser.add_argument("--github-output", default="", help="Optional GitHub output file path.")
+    action_parser.add_argument("--privacy-scan", dest="privacy_scan", action="store_true", default=True)
+    action_parser.add_argument("--no-privacy-scan", dest="privacy_scan", action="store_false")
+    action_parser.add_argument("--adapter-check", dest="adapter_check", action="store_true", default=True)
+    action_parser.add_argument("--no-adapter-check", dest="adapter_check", action="store_false")
+    action_parser.add_argument("--release-check", dest="release_check", action="store_true", default=False)
+    action_parser.add_argument("--no-release-check", dest="release_check", action="store_false")
+    action_parser.add_argument("--review-evidence", dest="review_evidence", action="store_true", default=True)
+    action_parser.add_argument("--no-review-evidence", dest="review_evidence", action="store_false")
+    action_parser.add_argument("--live-host-smoke", dest="live_host_smoke", action="store_true", default=False)
+    action_parser.add_argument("--live-hosts", action="append", default=[], help="Comma or newline separated live host list.")
+    action_parser.set_defaults(func=run_github_action, parser=action_parser)
 
     scaffold_parser = subparsers.add_parser("scaffold", help="Create or plan automation scaffolding.")
     add_common_flags(scaffold_parser)

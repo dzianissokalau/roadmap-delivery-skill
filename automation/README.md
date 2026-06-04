@@ -12,7 +12,7 @@ Use `../roadmaps/` for human-facing documents:
 - `../roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md`
 - `../roadmaps/delivered_release_install_and_distribution_trust_roadmap.md`
 - `../roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md`
-- `../roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md`
+- `../roadmaps/in_progress_host_validation_and_github_action_companion_roadmap.md`
 
 Use this folder for automation templates, state, logs, review outputs, and
 closeout checklists.
@@ -52,15 +52,11 @@ in the project root or `../roadmaps/`.
 | `../roadmaps/delivered_autonomous_operation_modes_and_adaptive_control_roadmap.md` | Completed | Complete | `autonomous-operation-modes-and-adaptive-control` hourly, PAUSED | `autonomous-operation-modes-and-adaptive-control/delivery_state.json` |
 | `../roadmaps/delivered_onboarding_wizard_and_proof_demos_roadmap.md` | Completed | Complete | `onboarding-wizard-and-proof-demos` hourly, PAUSED | `onboarding-wizard-and-proof-demos/delivery_state.json` |
 | `../roadmaps/delivered_release_install_and_distribution_trust_roadmap.md` | Completed | Complete | `release-install-and-distribution-trust` hourly, PAUSED | `release-install-and-distribution-trust/delivery_state.json` |
+| `../roadmaps/in_progress_host_validation_and_github_action_companion_roadmap.md` | In Progress | Phase 1 | `host-validation-and-github-action-companion` hourly, ACTIVE | `host-validation-and-github-action-companion/delivery_state.json` |
 
 ## Planned Roadmaps
 
-These roadmap documents exist in `../roadmaps/`, but no automation directory or
-saved automation has been configured yet.
-
-| Roadmap | Status | Suggested Slug |
-|---|---|---|
-| `../roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md` | Not Started | `host-validation-and-github-action-companion` |
+No additional phased roadmaps are currently planned without automation.
 
 ## Release Trust Roadmap Notes
 

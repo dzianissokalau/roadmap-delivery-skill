@@ -1,9 +1,11 @@
 # Host Validation And GitHub Action Companion Roadmap
 
-Status: Not Started
-Current phase: Phase 0 - Host Validation Safety Contract
-Last updated: 2026-06-02
-Next action: Set up automation or deliver Phase 0.
+Status: Delivered
+Current phase: Complete
+Last updated: 2026-06-04
+Next action: Review final evidence and promotion readiness; publication,
+branch push, promotion, remote schedule activation, repository secrets, and
+installed package synchronization remain separate human-approved actions.
 Blocked by: None.
 
 ## Purpose
@@ -31,7 +33,7 @@ and CI evidence for teams that already use repository workflows.
 Recommended automation setup:
 
 ```text
-ROADMAP_PATH=roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md
+ROADMAP_PATH=roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md
 ROADMAP_SLUG=host-validation-and-github-action-companion
 AUTOMATION_DIR=automation/host-validation-and-github-action-companion
 AUTOMATION_ID=host-validation-and-github-action-companion
@@ -105,7 +107,7 @@ tests/
   test_host_smoke.py
   test_adapter_parity.py
 roadmaps/
-  not_started_host_validation_and_github_action_companion_roadmap.md
+  delivered_host_validation_and_github_action_companion_roadmap.md
 ```
 
 Do not add hosted service dependencies, billing flows, marketplace publication,
@@ -145,7 +147,7 @@ they must skip, and what requires operator approval.
 ### Owned Files
 
 ```text
-roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md
+roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md
 docs/host-smoke-checks.md
 docs/github-action.md
 docs/compatibility.md
@@ -567,7 +569,7 @@ docs/compatibility.md
 .github/actions/roadmap-delivery-validate/
 .github/workflows/
 automation/<roadmap-slug>/
-roadmaps/not_started_host_validation_and_github_action_companion_roadmap.md
+roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md
 ```
 
 ### Inputs

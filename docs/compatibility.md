@@ -24,6 +24,9 @@ planning surface.
 | Claude plugin package | Supported local package | Generated under `dist/claude/` with skill, reviewer agent, hooks, and references. |
 | Generic markdown pack | Documentation template | Built only as an explicit release artifact for future adapter planning. |
 | Local release artifacts | Supported | `scripts/build_release.py --check` verifies reproducible source, Codex, Claude, schema, CLI, and generic bundles. |
+| GitHub Action companion | Supported local action | `.github/actions/roadmap-delivery-validate` delegates to the CLI and helper scripts for offline validation. |
+| Live host smoke checks | Supported optional evidence | `scripts/host_smoke.py` and `.github/workflows/host-smoke-nightly.yml` provide opt-in Codex and Claude smoke reports with visible skipped results. |
+| Nightly host smoke workflow | Opt-in template | The workflow is manual-dispatch by default; remote scheduling requires a separate human-approved repository change. |
 | Host capability metadata | Supported | `host-capabilities/codex.yaml` and `host-capabilities/claude.yaml` define the adapter support contract. |
 
 ## Host Capability Notes
@@ -48,6 +51,13 @@ Approval policy, adaptive model policy, and completion or stall pause behavior
 are host-neutral control-plane contracts. Hosts that cannot read or update a
 saved runner config must expose that limitation as an explicit fallback instead
 of claiming automatic retarget or pause support.
+
+GitHub Action validation is a supported local companion surface. Its contract
+is offline-first and delegates to the existing CLI, schemas, adapter checks,
+and privacy guardrails. Optional live Codex and Claude smoke checks are
+maintainer evidence only: missing prerequisites must be reported as skipped,
+and successful smoke checks do not replace repository validation or host
+capability metadata.
 
 ## Marketplace And Distribution Boundary
 
@@ -86,6 +96,12 @@ host assumptions in prompts:
   package and host-specific fallback boundaries.
 - `host-capabilities/generic.yaml` records the documentation-only generic
   adapter template for future host planning.
+
+The capability files are also the source for host smoke coverage summaries.
+Each live smoke section records the offline parity boundary, live status
+source, skip visibility rule, opt-in workflow reference, and fallback surface.
+The workflow report is evidence for a specific run; the capability file is the
+compatibility claim.
 
 Parity levels:
 

@@ -244,6 +244,8 @@ class InstallSmokeTests(unittest.TestCase):
                 self.assertIn("AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR", text)
         self.assertIn("## Short Path", codex_doc)
         self.assertIn("## Verification Path", codex_doc)
+        self.assertIn("scripts/host_smoke.py --host codex --isolated-home --json", codex_doc)
+        self.assertIn("skipped", codex_doc)
         self.assertIn("## Rollback Or Cleanup", codex_doc)
         self.assertIn("## Short Path", claude_doc)
         self.assertIn("## Verification Path", claude_doc)

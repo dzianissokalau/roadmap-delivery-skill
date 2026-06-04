@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "roadmap": "roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md",
+  "roadmap_slug": "host-validation-and-github-action-companion",
+  "current_phase": "Complete",
+  "branch": "codex/host-validation-and-github-action-companion-finalization",
+  "status": "completed",
+  "review_iterations": 1,
+  "max_review_iterations": 3,
+  "last_verification": {
+    "verified_at": "2026-06-04T16:36:22Z",
+    "phase": "finalization",
+    "status": "passed",
+    "commands": [
+      {
+        "command": "python3 -m unittest discover -s tests -v",
+        "status": "passed",
+        "summary": "Ran 205 tests successfully with 1 expected skip for optional Claude binary help."
+      },
+      {
+        "command": "python3 scripts/build_adapters.py --check --json",
+        "status": "passed",
+        "summary": "Adapter check returned status ok for Codex and Claude with no diffs, no errors, and marketplace readiness ok."
+      },
+      {
+        "command": "python3 scripts/build_release.py --check --json",
+        "status": "passed",
+        "summary": "Release check returned status ok with reproducible 0.1.0 artifacts, no errors, and privacy scan passed."
+      },
+      {
+        "command": "python3 scripts/check_release_privacy.py --repo-root .",
+        "status": "passed",
+        "summary": "Privacy scan passed: 128 files scanned, 0 findings, 0 errors."
+      },
+      {
+        "command": "git diff --check",
+        "status": "passed",
+        "summary": "No whitespace errors."
+      },
+      {
+        "command": "python3 scripts/host_smoke.py --host codex --isolated-home --codex-binary /private/tmp/roadmap-delivery-missing-codex --json",
+        "status": "passed_with_skip",
+        "summary": "Codex smoke reported status skipped with offline_status passed, live_status skipped, reason codex_binary_not_found, active_codex_home_used false, and created_real_automation false."
+      },
+      {
+        "command": "python3 scripts/host_smoke.py --host claude --isolated-home --claude-binary /private/tmp/roadmap-delivery-missing-claude --json",
+        "status": "passed_with_skip",
+        "summary": "Claude smoke reported status skipped with offline_status passed, live_status skipped, reason claude_binary_not_found, active_claude_config_used false, and created_real_automation false."
+      },
+      {
+        "command": "PYTHONPATH=src python3 -c \"from roadmap_delivery.automation import pause_saved_automation; ...\"",
+        "status": "passed",
+        "summary": "Completion safety pause was allowed by approval policy and saved automation readback reported PAUSED after mutating only the status field."
+      },
+      {
+        "command": "rg -n \"in_progress_host_validation_and_github_action_companion_roadmap|host-validation-and-github-action-companion-phase-6\" README.md automation/host-validation-and-github-action-companion/deep_review_prompt.md automation/host-validation-and-github-action-companion/trust_evidence.md roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md",
+        "status": "passed",
+        "summary": "No current-facing stale in-progress roadmap path or Phase 6 branch references remain in README, delivered roadmap, final deep-review prompt, or trust evidence."
+      },
+      {
+        "command": "python3 -m unittest tests.test_quality_gates tests.test_adapter_parity -v",
+        "status": "passed",
+        "summary": "Ran 14 targeted quality/adapter tests successfully after lifecycle reference refresh."
+      },
+      {
+        "command": "git diff --check",
+        "status": "passed",
+        "summary": "No whitespace errors after lifecycle reference refresh."
+      }
+    ]
+  },
+  "last_review": {
+    "reviewed_at": "2026-06-04T16:36:22Z",
+    "status": "delivered",
+    "verdict": "delivered",
+    "file": "automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-1.md",
+    "phase": "finalization",
+    "summary": "Finalization completed with delivered roadmap rename, refreshed lifecycle references, full verification, completed alert, final deep-review prompt evidence, and PAUSED automation readback."
+  },
+  "last_delivered_phase": "finalization",
+  "blocked_reason": null,
+  "last_blocker_repair": {
+    "repaired_at": "2026-06-04T12:03:30Z",
+    "classification": "automation-config",
+    "repair": "Reconciled repository-local status surfaces from PAUSED to ACTIVE after saved automation readback validated matching prompt guards, cwd, model, and reasoning.",
+    "blocked_reason_cleared": null
+  },
+  "approval_policy_path": "automation/host-validation-and-github-action-companion/approval_policy.json",
+  "approval_mode": "conservative",
+  "last_approval_policy_readback": {
+    "read_at": "2026-06-04T16:07:22Z",
+    "path": "automation/host-validation-and-github-action-companion/approval_policy.json",
+    "status": "valid",
+    "approval_mode": "conservative",
+    "approved_operations": [
+      "edit_phase_owned_files",
+      "write_state_log_review_artifacts",
+      "create_or_switch_phase_branch",
+      "run_verification"
+    ],
+    "pause_automation_on_completion": true,
+    "pause_automation_on_stall": true,
+    "fallback_reason": null
+  },
+  "required_model": "gpt-5.5",
+  "required_reasoning_effort": "xhigh",
+  "configured_automation_model": "gpt-5.5",
+  "configured_automation_reasoning_effort": "xhigh",
+  "configured_automation_status": "PAUSED",
+  "configured_execution_environment": "local",
+  "automation": {
+    "id": "host-validation-and-github-action-companion",
+    "kind": "cron",
+    "status": "PAUSED",
+    "execution_environment": "local",
+    "prompt_roadmap": "state:automation/host-validation-and-github-action-companion/delivery_state.json",
+    "prompt_artifact_dir": "automation/host-validation-and-github-action-companion",
+    "readback_at": "2026-06-04T16:07:22Z",
+    "prompt_path_strategy": "state_resolved",
+    "cadence": "hourly"
+  },
+  "run_count": 9,
+  "stalled_run_count": 0,
+  "max_stalled_runs": 2,
+  "last_progress_signature": "sha256:7cc8d53b0c50e059d831d03f47c4581afa8b9f946c4e7d5c4f4ad7e682ee645d",
+  "last_progress_at": "2026-06-04T16:36:22Z",
+  "last_operator_alert": {
+    "kind": "completed",
+    "file": "automation/host-validation-and-github-action-companion/alerts/2026-06-04T16-07-22Z-completed.md",
+    "timestamp": "2026-06-04T16:07:22Z",
+    "reason": "All host validation and GitHub Action companion roadmap phases and finalization are delivered; the saved Codex automation is PAUSED by the approved completion safety pause.",
+    "next_human_action": "Review final evidence for promotion readiness; publication, branch push, main promotion, remote schedules, repository secrets, and installed package sync remain separate approvals.",
+    "notification_sink": "alert_file",
+    "notification_status": "local_alert_only"
+  },
+  "last_automation_pause": {
+    "context": "completion",
+    "decided_at": "2026-06-04T16:07:22Z",
+    "approval_decision": {
+      "operation": "pause_saved_automation",
+      "context": "completion",
+      "decision": "allowed",
+      "reason": "Approval policy explicitly allows automation pause on completion.",
+      "source": "pause_automation_on_completion"
+    },
+    "status": "paused",
+    "result": {
+      "automation_id": "host-validation-and-github-action-companion",
+      "config_path": "/Users/dzianissokalau/.codex/automations/host-validation-and-github-action-companion/automation.toml",
+      "attempted": true,
+      "paused": true,
+      "status": "paused",
+      "previous_status": "ACTIVE",
+      "readback_status": "PAUSED",
+      "paused_at": "2026-06-04T16:07:22Z",
+      "reason": "Roadmap finalization completed; completion safety pause is enabled by approval policy."
+    }
+  },
+  "last_activation": {
+    "accepted_at": "2026-06-04T12:03:30Z",
+    "source": "saved_automation_readback",
+    "status": "ACTIVE",
+    "reason": "Saved automation read back ACTIVE with matching prompt guards, cwd, model, reasoning, and state-resolved roadmap strategy; accepted as operator/manual activation."
+  },
+  "last_run_quality": "flawless",
+  "last_adaptive_action": {
+    "action": "disabled",
+    "reason": "Adaptive model policy is disabled or absent.",
+    "run_quality": "flawless",
+    "target": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "xhigh"
+    },
+    "target_phase": "Complete"
+  },
+  "model_history": [
+    {
+      "phase": "Phase 0 - Host Validation Safety Contract",
+      "completed_at": "2026-06-04T12:08:49Z",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "run_quality": "flawless"
+    },
+    {
+      "phase": "Phase 1 - GitHub Action Contract And Offline Validation",
+      "completed_at": "2026-06-04T12:40:32Z",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "run_quality": "flawless"
+    },
+    {
+      "phase": "Phase 2 - GitHub Action Implementation",
+      "completed_at": "2026-06-04T13:41:16Z",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "high",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "run_quality": "flawless"
+    },
+    {
+      "phase": "Phase 3 - Optional Codex Live Smoke Harness",
+      "completed_at": "2026-06-04T14:30:33Z",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "run_quality": "flawless"
+    },
+    {
+      "phase": "Phase 4 - Optional Claude Live Smoke Harness",
+      "completed_at": "2026-06-04T14:42:14Z",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "run_quality": "flawless"
+    },
+    {
+      "phase": "Phase 5 - Nightly Workflow And Capability Metadata",
+      "completed_at": "2026-06-04T15:28:50Z",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "high",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "run_quality": "flawless"
+    },
+    {
+      "phase": "Phase 6 - Trust Evidence Closeout",
+      "completed_at": "2026-06-04T15:54:00Z",
+      "required_model": "gpt-5.5",
+      "required_reasoning_effort": "xhigh",
+      "configured_automation_model": "gpt-5.5",
+      "configured_automation_reasoning_effort": "xhigh",
+      "run_quality": "flawless"
+    }
+  ],
+  "adaptive_escalation_count": 0,
+  "adaptive_deescalation_count": 0,
+  "adaptive_flawless_streak": 0,
+  "auto_advance_after_delivered_review": true,
+  "commit_delivered_phase_locally": false,
+  "push_to_github": false,
+  "all_phases_complete": true,
+  "deep_review_prompt": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
+  "final_deep_review_prompt_prepared": true,
+  "final_deep_review_prompt_file": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
+  "final_deep_review_status": "prompt-prepared",
+  "final_deep_review_waiver_reason": null,
+  "updated_at": "2026-06-04T16:36:22Z",
+  "finalization": {
+    "completed_at": "2026-06-04T16:07:22Z",
+    "deep_review_prompt": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
+    "completion_alert_required": true,
+    "completion_alert_file": "automation/host-validation-and-github-action-companion/alerts/2026-06-04T16-07-22Z-completed.md",
+    "automation_pause_required": true,
+    "automation_pause_status": "paused",
+    "automation_pause_completed_at": "2026-06-04T16:07:22Z",
+    "automation_pause_approval": {
+      "operation": "pause_saved_automation",
+      "context": "completion",
+      "decision": "allowed",
+      "reason": "Approval policy explicitly allows automation pause on completion.",
+      "source": "pause_automation_on_completion"
+    },
+    "automation_readback": "PAUSED, local, gpt-5.5, xhigh",
+    "delivered_roadmap": "roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md",
+    "finalization_branch": "codex/host-validation-and-github-action-companion-finalization",
+    "publication_status": "not_published_without_approval",
+    "branch_push_status": "not_pushed_without_approval",
+    "promotion_status": "not_promoted_without_approval",
+    "remote_schedule_status": "not_enabled_without_approval",
+    "repository_secret_status": "not_created_without_approval",
+    "installed_package_sync_status": "not_synchronized_without_approval"
+  }
+}

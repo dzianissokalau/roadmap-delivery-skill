@@ -1,0 +1,125 @@
+name: Host Smoke Nightly
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_codex:
+        description: Run the optional Codex smoke harness.
+        required: false
+        type: boolean
+        default: false
+      run_claude:
+        description: Run the optional Claude smoke harness.
+        required: false
+        type: boolean
+        default: false
+      codex_binary:
+        description: Codex binary name or path for the optional live check.
+        required: false
+        type: string
+        default: codex
+      claude_binary:
+        description: Claude binary name or path for the optional live check.
+        required: false
+        type: string
+        default: claude
+
+permissions:
+  contents: read
+
+jobs:
+  host-smoke:
+    name: Optional Host Smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install package
+        run: python3 -m pip install -e .
+
+      - name: Prepare report directory
+        run: mkdir -p host-smoke-reports
+
+      - name: Run Codex host smoke
+        if: ${{ inputs.run_codex }}
+        shell: bash
+        run: |
+          set +e
+          python3 scripts/host_smoke.py \
+            --host codex \
+            --isolated-home \
+            --codex-binary "${{ inputs.codex_binary }}" \
+            --json > host-smoke-reports/codex.json
+          status=$?
+          set -e
+          cat host-smoke-reports/codex.json
+          echo "codex=${status}" >> host-smoke-reports/exit-status.txt
+
+      - name: Run Claude host smoke
+        if: ${{ inputs.run_claude }}
+        shell: bash
+        run: |
+          set +e
+          python3 scripts/host_smoke.py \
+            --host claude \
+            --isolated-home \
+            --claude-binary "${{ inputs.claude_binary }}" \
+            --json > host-smoke-reports/claude.json
+          status=$?
+          set -e
+          cat host-smoke-reports/claude.json
+          echo "claude=${status}" >> host-smoke-reports/exit-status.txt
+
+      - name: Write host coverage summary
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from roadmap_delivery.reports import build_host_coverage_report
+
+          report_dir = Path("host-smoke-reports")
+          reports = []
+          for path in sorted(report_dir.glob("*.json")):
+              if path.name == "host-coverage.json":
+                  continue
+              reports.append(json.loads(path.read_text(encoding="utf-8")))
+          report = build_host_coverage_report(Path("."), smoke_reports=reports)
+          target = Path("host-smoke-reports/host-coverage.json")
+          target.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload host smoke reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-smoke-reports
+          path: host-smoke-reports/*
+
+      - name: Fail on host smoke failure
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          status_file = Path("host-smoke-reports/exit-status.txt")
+          if not status_file.exists():
+              raise SystemExit(0)
+          failed = []
+          for line in status_file.read_text(encoding="utf-8").splitlines():
+              host, _, value = line.partition("=")
+              if value.strip() and int(value) != 0:
+                  failed.append(host)
+          if failed:
+              raise SystemExit("Host smoke failed for: " + ", ".join(failed))
+          PY

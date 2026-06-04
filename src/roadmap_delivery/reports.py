@@ -8,9 +8,10 @@ import os
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 from .adaptive import adaptive_target_from_state, validate_adaptive_model_policy
 from .approval import approval_decision_for_pause_context, read_approval_policy
@@ -44,7 +45,10 @@ from .toml import parse_minimal_toml
 
 DEFAULT_AUTOMATIONS_DIR = Path.home() / ".codex" / "automations"
 AUTOMATIONS_DIR = Path(os.environ.get("AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR", str(DEFAULT_AUTOMATIONS_DIR))).expanduser()
+GITHUB_ACTION_REPORT_SCHEMA_VERSION = 1
 EVIDENCE_BENCHMARK_SCHEMA_VERSION = 1
+HOST_COVERAGE_REPORT_SCHEMA_VERSION = 1
+HOST_CAPABILITY_FILES = ("codex.yaml", "claude.yaml", "generic.yaml")
 EVIDENCE_BENCHMARK_SCENARIOS = (
     {
         "id": "clean_delivery",
@@ -119,6 +123,396 @@ LIFECYCLE_ACTIVE_STATE_STATUSES = {"active", "in progress", "in-progress"}
 
 class EvidenceBenchmarkError(RuntimeError):
     """Raised when the local evidence benchmark cannot build a fixture."""
+
+
+def split_action_values(values: Iterable[str]) -> List[str]:
+    result: List[str] = []
+    for value in values:
+        for chunk in str(value).replace(",", "\n").splitlines():
+            item = chunk.strip()
+            if item:
+                result.append(item)
+    return result
+
+
+def clean_yaml_scalar(value: str) -> str:
+    value = value.strip()
+    if not value:
+        return ""
+    if value[0] in {'"', "'"} and value[-1:] == value[0]:
+        return value[1:-1]
+    return value
+
+
+def extract_yaml_scalar(text: str, key: str) -> str:
+    pattern = re.compile(rf"^{re.escape(key)}:\s*(?P<value>.+?)\s*$", re.MULTILINE)
+    match = pattern.search(text)
+    return clean_yaml_scalar(match.group("value")) if match else ""
+
+
+def extract_capability_block(text: str, capability: str) -> str:
+    lines = text.splitlines()
+    block: List[str] = []
+    in_block = False
+    for line in lines:
+        if line.startswith("  ") and not line.startswith("    "):
+            if in_block:
+                break
+            if line.strip() == f"{capability}:":
+                in_block = True
+                block.append(line)
+            continue
+        if in_block:
+            block.append(line)
+    return "\n".join(block)
+
+
+def extract_block_scalar(block: str, key: str) -> str:
+    pattern = re.compile(rf"^\s+{re.escape(key)}:\s*(?P<value>.+?)\s*$", re.MULTILINE)
+    match = pattern.search(block)
+    return clean_yaml_scalar(match.group("value")) if match else ""
+
+
+def skipped_checks_from_smoke_report(report: Dict[str, Any]) -> List[Dict[str, str]]:
+    result: List[Dict[str, str]] = []
+    for item in report.get("checks", []):
+        if not isinstance(item, dict) or item.get("status") != "skipped":
+            continue
+        result.append(
+            {
+                "name": str(item.get("name") or "unknown"),
+                "reason": str(item.get("reason") or "skipped"),
+            }
+        )
+    return result
+
+
+def build_host_coverage_report(
+    repo_root: Path,
+    *,
+    smoke_reports: Iterable[Dict[str, Any]] = (),
+) -> Dict[str, Any]:
+    repo_root = repo_root.expanduser().resolve()
+    smoke_by_host = {
+        str(report.get("host")): report
+        for report in smoke_reports
+        if isinstance(report, dict) and report.get("host")
+    }
+    hosts: List[Dict[str, Any]] = []
+
+    for filename in HOST_CAPABILITY_FILES:
+        capability_path = repo_root / "host-capabilities" / filename
+        try:
+            text = capability_path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        host = extract_yaml_scalar(text, "host") or capability_path.stem
+        live_block = extract_capability_block(text, "live_smoke_harness")
+        smoke_report = smoke_by_host.get(host, {})
+        skipped_checks = skipped_checks_from_smoke_report(smoke_report)
+        hosts.append(
+            {
+                "host": host,
+                "capability_file": relative_path(repo_root, capability_path),
+                "support_status": extract_yaml_scalar(text, "support_status"),
+                "live_smoke_status": extract_block_scalar(live_block, "status"),
+                "offline_parity": extract_block_scalar(live_block, "offline_parity"),
+                "live_status_source": extract_block_scalar(live_block, "live_status_source"),
+                "skipped_result_visibility": extract_block_scalar(live_block, "skipped_result_visibility"),
+                "nightly_workflow": extract_block_scalar(live_block, "nightly_workflow"),
+                "fallback": extract_block_scalar(live_block, "fallback"),
+                "smoke_report_status": str(smoke_report.get("status") or "not-run"),
+                "offline_status": str(smoke_report.get("offline_status") or "not-run"),
+                "live_status": str(smoke_report.get("live_status") or "not-run"),
+                "skipped_checks": skipped_checks,
+            }
+        )
+
+    skipped_live_checks = [
+        {
+            "host": item["host"],
+            "check": skipped["name"],
+            "reason": skipped["reason"],
+        }
+        for item in hosts
+        for skipped in item["skipped_checks"]
+    ]
+    counts = {
+        "hosts": len(hosts),
+        "optional_live_smoke_hosts": sum(
+            1 for item in hosts if str(item.get("live_smoke_status", "")).startswith("optional")
+        ),
+        "future_work_hosts": sum(
+            1 for item in hosts if str(item.get("live_smoke_status")) in {"host_specific_adapter_required", "future_work"}
+        ),
+        "smoke_reports": len(smoke_by_host),
+        "skipped_live_checks": len(skipped_live_checks),
+        "failed_live_checks": sum(1 for item in hosts if item.get("live_status") == "failed"),
+    }
+    if counts["failed_live_checks"]:
+        status = "failed"
+    elif counts["skipped_live_checks"]:
+        status = "warning"
+    else:
+        status = "ok"
+    return {
+        "schema_version": HOST_COVERAGE_REPORT_SCHEMA_VERSION,
+        "status": status,
+        "repo_root": str(repo_root),
+        "counts": counts,
+        "hosts": hosts,
+        "skipped_live_checks": skipped_live_checks,
+    }
+
+
+def action_default_path(repo_root: Path, suffix: str) -> Path:
+    runner_temp = os.environ.get("RUNNER_TEMP")
+    root = Path(runner_temp).expanduser() if runner_temp else repo_root
+    if not root.is_absolute():
+        root = repo_root / root
+    return root / f"roadmap-delivery-validate.{suffix}"
+
+
+def resolve_action_report_file(repo_root: Path, value: str, report_format: str) -> Path:
+    suffix = "json" if report_format == "json" else "txt"
+    path = Path(value).expanduser() if value else action_default_path(repo_root, suffix)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.resolve()
+
+
+def resolve_github_output_file(repo_root: Path, value: str) -> Path:
+    raw = value or os.environ.get("GITHUB_OUTPUT") or ""
+    path = Path(raw).expanduser() if raw else action_default_path(repo_root, "outputs")
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.resolve()
+
+
+def run_action_json(command: Sequence[str], cwd: Path) -> Dict[str, Any]:
+    proc = subprocess.run(
+        list(command),
+        cwd=cwd,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    try:
+        payload: Any = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        payload = {"stdout": proc.stdout.strip()}
+    return {
+        "command": list(command),
+        "returncode": proc.returncode,
+        "stdout": payload,
+        "stderr": proc.stderr.strip(),
+    }
+
+
+def command_status(result: Dict[str, Any], ok_statuses: set[str]) -> str:
+    payload = result.get("stdout")
+    status = payload.get("status") if isinstance(payload, dict) else None
+    if result.get("returncode") == 0 and status in ok_statuses:
+        return "passed"
+    return "failed"
+
+
+def action_issue_codes(payload: Dict[str, Any]) -> set[str]:
+    codes: set[str] = set()
+    for section in ("errors", "warnings"):
+        for item in payload.get(section, []):
+            code = item.get("code") if isinstance(item, dict) else None
+            if code:
+                codes.add(str(code))
+    return codes
+
+
+def build_github_action_report(
+    *,
+    repo_root: Path,
+    roadmap_slug: str = "",
+    automation_id: str = "",
+    roadmap_path: str = "",
+    automation_dir: str = "",
+    strict: bool = False,
+    allow_warning: Iterable[str] = (),
+    privacy_scan: bool = True,
+    adapter_check: bool = True,
+    release_check: bool = False,
+    review_evidence: bool = True,
+    report_file: Path,
+    live_host_smoke: bool = False,
+    live_hosts: Iterable[str] = (),
+    python_executable: str = sys.executable,
+) -> Dict[str, Any]:
+    repo_root = repo_root.expanduser().resolve()
+    commands: List[Dict[str, Any]] = []
+
+    if roadmap_slug or automation_id:
+        validate_command = [
+            python_executable,
+            "-m",
+            "roadmap_delivery.cli",
+            "validate",
+            "--repo-root",
+            str(repo_root),
+            "--json",
+        ]
+        if roadmap_slug:
+            validate_command.extend(["--roadmap-slug", roadmap_slug])
+        if automation_id:
+            validate_command.extend(["--automation-id", automation_id])
+        if strict:
+            validate_command.append("--strict")
+        for warning in split_action_values(allow_warning):
+            validate_command.extend(["--allow-warning", warning])
+        validation = run_action_json(validate_command, repo_root)
+        validation_status = "passed" if validation["returncode"] == 0 else "failed"
+    else:
+        validation = {
+            "command": None,
+            "returncode": None,
+            "stdout": {
+                "status": "error",
+                "errors": [
+                    {
+                        "code": "missing_validation_target",
+                        "message": "Set roadmap-slug or automation-id for offline validation.",
+                    }
+                ],
+                "warnings": [],
+            },
+            "stderr": "",
+        }
+        validation_status = "blocked"
+    commands.append({"name": "validate", **validation})
+
+    validation_report = validation["stdout"] if isinstance(validation["stdout"], dict) else {}
+    validation_errors = validation_report.get("errors", [])
+    validation_warnings = validation_report.get("warnings", [])
+    errors_count = len(validation_errors) if isinstance(validation_errors, list) else 0
+    warnings_count = len(validation_warnings) if isinstance(validation_warnings, list) else 0
+
+    if review_evidence:
+        codes = action_issue_codes(validation_report)
+        if validation_status == "blocked":
+            review_status = "blocked"
+        elif codes.intersection({"review_artifact_missing", "review_artifact_schema_error"}):
+            review_status = "missing"
+        else:
+            review_status = "present"
+    else:
+        review_status = "not-requested"
+
+    if adapter_check:
+        adapter = run_action_json(
+            [python_executable, "scripts/build_adapters.py", "--repo-root", str(repo_root), "--check", "--json"],
+            repo_root,
+        )
+        adapter_status = command_status(adapter, {"ok"})
+        commands.append({"name": "adapter-check", **adapter})
+    else:
+        adapter_status = "not-requested"
+
+    if privacy_scan:
+        privacy = run_action_json(
+            [python_executable, "scripts/check_release_privacy.py", "--repo-root", str(repo_root), "--json"],
+            repo_root,
+        )
+        privacy_status = command_status(privacy, {"passed"})
+        commands.append({"name": "privacy-scan", **privacy})
+    else:
+        privacy_status = "not-requested"
+
+    if release_check:
+        release = run_action_json(
+            [python_executable, "scripts/build_release.py", "--repo-root", str(repo_root), "--check", "--json"],
+            repo_root,
+        )
+        release_status = command_status(release, {"ok"})
+        commands.append({"name": "release-check", **release})
+    else:
+        release_status = "not-requested"
+
+    if live_host_smoke:
+        hosts = split_action_values(live_hosts) or ["requested"]
+        live_host_status = "skipped"
+        skipped_live_hosts = ",".join(f"{host}:reserved-for-later-phase" for host in hosts)
+    else:
+        live_host_status = "not-requested"
+        skipped_live_hosts = ""
+
+    outputs = {
+        "validation-status": validation_status,
+        "warnings-count": str(warnings_count),
+        "errors-count": str(errors_count),
+        "review-evidence-status": review_status,
+        "adapter-status": adapter_status,
+        "privacy-status": privacy_status,
+        "release-status": release_status,
+        "live-host-status": live_host_status,
+        "skipped-live-hosts": skipped_live_hosts,
+        "report-file": str(report_file),
+    }
+    failed = validation_status in {"failed", "blocked"} or any(
+        outputs[key] == "failed"
+        for key in ("adapter-status", "privacy-status", "release-status", "live-host-status")
+    )
+
+    return {
+        "schema_version": GITHUB_ACTION_REPORT_SCHEMA_VERSION,
+        "github_action_report_schema_version": GITHUB_ACTION_REPORT_SCHEMA_VERSION,
+        "command": "github-action",
+        "status": "failed" if failed else "passed",
+        "repo_root": str(repo_root),
+        "roadmap_slug": roadmap_slug,
+        "automation_id": automation_id,
+        "roadmap_path": roadmap_path,
+        "automation_dir": automation_dir,
+        "outputs": outputs,
+        "commands": commands,
+        "host_coverage": build_host_coverage_report(repo_root),
+        "errors": [],
+    }
+
+
+def write_github_action_report(report: Dict[str, Any], report_file: Path, report_format: str) -> None:
+    report_file.parent.mkdir(parents=True, exist_ok=True)
+    if report_format == "json":
+        report_file.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return
+    lines = [
+        f"status: {report.get('status')}",
+        f"validation-status: {report['outputs']['validation-status']}",
+        f"warnings-count: {report['outputs']['warnings-count']}",
+        f"errors-count: {report['outputs']['errors-count']}",
+        f"review-evidence-status: {report['outputs']['review-evidence-status']}",
+        f"adapter-status: {report['outputs']['adapter-status']}",
+        f"privacy-status: {report['outputs']['privacy-status']}",
+        f"release-status: {report['outputs']['release-status']}",
+        f"live-host-status: {report['outputs']['live-host-status']}",
+        "commands:",
+    ]
+    for item in report.get("commands", []):
+        command = item.get("command")
+        command_text = " ".join(command) if command else "not run"
+        lines.append(f"- {item['name']}: {item.get('returncode')} {command_text}")
+    report_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_github_action_outputs(output_file: Path, outputs: Dict[str, str]) -> None:
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    with output_file.open("a", encoding="utf-8") as handle:
+        for key, value in outputs.items():
+            handle.write(f"{key}={value}\n")
+
+
+def print_github_action_text(report: Dict[str, Any]) -> None:
+    print(f"status: {report.get('status')}")
+    print(f"report-file: {report['outputs'].get('report-file')}")
+    for key, value in report.get("outputs", {}).items():
+        print(f"{key}: {value}")
 
 
 def add_warning(warnings: List[Dict[str, str]], code: str, message: str) -> None:
