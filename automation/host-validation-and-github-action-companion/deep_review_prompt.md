@@ -7,6 +7,17 @@ Repository:
 
 - `https://github.com/dzianissokalau/roadmap-delivery-skill`
 
+GitHub promoted target:
+
+- Main URL:
+  `https://github.com/dzianissokalau/roadmap-delivery-skill/tree/main`
+- Main deep-review prompt URL:
+  `https://github.com/dzianissokalau/roadmap-delivery-skill/blob/main/automation/host-validation-and-github-action-companion/deep_review_prompt.md`
+- Main raw prompt URL:
+  `https://raw.githubusercontent.com/dzianissokalau/roadmap-delivery-skill/main/automation/host-validation-and-github-action-companion/deep_review_prompt.md`
+- Main promotion content commit:
+  `f8823c3cc3c1d6c9d18d43184359ecfeffb34b54`
+
 GitHub review target:
 
 - Branch URL:
@@ -26,7 +37,8 @@ git switch --detach FETCH_HEAD
 
 Local review target:
 
-- Branch: `codex/host-validation-and-github-action-companion-finalization`
+- Branch: `main` after promotion; review branch retained at
+  `codex/host-validation-and-github-action-companion-finalization`
 - Roadmap:
   `roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md`
 - Delivery state:
@@ -81,9 +93,10 @@ Evaluate:
   `python3 scripts/build_release.py --check --json`,
   `python3 scripts/check_release_privacy.py --repo-root .`, and
   `git diff --check`.
-- Whether publication, promotion to `main`, remote workflow scheduling,
-  repository secret management, credential use, installed-skill sync, and
-  installed-plugin sync remain safely human-approved.
+- Whether main promotion was explicitly approved, fast-forward-only, and
+  recorded; publication, remote workflow scheduling, repository secret
+  management, credential use, installed-skill sync, and installed-plugin sync
+  should remain safely human-approved.
 - Whether finalization correctly renamed the roadmap to `delivered_...`,
   wrote the completion alert, and handled automation pause without losing
   evidence or bypassing approval policy.

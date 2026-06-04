@@ -48,9 +48,9 @@ Verdict: delivered
 - The repository's checked-in workflows target `ubuntu-latest`; this repair
   covers the documented general GitHub Actions checkout and self-hosted runner
   portability path without adding a live macOS CI job.
-- Release publication, promotion to `main`, remote schedule activation,
-  repository secrets, credentials, and installed package synchronization remain
-  separate human-approved actions.
+- Release publication, remote schedule activation, repository secrets,
+  credentials, and installed package synchronization remain separate
+  human-approved actions.
 
 ## Verdict
 

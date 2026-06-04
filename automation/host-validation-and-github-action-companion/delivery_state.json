@@ -3,7 +3,7 @@
   "roadmap": "roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md",
   "roadmap_slug": "host-validation-and-github-action-companion",
   "current_phase": "Complete",
-  "branch": "codex/host-validation-and-github-action-companion-finalization",
+  "branch": "main",
   "status": "completed",
   "review_iterations": 2,
   "max_review_iterations": 3,
@@ -99,7 +99,7 @@
     "file": "automation/host-validation-and-github-action-companion/alerts/2026-06-04T16-07-22Z-completed.md",
     "timestamp": "2026-06-04T16:07:22Z",
     "reason": "All host validation and GitHub Action companion roadmap phases and finalization are delivered; the saved Codex automation is PAUSED by the approved completion safety pause.",
-    "next_human_action": "Review the pushed GitHub branch for promotion readiness; release publication, main promotion, remote schedules, repository secrets, and installed package sync remain separate approvals.",
+    "next_human_action": "Main promotion is complete; release publication, remote schedules, repository secrets, and installed package sync remain separate approvals.",
     "notification_sink": "alert_file",
     "notification_status": "local_alert_only"
   },
@@ -220,7 +220,7 @@
   "final_deep_review_prompt_file": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
   "final_deep_review_status": "prompt-prepared",
   "final_deep_review_waiver_reason": null,
-  "updated_at": "2026-06-04T17:40:29Z",
+  "updated_at": "2026-06-04T18:10:17Z",
   "finalization": {
     "completed_at": "2026-06-04T16:07:22Z",
     "deep_review_prompt": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
@@ -259,7 +259,13 @@
       "verification_status": "passed",
       "github_branch": "codex/host-validation-and-github-action-companion-finalization"
     },
-    "promotion_status": "not_promoted_without_approval",
+    "promotion_status": "pushed_to_main",
+    "promotion_remote": "origin",
+    "promotion_branch": "main",
+    "promotion_completed_at": "2026-06-04T18:10:17Z",
+    "promotion_operator_approval": "Operator explicitly requested pushing the reviewed finalization branch to main.",
+    "promotion_initial_main_commit": "f8823c3cc3c1d6c9d18d43184359ecfeffb34b54",
+    "promotion_main_url": "https://github.com/dzianissokalau/roadmap-delivery-skill/tree/main",
     "remote_schedule_status": "not_enabled_without_approval",
     "repository_secret_status": "not_created_without_approval",
     "installed_package_sync_status": "not_synchronized_without_approval"

@@ -129,3 +129,21 @@ Review file:
 - The roadmap remains completed, the saved automation remains `PAUSED`, and
   publication, promotion, secrets, schedules, credentials, and installed
   package synchronization remain separate human-approved actions.
+
+## Main Promotion - 2026-06-04T18:10:17Z
+
+Verdict: delivered
+Review file:
+`automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-2.md`
+
+### Summary
+
+- Operator explicitly approved pushing the reviewed finalization branch to
+  `main`.
+- `origin/main` was fast-forwarded to
+  `f8823c3cc3c1d6c9d18d43184359ecfeffb34b54`.
+- Promotion evidence was recorded in state, delivery log, automation guide,
+  roadmap, completion alert, and deep-review prompt.
+- Release publication, remote schedule activation, repository secrets,
+  credentials, and installed package synchronization remain separate
+  human-approved actions.

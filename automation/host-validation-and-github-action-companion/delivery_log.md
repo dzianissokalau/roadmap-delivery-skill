@@ -840,9 +840,9 @@ Branch: `codex/host-validation-and-github-action-companion-finalization`
 
 ### Residual Risks
 
-- Release artifact publication, promotion to `main`, remote schedule
-  activation, repository secrets, credentials, and installed package
-  synchronization remain separate human-approved actions.
+- Release artifact publication, remote schedule activation, repository
+  secrets, credentials, and installed package synchronization remain separate
+  human-approved actions.
 
 ## Finalization - 2026-06-04T17:38:25Z - External Review Repair
 
@@ -894,6 +894,50 @@ Branch: `codex/host-validation-and-github-action-companion-finalization`
 - The repo's workflows remain `ubuntu-latest`; the repair targets the
   documented general GitHub Actions checkout and self-hosted runner
   portability path.
-- Release artifact publication, promotion to `main`, remote schedule
-  activation, repository secrets, credentials, and installed package
-  synchronization remain separate human-approved actions.
+- Release artifact publication, remote schedule activation, repository
+  secrets, credentials, and installed package synchronization remain separate
+  human-approved actions.
+
+## Finalization - 2026-06-04T18:10:17Z - Main Promotion
+
+Status: delivered
+Branch: `main`
+
+### Scope
+
+- Promoted the reviewed finalization branch to `origin/main` after explicit
+  operator approval in the current conversation.
+- Used a fast-forward-only path from the previously reviewed finalization
+  branch tip to `main`.
+- Preserved boundaries: no force push, no release publication, no remote
+  schedule activation, no repository secrets, no credentials, and no installed
+  package synchronization.
+
+### Promotion Evidence
+
+- Remote: `origin`
+- Target branch: `main`
+- Main URL:
+  `https://github.com/dzianissokalau/roadmap-delivery-skill/tree/main`
+- Fast-forwarded content commit:
+  `f8823c3cc3c1d6c9d18d43184359ecfeffb34b54`
+- Command: `git push origin HEAD:main`: passed.
+- Remote readback before promotion:
+  `224bf039d6464e52eac8ddb6c7498c9fdb566b4c refs/heads/main`
+- Remote readback after promotion:
+  `f8823c3cc3c1d6c9d18d43184359ecfeffb34b54 refs/heads/main`
+
+### Tests And Verification
+
+- `PYTHONPATH=src python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug host-validation-and-github-action-companion --automation-id host-validation-and-github-action-companion --json`:
+  passed with status `ok`, no warnings, before promotion.
+- `git merge-base --is-ancestor main HEAD`: passed before promotion,
+  confirming the finalization branch could fast-forward from local `main`.
+- `git ls-remote origin refs/heads/main`: passed before and after promotion,
+  confirming the remote `main` update.
+
+### Residual Risks
+
+- Release artifact publication, remote schedule activation, repository
+  secrets, credentials, and installed package synchronization remain separate
+  human-approved actions.

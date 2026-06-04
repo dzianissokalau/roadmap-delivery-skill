@@ -23,6 +23,8 @@ prompt guards, cwd, model, and reasoning; repository-local status was
 reconciled to active without editing the saved automation config.
 Completion closeout: finalization paused the saved automation through the
 approval-policy completion safety pause and read back `PAUSED`.
+Main promotion: operator approved promotion; `origin/main` was fast-forwarded
+to `f8823c3cc3c1d6c9d18d43184359ecfeffb34b54` at 2026-06-04T18:10:17Z.
 
 ## Operating Policy
 

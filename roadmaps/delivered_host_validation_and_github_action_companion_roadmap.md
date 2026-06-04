@@ -3,9 +3,9 @@
 Status: Delivered
 Current phase: Complete
 Last updated: 2026-06-04
-Next action: Review final evidence and promotion readiness; publication,
-branch push, promotion, remote schedule activation, repository secrets, and
-installed package synchronization remain separate human-approved actions.
+Next action: Main promotion is complete; publication, remote schedule
+activation, repository secrets, and installed package synchronization remain
+separate human-approved actions.
 Blocked by: None.
 
 ## Purpose
