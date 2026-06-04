@@ -195,6 +195,12 @@ Before editing:
 Blocked Remediation Mode:
 - classify the blocker as local-repairable, automation-config,
   permission-gated, external-decision, or destructive-risk
+- before recording a generic automation status blocker, check the normal
+  paused-setup to active-run transition; if durable setup artifacts still say
+  PAUSED but saved readback is ACTIVE and model/reasoning, cwd, state-first
+  prompt, hard-stop guard, and blocked-remediation guard all match, accept it
+  immediately as operator/manual activation rather than forcing one blocked
+  run
 - repair local-repairable blockers and already-authorized automation-config
   blockers before retrying phase delivery
 - if setup expected PAUSED but saved automation now reads ACTIVE, accept that

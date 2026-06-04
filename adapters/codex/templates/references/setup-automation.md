@@ -227,8 +227,19 @@ Read these first:
 
 Operate on exactly one current phase at a time. Resolve the roadmap from state,
 then reconcile roadmap, state, log, review files, phase model policy, git
-branch, working tree, and saved automation configuration before editing. If
-they disagree, record the blocker in state/log/review and stop.
+branch, working tree, and saved automation configuration before editing.
+
+Before recording a generic mismatch blocker, handle the normal paused-setup to
+active-run transition: if durable setup artifacts still say the saved
+automation is PAUSED but saved readback is ACTIVE, and model/reasoning, cwd,
+state-first prompt, hard-stop guard, and blocked-remediation guard all match,
+accept it as operator/manual activation. Update guide/log/state to ACTIVE,
+record `last_activation` and `last_blocker_repair`, reset stalled counters,
+rerun validation, and continue the current phase. Do not stop just because the
+saved automation is ACTIVE after the operator started it.
+
+If the surfaces still disagree after local lifecycle and activation
+reconciliation, record the blocker in state/log/review and stop.
 
 If state is `blocked`, enter Blocked Remediation Mode before normal delivery:
 classify the blocker, repair local or already-authorized automation-config

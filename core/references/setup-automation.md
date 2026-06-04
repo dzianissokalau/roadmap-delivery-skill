@@ -45,7 +45,9 @@ If the operator manually activates a runner that setup originally recorded as
 paused, the next run must reconcile the durable artifacts instead of treating
 ACTIVE as a permanent setup failure. Accept ACTIVE only when readback proves the
 model/reasoning, prompt, cwd, and safety guards still match, then update
-guide/log/state to ACTIVE and record the activation.
+guide/log/state to ACTIVE and record the activation. This reconciliation must
+happen before the generic "surfaces disagree, stop" rule, so an intentional
+activation does not waste a run by first creating a blocker.
 
 ## Required Initial Artifacts
 

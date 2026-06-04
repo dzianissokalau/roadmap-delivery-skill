@@ -60,6 +60,12 @@ evidence for supported adapters.
   controls. A non-flawless run may update durable state and propose or perform
   an approved saved automation retarget, but it does not change the active
   model inside the current session.
+- A paused setup that reads back as ACTIVE after the operator starts the
+  automation is a normal activation transition, not a blocker, when cwd,
+  model/reasoning, state-first prompt, hard-stop guard, and
+  blocked-remediation guard all match. Reconcile guide/log/state to ACTIVE,
+  record `last_activation`, and continue before applying the generic
+  disagreement stop rule.
 - Completion and repeated-stall self-pause are default safety behaviors for
   generated policies through `pause_automation_on_completion` and
   `pause_automation_on_stall`. `pause_saved_automation` still gates broad

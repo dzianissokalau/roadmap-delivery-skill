@@ -1,10 +1,11 @@
 {
+  "schema_version": 1,
   "adapter": "codex",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "9020e02bf033365366ac992edbedb28e7eceba41ac1bbe9dbf4dd19378f55f67",
-      "size": 4908
+      "sha256": "5a129b01506411e1bdbaa07993b06d26448ffa635719b0a882350c2cf1bf4539",
+      "size": 5285
     },
     {
       "path": "agents/openai.yaml",
@@ -12,91 +13,90 @@
       "size": 217
     },
     {
-      "core_sha256": "1332711bdfd345da77b49ed5f6564d6ac4b8ad8ca499b81d8c73238d7b94d0b9",
-      "core_size": 3262,
-      "core_source": "core/references/finalization-and-promotion.md",
       "path": "references/finalization-and-promotion.md",
       "sha256": "b38963686f67086c47d7a77f9e200691862dece3ece4cab865769063a34f2288",
-      "size": 8441
+      "size": 8441,
+      "core_source": "core/references/finalization-and-promotion.md",
+      "core_sha256": "1332711bdfd345da77b49ed5f6564d6ac4b8ad8ca499b81d8c73238d7b94d0b9",
+      "core_size": 3262
     },
     {
-      "core_sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
-      "core_size": 7819,
-      "core_source": "core/references/model-policy-and-stall-control.md",
       "path": "references/model-policy-and-stall-control.md",
       "sha256": "6ba61895dffd38554b7b7c39f92982121a1fbdfec4dca9a88324c7bcfaeb197e",
-      "size": 16939
+      "size": 16939,
+      "core_source": "core/references/model-policy-and-stall-control.md",
+      "core_sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
+      "core_size": 7819
     },
     {
-      "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
-      "core_size": 6149,
-      "core_source": "core/references/phase-loop.md",
       "path": "references/phase-loop.md",
       "sha256": "1f2449dd551d543d98a53fbdf767e52e54cc9fd8de445966847f14ec58d1b37a",
-      "size": 14552
+      "size": 14552,
+      "core_source": "core/references/phase-loop.md",
+      "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
+      "core_size": 6149
     },
     {
-      "core_sha256": "2b4e45837764e55495bf3707fb398ddf0e3a3cc1c8ce15ff442c6a2623ae9ae7",
-      "core_size": 2595,
-      "core_source": "core/references/review-and-fix.md",
       "path": "references/review-and-fix.md",
       "sha256": "a9c8b8c69bc54b23678254ce26152da8ad7d0c6957f960bdcc5fb8c7bc174b1b",
-      "size": 5619
+      "size": 5619,
+      "core_source": "core/references/review-and-fix.md",
+      "core_sha256": "2b4e45837764e55495bf3707fb398ddf0e3a3cc1c8ce15ff442c6a2623ae9ae7",
+      "core_size": 2595
     },
     {
-      "core_sha256": "67ef15499e06a383911a8103d8cd2091beb4343208df245749a780d0f9c2a107",
-      "core_size": 5176,
-      "core_source": "core/references/setup-automation.md",
       "path": "references/setup-automation.md",
-      "sha256": "97c792b0dbaebf807a48e68fb5a88c5bd0809d092dfbd937de722352b56a7fd0",
-      "size": 17809
+      "sha256": "0fd7b65d74777ab3b595adf300bed428176b8cbd847cb0bd9b9365a67a98df9b",
+      "size": 18469,
+      "core_source": "core/references/setup-automation.md",
+      "core_sha256": "c4475f8ef4626e34d14305b50730593fa53915a1bc0b618dae550edfd70a11b7",
+      "core_size": 5338
     },
     {
-      "core_sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
-      "core_size": 3187,
-      "core_source": "core/references/state-log-and-branches.md",
       "path": "references/state-log-and-branches.md",
       "sha256": "e2d5e3ef98a89d8b8daf6ea7bb8491f8c3731271ab207dfe7d061b4eac60607a",
-      "size": 10919
+      "size": 10919,
+      "core_source": "core/references/state-log-and-branches.md",
+      "core_sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
+      "core_size": 3187
     },
     {
-      "core_sha256": "3229a3dd93110247f6ca03ce28ae74370efa79ec4592573e059ce0f895f0c049",
-      "core_size": 5491,
-      "core_source": "core/references/troubleshooting.md",
       "path": "references/troubleshooting.md",
       "sha256": "f4a3383f3151c602b7bf1a2ca2e1d868c21f99631b6041a5114eb5cd6262eddc",
-      "size": 18277
+      "size": 18277,
+      "core_source": "core/references/troubleshooting.md",
+      "core_sha256": "3229a3dd93110247f6ca03ce28ae74370efa79ec4592573e059ce0f895f0c049",
+      "core_size": 5491
     },
     {
-      "mode": "0644",
       "path": "scripts/compute_progress_signature.py",
       "sha256": "3a6397e6c14fbbddb5ed22983b345e24b304c8c4a681233f04229463a7ff478b",
-      "size": 885
+      "size": 885,
+      "mode": "0644"
     },
     {
-      "mode": "0755",
       "path": "scripts/inspect_delivery_state.py",
       "sha256": "68ce88bbb1e32884724109c1263017216d2bb1b01a8b5d7205a1476ddd5fcb6c",
-      "size": 883
+      "size": 883,
+      "mode": "0755"
     },
     {
-      "mode": "0755",
       "path": "scripts/plan_automation_retarget.py",
       "sha256": "ededf9dfc412635f4a7e5251e3370dbb64542caa302b5585603c73516ef32b46",
-      "size": 34043
+      "size": 34043,
+      "mode": "0755"
     },
     {
-      "mode": "0755",
       "path": "scripts/validate_delivery_artifacts.py",
       "sha256": "efc29a1589c051ed139ff6135590d10003f6ab95af2d0f6e7f0639a037835f24",
-      "size": 889
+      "size": 889,
+      "mode": "0755"
     },
     {
-      "mode": "0644",
       "path": "scripts/write_operator_alert.py",
       "sha256": "fa3a3f665b0195a6c5633f99e3077752a3760be3d8268f49cf6bad3d902c154a",
-      "size": 881
+      "size": 881,
+      "mode": "0644"
     }
-  ],
-  "schema_version": 1
+  ]
 }

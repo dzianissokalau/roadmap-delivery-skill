@@ -914,6 +914,32 @@ class HelperScriptTests(unittest.TestCase):
             self.assertIn("manual_activation_reconciliation_available", self.info_codes(validate))
             self.assertNotIn("blocked_state_active_without_remediation_guard", self.error_codes(validate))
 
+    def test_paused_setup_active_readback_is_not_a_delivery_blocker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = DeliveryFixture(
+                tmp,
+                roadmap_filename="not_started_eval_fixture_roadmap.md",
+                current_phase="Phase 0 - Fixture",
+                roadmap_status="Not Started",
+                state_status="not_started",
+                write_model_policy=True,
+                automation_status="ACTIVE",
+                prompt_state_resolved=True,
+            )
+            state_path = fixture.state_dir / "delivery_state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["configured_automation_status"] = "PAUSED"
+            state["automation"] = {"id": fixture.automation_id, "status": "PAUSED"}
+            state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+            inspect = self.run_inspect(fixture)
+            validate = self.run_validate(fixture)
+
+            self.assertEqual(inspect["automation_status"], "ACTIVE")
+            self.assertFalse(inspect["blocked_remediation_required"])
+            self.assertFalse(validate["activation_reconciliation"]["blocked_state"])
+            self.assertEqual(self.error_codes(validate), set())
+
     def test_missing_automation_config_is_warning_for_both_helpers(self):
         with tempfile.TemporaryDirectory() as tmp:
             fixture = DeliveryFixture(tmp, write_automation_config=False)

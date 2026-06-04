@@ -76,6 +76,21 @@ class CoreSourceTests(unittest.TestCase):
         self.assertIn("core/templates/", text)
         self.assertIn("core/prompts/", text)
 
+    def test_automation_prompt_handles_activation_before_generic_blocker(self):
+        prompt = (CORE_ROOT / "templates" / "automation_prompt.md").read_text(encoding="utf-8")
+        setup_reference = (SKILL_REFERENCES / "setup-automation.md").read_text(encoding="utf-8")
+
+        activation_marker = "Before recording a generic mismatch blocker"
+        blocker_marker = "record the blocker"
+        normalized_prompt = " ".join(prompt.split())
+        normalized_setup = " ".join(setup_reference.split())
+
+        self.assertIn(activation_marker, prompt)
+        self.assertIn("Do not stop just because the saved runner is ACTIVE", normalized_prompt)
+        self.assertLess(prompt.index(activation_marker), prompt.index(blocker_marker))
+        self.assertIn(activation_marker, setup_reference)
+        self.assertIn("Do not stop just because the saved automation is ACTIVE", normalized_setup)
+
 
 if __name__ == "__main__":
     unittest.main()
