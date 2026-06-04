@@ -843,3 +843,57 @@ Branch: `codex/host-validation-and-github-action-companion-finalization`
 - Release artifact publication, promotion to `main`, remote schedule
   activation, repository secrets, credentials, and installed package
   synchronization remain separate human-approved actions.
+
+## Finalization - 2026-06-04T17:38:25Z - External Review Repair
+
+Status: delivered
+Branch: `codex/host-validation-and-github-action-companion-finalization`
+
+### Scope
+
+- Repaired an operator-provided external review finding after the finalization
+  branch was published.
+- Finding: `.github/actions/roadmap-delivery-validate/action.yml` used Bash 4
+  lowercase expansion `${1,,}` in the composite action `truthy` helper, which
+  fails on Bash 3.2 macOS/self-hosted runners.
+- Preserved completion state and pause state; this run did not reopen a
+  roadmap phase, publish releases, promote to `main`, create secrets, enable
+  schedules, use credentials, or sync installed packages.
+
+### Changes
+
+- Replaced `${1,,}` with portable `printf` plus `tr '[:upper:]'
+  '[:lower:]'` normalization in the local composite action.
+- Added a GitHub Action contract regression test to reject Bash 4 lowercase
+  expansion and require the portable normalization path.
+- Updated the final deep-review prompt so external reviewers can find the
+  Bash 3.2 repair target, regression test, and review artifact on the GitHub
+  branch.
+
+### Tests And Verification
+
+- `python3 -m unittest tests.test_github_action -v`: passed, 7 tests.
+- `/bin/bash --version`: passed, confirmed GNU Bash 3.2.57.
+- `/bin/bash -c 'set -euo pipefail; truthy(){ ... }; truthy TRUE; truthy Yes; truthy on; ! truthy false'`:
+  passed.
+- `git diff --check`: passed.
+- `PYTHONPATH=src python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug host-validation-and-github-action-companion --automation-id host-validation-and-github-action-companion --allow-warning worktree_dirty --json`:
+  passed with only the expected dirty-worktree warning while the repair was
+  uncommitted.
+
+### Review
+
+- Review file:
+  `automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-2.md`
+- Verdict: delivered
+
+### Residual Risks
+
+- Same-context repair review was used because no separate reviewer context is
+  available in this automation run.
+- The repo's workflows remain `ubuntu-latest`; the repair targets the
+  documented general GitHub Actions checkout and self-hosted runner
+  portability path.
+- Release artifact publication, promotion to `main`, remote schedule
+  activation, repository secrets, credentials, and installed package
+  synchronization remain separate human-approved actions.

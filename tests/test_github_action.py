@@ -123,6 +123,13 @@ class GithubActionContractTests(unittest.TestCase):
             with self.subTest(snippet=snippet):
                 self.assertNotIn(snippet, action)
 
+    def test_action_truthy_helper_is_bash_32_compatible(self):
+        action = read_action()
+
+        self.assertNotIn("${1,,}", action)
+        self.assertIn("tr '[:upper:]' '[:lower:]'", action)
+        self.assertIn('printf \'%s\' "$1"', action)
+
     def test_action_docs_match_metadata_contract(self):
         readme = ACTION_README.read_text(encoding="utf-8")
         guide = GITHUB_ACTION_DOC.read_text(encoding="utf-8")

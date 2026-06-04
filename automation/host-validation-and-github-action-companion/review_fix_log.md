@@ -110,3 +110,22 @@ Review file:
 - Publication, branch push, promotion to `main`, remote schedule activation,
   repository secrets, and installed package synchronization remain separate
   human-approved actions.
+
+## Finalization - Iteration 2 - 2026-06-04T17:38:25Z
+
+Verdict: delivered
+Review file:
+`automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-2.md`
+
+### Summary
+
+- Fixed the external review finding that the composite action `truthy` helper
+  used Bash 4 lowercase expansion `${1,,}`, which fails on Bash 3.2
+  macOS/self-hosted runners.
+- Added regression coverage in `tests/test_github_action.py` and confirmed the
+  helper under local `/bin/bash` 3.2.57.
+- Updated the deep-review prompt so external reviewers can find the GitHub
+  branch, Bash portability repair target, regression test, and review artifact.
+- The roadmap remains completed, the saved automation remains `PAUSED`, and
+  publication, promotion, secrets, schedules, credentials, and installed
+  package synchronization remain separate human-approved actions.

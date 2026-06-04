@@ -5,87 +5,47 @@
   "current_phase": "Complete",
   "branch": "codex/host-validation-and-github-action-companion-finalization",
   "status": "completed",
-  "review_iterations": 1,
+  "review_iterations": 2,
   "max_review_iterations": 3,
   "last_verification": {
-    "verified_at": "2026-06-04T17:28:25Z",
-    "phase": "finalization",
+    "verified_at": "2026-06-04T17:40:29Z",
+    "phase": "post-finalization external review repair",
     "status": "passed",
     "commands": [
       {
-        "command": "python3 -m unittest discover -s tests -v",
+        "command": "python3 -m unittest tests.test_github_action -v",
         "status": "passed",
-        "summary": "Ran 205 tests successfully with 1 expected skip for optional Claude binary help."
+        "summary": "Ran 7 GitHub Action contract tests successfully, including Bash 3.2 compatibility coverage for the truthy helper."
       },
       {
-        "command": "python3 scripts/build_adapters.py --check --json",
+        "command": "/bin/bash --version",
         "status": "passed",
-        "summary": "Adapter check returned status ok for Codex and Claude with no diffs, no errors, and marketplace readiness ok."
+        "summary": "Confirmed local GNU Bash 3.2.57, matching the macOS/self-hosted runner compatibility class in the external finding."
       },
       {
-        "command": "python3 scripts/build_release.py --check --json",
+        "command": "/bin/bash -c 'set -euo pipefail; truthy(){ ... }; truthy TRUE; truthy Yes; truthy on; ! truthy false'",
         "status": "passed",
-        "summary": "Release check returned status ok with reproducible 0.1.0 artifacts, no errors, and privacy scan passed."
-      },
-      {
-        "command": "python3 scripts/check_release_privacy.py --repo-root .",
-        "status": "passed",
-        "summary": "Privacy scan passed: 128 files scanned, 0 findings, 0 errors."
+        "summary": "Portable truthy helper ran successfully under Bash 3.2.57 with uppercase and lowercase accepted values plus a false negative case."
       },
       {
         "command": "git diff --check",
         "status": "passed",
-        "summary": "No whitespace errors."
+        "summary": "No whitespace errors after the Bash portability repair and deep-review prompt update."
       },
       {
-        "command": "python3 scripts/host_smoke.py --host codex --isolated-home --codex-binary /private/tmp/roadmap-delivery-missing-codex --json",
-        "status": "passed_with_skip",
-        "summary": "Codex smoke reported status skipped with offline_status passed, live_status skipped, reason codex_binary_not_found, active_codex_home_used false, and created_real_automation false."
-      },
-      {
-        "command": "python3 scripts/host_smoke.py --host claude --isolated-home --claude-binary /private/tmp/roadmap-delivery-missing-claude --json",
-        "status": "passed_with_skip",
-        "summary": "Claude smoke reported status skipped with offline_status passed, live_status skipped, reason claude_binary_not_found, active_claude_config_used false, and created_real_automation false."
-      },
-      {
-        "command": "PYTHONPATH=src python3 -c \"from roadmap_delivery.automation import pause_saved_automation; ...\"",
-        "status": "passed",
-        "summary": "Completion safety pause was allowed by approval policy and saved automation readback reported PAUSED after mutating only the status field."
-      },
-      {
-        "command": "rg -n \"in_progress_host_validation_and_github_action_companion_roadmap|host-validation-and-github-action-companion-phase-6\" README.md automation/host-validation-and-github-action-companion/deep_review_prompt.md automation/host-validation-and-github-action-companion/trust_evidence.md roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md",
-        "status": "passed",
-        "summary": "No current-facing stale in-progress roadmap path or Phase 6 branch references remain in README, delivered roadmap, final deep-review prompt, or trust evidence."
-      },
-      {
-        "command": "python3 -m unittest tests.test_quality_gates tests.test_adapter_parity -v",
-        "status": "passed",
-        "summary": "Ran 14 targeted quality/adapter tests successfully after lifecycle reference refresh."
-      },
-      {
-        "command": "git diff --check",
-        "status": "passed",
-        "summary": "No whitespace errors after lifecycle reference refresh."
-      },
-      {
-        "command": "rg -n \"Branch URL|Deep-review prompt URL|Raw prompt URL|git fetch origin codex/host-validation-and-github-action-companion-finalization\" automation/host-validation-and-github-action-companion/deep_review_prompt.md",
-        "status": "passed",
-        "summary": "Deep-review prompt includes the GitHub branch URL, prompt URL, raw prompt URL, and fetch command."
-      },
-      {
-        "command": "git push -u origin codex/host-validation-and-github-action-companion-finalization",
-        "status": "passed",
-        "summary": "Created the remote GitHub review branch and set upstream tracking for the local finalization branch."
+        "command": "PYTHONPATH=src python3 -m roadmap_delivery.cli validate --repo-root . --roadmap-slug host-validation-and-github-action-companion --automation-id host-validation-and-github-action-companion --allow-warning worktree_dirty --json",
+        "status": "passed_with_allowed_warning",
+        "summary": "Roadmap validator exited successfully with only the expected worktree_dirty warning while the repair was uncommitted."
       }
     ]
   },
   "last_review": {
-    "reviewed_at": "2026-06-04T17:28:25Z",
+    "reviewed_at": "2026-06-04T17:38:25Z",
     "status": "delivered",
     "verdict": "delivered",
-    "file": "automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-1.md",
-    "phase": "finalization",
-    "summary": "Finalization completed with delivered roadmap rename, refreshed lifecycle references, full verification, completed alert, final deep-review prompt evidence, PAUSED automation readback, and pushed GitHub review branch."
+    "file": "automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-2.md",
+    "phase": "post-finalization external review repair",
+    "summary": "External Bash 3.2 compatibility finding was fixed by removing Bash 4 lowercase expansion from the composite action truthy helper, adding regression coverage, and updating the deep-review prompt with repair evidence."
   },
   "last_delivered_phase": "finalization",
   "blocked_reason": null,
@@ -129,11 +89,11 @@
     "prompt_path_strategy": "state_resolved",
     "cadence": "hourly"
   },
-  "run_count": 10,
+  "run_count": 11,
   "stalled_run_count": 0,
   "max_stalled_runs": 2,
   "last_progress_signature": "sha256:852b6d2d9e169078c3de7023268380c2eeb044a84b9aa2a4deea724c8b8b4c0e",
-  "last_progress_at": "2026-06-04T17:30:28Z",
+  "last_progress_at": "2026-06-04T17:40:29Z",
   "last_operator_alert": {
     "kind": "completed",
     "file": "automation/host-validation-and-github-action-companion/alerts/2026-06-04T16-07-22Z-completed.md",
@@ -172,11 +132,11 @@
     "status": "ACTIVE",
     "reason": "Saved automation read back ACTIVE with matching prompt guards, cwd, model, reasoning, and state-resolved roadmap strategy; accepted as operator/manual activation."
   },
-  "last_run_quality": "flawless",
+  "last_run_quality": "delivered_with_fixes",
   "last_adaptive_action": {
     "action": "disabled",
     "reason": "Adaptive model policy is disabled or absent.",
-    "run_quality": "flawless",
+    "run_quality": "delivered_with_fixes",
     "target": {
       "model": "gpt-5.5",
       "reasoning_effort": "xhigh"
@@ -260,7 +220,7 @@
   "final_deep_review_prompt_file": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
   "final_deep_review_status": "prompt-prepared",
   "final_deep_review_waiver_reason": null,
-  "updated_at": "2026-06-04T17:30:28Z",
+  "updated_at": "2026-06-04T17:40:29Z",
   "finalization": {
     "completed_at": "2026-06-04T16:07:22Z",
     "deep_review_prompt": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
@@ -291,6 +251,14 @@
     "deep_review_prompt_github_branch": "codex/host-validation-and-github-action-companion-finalization",
     "deep_review_prompt_github_url": "https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/host-validation-and-github-action-companion-finalization",
     "deep_review_prompt_raw_url": "https://raw.githubusercontent.com/dzianissokalau/roadmap-delivery-skill/codex/host-validation-and-github-action-companion-finalization/automation/host-validation-and-github-action-companion/deep_review_prompt.md",
+    "post_finalization_external_review_repair": {
+      "repaired_at": "2026-06-04T17:38:25Z",
+      "finding": "Composite action truthy helper used Bash 4 lowercase expansion ${1,,}, which fails on Bash 3.2 macOS/self-hosted runners.",
+      "repair": "Replaced Bash-specific lowercase expansion with printf plus tr normalization, added regression coverage, and updated the deep-review prompt with repair targets.",
+      "review_file": "automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-2.md",
+      "verification_status": "passed",
+      "github_branch": "codex/host-validation-and-github-action-companion-finalization"
+    },
     "promotion_status": "not_promoted_without_approval",
     "remote_schedule_status": "not_enabled_without_approval",
     "repository_secret_status": "not_created_without_approval",

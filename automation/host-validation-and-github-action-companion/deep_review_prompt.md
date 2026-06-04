@@ -40,6 +40,22 @@ Local review target:
 - Completion alert:
   `automation/host-validation-and-github-action-companion/alerts/2026-06-04T16-07-22Z-completed.md`
 
+Post-finalization external review repair:
+
+- Finding: `.github/actions/roadmap-delivery-validate/action.yml` used Bash 4
+  lowercase expansion `${1,,}` in the composite action `truthy` helper, which
+  fails with `bad substitution` on Bash 3.2, including common macOS
+  self-hosted runners.
+- Repair target on this branch:
+  `.github/actions/roadmap-delivery-validate/action.yml`
+- Regression coverage:
+  `tests/test_github_action.py`
+- Repair review artifact:
+  `automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-2.md`
+- External reviewers should confirm the helper no longer uses `${1,,}`, still
+  accepts the documented truthy inputs, and remains safe for the repo's
+  `ubuntu-latest` CI plus Bash 3.2 self-hosted runner scenarios.
+
 Take a skeptical code-review stance. Lead with findings and cite file paths and
 line numbers where possible.
 
