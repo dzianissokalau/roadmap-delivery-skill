@@ -805,3 +805,41 @@ Branch: `codex/host-validation-and-github-action-companion-finalization`
 - Updated finalization review:
   `automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-1.md`
 - Verdict: delivered
+
+## Finalization - 2026-06-04T17:28:25Z - GitHub Review Branch
+
+Status: delivered
+Branch: `codex/host-validation-and-github-action-companion-finalization`
+
+### Scope
+
+- Published the finalization branch to GitHub after explicit operator approval.
+- Updated the final deep-review prompt with GitHub branch URL, prompt URL, raw
+  prompt URL, and clone/fetch commands so an external reviewer can find the
+  evidence.
+- Recorded branch publication evidence in state and the completed alert.
+
+### Publication Evidence
+
+- Remote: `origin`
+- Branch URL:
+  `https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/host-validation-and-github-action-companion-finalization`
+- Pull request URL:
+  `https://github.com/dzianissokalau/roadmap-delivery-skill/pull/new/codex/host-validation-and-github-action-companion-finalization`
+- Pushed commit: `70ff474bd86e236ecd132dcb1ef9ca3fd6b169e0`
+
+### Tests And Verification
+
+- `rg -n "Branch URL|Deep-review prompt URL|Raw prompt URL|git fetch origin codex/host-validation-and-github-action-companion-finalization" automation/host-validation-and-github-action-companion/deep_review_prompt.md`:
+  passed.
+- `python3 -m unittest tests.test_quality_gates tests.test_adapter_parity -v`:
+  passed, 14 tests.
+- `git diff --check`: passed.
+- `git push -u origin codex/host-validation-and-github-action-companion-finalization`:
+  passed and created the remote branch.
+
+### Residual Risks
+
+- Release artifact publication, promotion to `main`, remote schedule
+  activation, repository secrets, credentials, and installed package
+  synchronization remain separate human-approved actions.

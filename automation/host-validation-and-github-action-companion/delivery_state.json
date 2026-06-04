@@ -8,7 +8,7 @@
   "review_iterations": 1,
   "max_review_iterations": 3,
   "last_verification": {
-    "verified_at": "2026-06-04T16:36:22Z",
+    "verified_at": "2026-06-04T17:28:25Z",
     "phase": "finalization",
     "status": "passed",
     "commands": [
@@ -66,16 +66,26 @@
         "command": "git diff --check",
         "status": "passed",
         "summary": "No whitespace errors after lifecycle reference refresh."
+      },
+      {
+        "command": "rg -n \"Branch URL|Deep-review prompt URL|Raw prompt URL|git fetch origin codex/host-validation-and-github-action-companion-finalization\" automation/host-validation-and-github-action-companion/deep_review_prompt.md",
+        "status": "passed",
+        "summary": "Deep-review prompt includes the GitHub branch URL, prompt URL, raw prompt URL, and fetch command."
+      },
+      {
+        "command": "git push -u origin codex/host-validation-and-github-action-companion-finalization",
+        "status": "passed",
+        "summary": "Created the remote GitHub review branch and set upstream tracking for the local finalization branch."
       }
     ]
   },
   "last_review": {
-    "reviewed_at": "2026-06-04T16:36:22Z",
+    "reviewed_at": "2026-06-04T17:28:25Z",
     "status": "delivered",
     "verdict": "delivered",
     "file": "automation/host-validation-and-github-action-companion/reviews/host-validation-and-github-action-companion-finalization-review-iteration-1.md",
     "phase": "finalization",
-    "summary": "Finalization completed with delivered roadmap rename, refreshed lifecycle references, full verification, completed alert, final deep-review prompt evidence, and PAUSED automation readback."
+    "summary": "Finalization completed with delivered roadmap rename, refreshed lifecycle references, full verification, completed alert, final deep-review prompt evidence, PAUSED automation readback, and pushed GitHub review branch."
   },
   "last_delivered_phase": "finalization",
   "blocked_reason": null,
@@ -119,17 +129,17 @@
     "prompt_path_strategy": "state_resolved",
     "cadence": "hourly"
   },
-  "run_count": 9,
+  "run_count": 10,
   "stalled_run_count": 0,
   "max_stalled_runs": 2,
-  "last_progress_signature": "sha256:7cc8d53b0c50e059d831d03f47c4581afa8b9f946c4e7d5c4f4ad7e682ee645d",
-  "last_progress_at": "2026-06-04T16:36:22Z",
+  "last_progress_signature": "sha256:852b6d2d9e169078c3de7023268380c2eeb044a84b9aa2a4deea724c8b8b4c0e",
+  "last_progress_at": "2026-06-04T17:30:28Z",
   "last_operator_alert": {
     "kind": "completed",
     "file": "automation/host-validation-and-github-action-companion/alerts/2026-06-04T16-07-22Z-completed.md",
     "timestamp": "2026-06-04T16:07:22Z",
     "reason": "All host validation and GitHub Action companion roadmap phases and finalization are delivered; the saved Codex automation is PAUSED by the approved completion safety pause.",
-    "next_human_action": "Review final evidence for promotion readiness; publication, branch push, main promotion, remote schedules, repository secrets, and installed package sync remain separate approvals.",
+    "next_human_action": "Review the pushed GitHub branch for promotion readiness; release publication, main promotion, remote schedules, repository secrets, and installed package sync remain separate approvals.",
     "notification_sink": "alert_file",
     "notification_status": "local_alert_only"
   },
@@ -242,15 +252,15 @@
   "adaptive_deescalation_count": 0,
   "adaptive_flawless_streak": 0,
   "auto_advance_after_delivered_review": true,
-  "commit_delivered_phase_locally": false,
-  "push_to_github": false,
+  "commit_delivered_phase_locally": true,
+  "push_to_github": true,
   "all_phases_complete": true,
   "deep_review_prompt": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
   "final_deep_review_prompt_prepared": true,
   "final_deep_review_prompt_file": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
   "final_deep_review_status": "prompt-prepared",
   "final_deep_review_waiver_reason": null,
-  "updated_at": "2026-06-04T16:36:22Z",
+  "updated_at": "2026-06-04T17:30:28Z",
   "finalization": {
     "completed_at": "2026-06-04T16:07:22Z",
     "deep_review_prompt": "automation/host-validation-and-github-action-companion/deep_review_prompt.md",
@@ -269,8 +279,18 @@
     "automation_readback": "PAUSED, local, gpt-5.5, xhigh",
     "delivered_roadmap": "roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md",
     "finalization_branch": "codex/host-validation-and-github-action-companion-finalization",
-    "publication_status": "not_published_without_approval",
-    "branch_push_status": "not_pushed_without_approval",
+    "publication_status": "github_review_branch_pushed; release_artifacts_not_published",
+    "branch_push_status": "pushed_to_origin",
+    "branch_push_remote": "origin",
+    "branch_push_completed_at": "2026-06-04T17:28:25Z",
+    "branch_push_operator_approval": "Operator requested pushing the finalized roadmap to a GitHub branch and updating the deep-review prompt with that location.",
+    "branch_push_commit": "70ff474bd86e236ecd132dcb1ef9ca3fd6b169e0",
+    "branch_push_url": "https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/host-validation-and-github-action-companion-finalization",
+    "branch_push_pr_url": "https://github.com/dzianissokalau/roadmap-delivery-skill/pull/new/codex/host-validation-and-github-action-companion-finalization",
+    "deep_review_prompt_review_source": "github_branch",
+    "deep_review_prompt_github_branch": "codex/host-validation-and-github-action-companion-finalization",
+    "deep_review_prompt_github_url": "https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/host-validation-and-github-action-companion-finalization",
+    "deep_review_prompt_raw_url": "https://raw.githubusercontent.com/dzianissokalau/roadmap-delivery-skill/codex/host-validation-and-github-action-companion-finalization/automation/host-validation-and-github-action-companion/deep_review_prompt.md",
     "promotion_status": "not_promoted_without_approval",
     "remote_schedule_status": "not_enabled_without_approval",
     "repository_secret_status": "not_created_without_approval",

@@ -2,7 +2,7 @@
 
 Roadmap: `roadmaps/delivered_host_validation_and_github_action_companion_roadmap.md`
 Phase: finalization
-Reviewed at: 2026-06-04T16:36:22Z
+Reviewed at: 2026-06-04T17:28:25Z
 Branch: `codex/host-validation-and-github-action-companion-finalization`
 Verdict: delivered
 
@@ -23,6 +23,9 @@ Verdict: delivered
 - Current-facing lifecycle references were refreshed and checked with `rg`;
   README, the delivered roadmap, the final deep-review prompt, and trust
   evidence now target the delivered roadmap path and finalization branch.
+- The finalization branch was pushed to GitHub after explicit operator
+  approval:
+  `https://github.com/dzianissokalau/roadmap-delivery-skill/tree/codex/host-validation-and-github-action-companion-finalization`.
 - `python3 -m unittest tests.test_quality_gates tests.test_adapter_parity -v`
   passed after the lifecycle reference refresh.
 - The saved Codex automation was paused through the completion safety pause
@@ -49,6 +52,11 @@ Verdict: delivered
   `README.md`, the delivered roadmap, `deep_review_prompt.md`, and
   `trust_evidence.md` no longer point readers at the in-progress roadmap path
   or Phase 6 branch as the review target.
+- The deep-review prompt contains the GitHub branch URL, prompt URL, raw prompt
+  URL, and clone/fetch commands for an external reviewer.
+- Branch publication evidence is recorded in `delivery_state.json`, the
+  delivery log, and the completed alert. The pushed branch commit was
+  `70ff474bd86e236ecd132dcb1ef9ca3fd6b169e0`.
 - Automation pause handling is complete: the saved automation was active at
   finalization start, completion pause was allowed by
   `pause_automation_on_completion`, and readback is `PAUSED`.
@@ -64,9 +72,9 @@ Verdict: delivered
   operator approval for live host execution or active credentials was provided.
   Missing-binary skip semantics and isolated-home behavior are covered by tests
   and targeted smokes.
-- The finalization branch is local and unpushed. Publication, push, promotion,
-  remote schedule activation, repository secrets, and installed package sync
-  remain separate human-approved follow-ups.
+- The finalization branch is pushed for review. Release artifact publication,
+  promotion to `main`, remote schedule activation, repository secrets, and
+  installed package sync remain separate human-approved follow-ups.
 
 ## Verdict
 
