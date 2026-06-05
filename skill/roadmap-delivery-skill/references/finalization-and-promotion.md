@@ -86,9 +86,10 @@ any further delivery extraction:
 6. Set `all_phases_complete` or an equivalent completed status in state.
 7. Write a `completed` operator alert before any optional notification sink.
 8. Pause the automation when `pause_saved_automation` is `allowed`,
-   `pause_automation_on_completion` explicitly allows the completion safety
-   context, or the pause is explicitly approved, then read back status.
-9. If pause approval or tooling is unavailable, record
+   `pause_automation_on_completion` allows the completion safety context, the
+   flag is absent and default terminal safety pause applies, or the pause is
+   explicitly approved, then read back status.
+9. If pause is explicitly disabled or tooling/readback is unavailable, record
    `completed_pending_pause`, keep the hard-stop guard active, and ask the
    operator to pause the automation.
 
@@ -102,8 +103,9 @@ action.
 
 Set `status: completed` only after completed alert evidence exists and pause
 readback reports `PAUSED` when policy allowed an automatic completion pause. If
-pause approval or readback is missing, use `status: completed_pending_pause`,
-keep the hard-stop guard active, and make the pause action explicit.
+pause is explicitly disabled or readback is missing, use
+`status: completed_pending_pause`, keep the hard-stop guard active, and make
+the pause action explicit.
 
 ## Final Branch
 
@@ -148,9 +150,11 @@ When the roadmap is complete or blocked on a human decision:
 
 1. Read back the saved automation config.
 2. Write the required local operator alert for the terminal state.
-3. Confirm whether the user wants it paused when `pause_saved_automation` is
-   not `allowed`.
-4. If approved, pause the automation through the available app/tooling.
+3. Pause through the available app/tooling when terminal self-pause is allowed
+   by `pause_saved_automation`, the context flag, default terminal safety
+   policy, or explicit approval.
+4. If pause is explicitly disabled, record the operator's chosen non-paused
+   terminal state instead of editing the automation.
 5. Read back status.
 6. Record the alert file, pause result, and any notification failure in
    delivery state and log.

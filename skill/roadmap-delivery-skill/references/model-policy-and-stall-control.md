@@ -438,10 +438,11 @@ When state has `all_phases_complete: true`, `status: completed`,
 3. Confirm a final deep-review prompt or review artifact is recorded when the
    roadmap requires one.
 4. Write a local `completed` alert with `write_operator_alert.py`.
-5. Attempt to pause the automation only when the pause surface is already
-   approved by `pause_saved_automation`, the context-specific
-   `pause_automation_on_completion` flag, or explicit human approval;
-   otherwise record that pause is pending and ask the operator.
+5. Attempt to pause the automation when `pause_saved_automation` is allowed,
+   the context-specific `pause_automation_on_completion` flag is true or
+   absent, default terminal safety pause applies, or explicit human approval
+   is present; record pause-needed only when the pause is explicitly disabled
+   or tooling/readback is unavailable.
 6. Read back the saved automation status after any pause attempt.
 7. Record alert path, notification status, and pause status in state/log.
 

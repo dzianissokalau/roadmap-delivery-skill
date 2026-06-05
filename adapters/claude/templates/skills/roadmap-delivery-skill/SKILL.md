@@ -60,23 +60,28 @@ supported adapters.
 - Do not broadly stage files or hide unrelated diffs inside phase work.
 - Do not force-push.
 - Do not promote, merge, push, publish, install global packages, use
-  credentials, or change runner configuration without explicit human approval.
+  credentials, or change runner configuration without explicit human approval,
+  except for the narrow status-only completion/stall self-pause described
+  below.
 
 ## Policy Gates
 
 - Read `approval_policy.json` when present. Missing policy means conservative
   legacy behavior: phase-owned edits, state/log/review writes, branch creation,
   and verification can proceed, while commits, pushes, runner retargets,
-  runner pauses, publication, promotion, credentials, destructive git, and
-  installed plugin sync still require approval or remain forbidden.
+  publication, promotion, credentials, destructive git, and installed plugin
+  sync still require approval or remain forbidden. Completion and repeated-stall
+  status-only self-pause is allowed by default unless
+  `pause_automation_on_completion` or `pause_automation_on_stall` is explicitly
+  `false`.
 - Treat `phase_model_policy.json` and `adaptive_model_policy` as next-run
   controls. A non-flawless run may update durable state and propose an
   approved runner retarget, but it does not change the active model inside the
   current session.
-- Completion and stall self-pause require `pause_saved_automation`,
-  `pause_automation_on_completion`, `pause_automation_on_stall`, or explicit
-  approval plus trusted runner readback. If pause approval or readback is
-  unavailable, write the local alert and keep the state in the appropriate
+- Completion and stall self-pause use `pause_saved_automation`, the
+  context-specific pause flags, or default terminal safety policy plus trusted
+  runner readback. If a pause is explicitly disabled, or pause tooling/readback
+  is unavailable, write the local alert and keep the state in the appropriate
   blocked or `completed_pending_pause` form.
 
 ## Claude Tool Permission Notes

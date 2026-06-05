@@ -38,9 +38,10 @@ If state is blocked, enter Blocked Remediation Mode before normal delivery.
 Hard stop before delivery if all phases are complete, status is completed, or
 status is completed_pending_pause. For completed or stalled states, pause the
 saved runner when `pause_saved_automation` is allowed, a context-specific
-pause flag allows it, or explicit human approval is present; generated
-policies allow completion and stalled-run safety pauses by default. Always
-record pause readback evidence.
+pause flag allows it, explicit human approval is present, or the context flag
+is absent and default terminal safety pause applies; generated policies allow
+completion and stalled-run safety pauses by default. Always record pause
+readback evidence.
 
 For the current phase only, extract objective, owned files, implementation
 steps, acceptance criteria, required verification, non-goals, and stop
@@ -51,7 +52,8 @@ state/log, write a fresh review, and advance only after the review verdict is
 delivered.
 
 Do not push or edit runner configuration unless a valid approval policy
-explicitly allows the operation and readback evidence matches. Do not merge,
+explicitly allows the operation and readback evidence matches, except for the
+narrow status-only completion/stall self-pause described above. Do not merge,
 promote, delete branches, install global packages, or run destructive commands
 without explicit human approval; approval modes never cover never-auto
 operations.

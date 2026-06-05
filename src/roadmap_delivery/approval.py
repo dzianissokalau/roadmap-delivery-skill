@@ -230,6 +230,17 @@ def approval_decision_for_pause_context(policy_report: Dict[str, Any], context: 
             "reason": f"Approval policy explicitly allows automation pause on {normalized_context}.",
             "source": flag_name,
         }
+    if flag_name not in policy_report:
+        return {
+            "operation": "pause_saved_automation",
+            "context": normalized_context,
+            "decision": "allowed",
+            "reason": (
+                f"Default terminal safety policy allows automation pause on {normalized_context}; "
+                f"set {flag_name}=false to disable it."
+            ),
+            "source": f"default_{flag_name}",
+        }
     return {
         **base_decision,
         "context": normalized_context,

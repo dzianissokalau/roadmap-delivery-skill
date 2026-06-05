@@ -183,10 +183,13 @@ readback evidence or record the required human pause action.
 `pause_automation_on_stall` as context-specific safety approvals. Delegated
 modes can allow the same behavior through `pause_saved_automation`; conservative
 mode can keep ordinary runner edits ask-first while explicitly allowing one
-safety pause context. A pause attempt is delivered only after trusted runner
-readback reports `PAUSED`.
+safety pause context. If a context-specific pause flag is absent, the default
+terminal safety policy allows the completion or stall pause; set the flag to
+`false` only when the operator explicitly wants the scheduler to keep running
+after that terminal condition. A pause attempt is delivered only after trusted
+runner readback reports `PAUSED`.
 
-If pause approval is missing, record a pause-needed blocker or
+If a pause is explicitly disabled, record a pause-needed blocker or
 completed-pending-pause state with a local alert. If pause readback fails, do
 not claim the runner is paused.
 

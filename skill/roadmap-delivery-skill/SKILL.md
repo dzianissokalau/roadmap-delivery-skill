@@ -46,16 +46,18 @@ evidence for supported adapters.
 - Preserve unrelated worktree changes; never revert user work without explicit instruction.
 - Do not broadly stage files or hide unrelated diffs inside phase work.
 - Do not force-push.
-- Do not promote to `main`, merge, push, or change Codex app automation config without explicit human approval.
+- Do not promote to `main`, merge, push, or change Codex app automation config without explicit human approval, except for the narrow status-only completion/stall self-pause described below.
 
 ## Policy Gates
 
 - Read `approval_policy.json` when present. Missing policy means conservative
   legacy behavior: phase-owned edits, state/log/review writes, branch creation,
   and verification can proceed, while commits, pushes, saved automation
-  retargets, saved automation pauses, publication, promotion, credentials,
-  destructive git, and installed skill sync still require approval or remain
-  forbidden.
+  retargets, publication, promotion, credentials, destructive git, and
+  installed skill sync still require approval or remain forbidden. Completion
+  and repeated-stall status-only self-pause is allowed by default unless
+  `pause_automation_on_completion` or `pause_automation_on_stall` is explicitly
+  `false`.
 - Treat `phase_model_policy.json` and `adaptive_model_policy` as next-run
   controls. A non-flawless run may update durable state and propose or perform
   an approved saved automation retarget, but it does not change the active
@@ -68,11 +70,11 @@ evidence for supported adapters.
   disagreement stop rule.
 - Completion and repeated-stall self-pause are default safety behaviors for
   generated policies through `pause_automation_on_completion` and
-  `pause_automation_on_stall`. `pause_saved_automation` still gates broad
-  saved-runner edits in conservative mode. If a roadmap explicitly disables a
-  context pause, or pause tooling/readback is unavailable, write the local
-  alert and keep the state in the appropriate blocked or
-  `completed_pending_pause` form.
+  `pause_automation_on_stall`. This is a narrow terminal status-only pause
+  exception; `pause_saved_automation` still gates broad saved-runner edits in
+  conservative mode. If a roadmap explicitly disables a context pause, or
+  pause tooling/readback is unavailable, write the local alert and keep the
+  state in the appropriate blocked or `completed_pending_pause` form.
 
 ## Stop Conditions
 

@@ -152,14 +152,16 @@ The following operations are intentionally outside automatic delivery:
 - merging or promoting to `main`
 - publishing release artifacts
 - syncing an installed global Codex skill copy
-- editing live app automation configuration
+- editing live app automation configuration, except the narrow terminal
+  status-only completion or stall self-pause when policy has not disabled it
 - using credentials or external notification sinks
 - destructive git operations
 
 Delegated approval modes can pre-approve lower-risk saved automation retarget
-and pause operations only when policy, state, and readback agree. They never
-pre-approve publication, promotion, unavailable credential use, or destructive
-git.
+and broader pause operations only when policy, state, and readback agree.
+Terminal completion or stall self-pause is a default safety operation unless a
+context flag disables it. Approval modes never pre-approve publication,
+promotion, unavailable credential use, or destructive git.
 
 Automation and CLI checks may identify that one of these actions is needed,
 but the action itself requires explicit operator approval.

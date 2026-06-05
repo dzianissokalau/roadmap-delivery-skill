@@ -31,6 +31,9 @@ automation lifecycle reliability, and distribution trust.
 - Saved automation activation is reconciled before generic mismatch blocking,
   so a user-started `ACTIVE` runner after paused setup does not waste a run or
   block delivery when model, cwd, prompt, and safety guards still match.
+- Terminal completion and repeated-stall self-pause now remain allowed by
+  default even when `approval_policy.json` is absent or a pause flag is
+  missing; only an explicit `false` flag disables the default safety pause.
 - Release and GitHub Action checks include portability fixes and stronger
   generated-package drift coverage.
 

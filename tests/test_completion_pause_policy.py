@@ -76,6 +76,62 @@ class CompletionPausePolicyTests(unittest.TestCase):
         self.assertEqual(completion["decision"], "allowed")
         self.assertEqual(stall["decision"], "allowed")
 
+    def test_missing_policy_report_defaults_terminal_safety_pause_allowed(self):
+        completion = approval_decision_for_pause_context({}, "completion")
+        stall = approval_decision_for_pause_context({}, "stall")
+
+        self.assertEqual(completion["decision"], "allowed")
+        self.assertEqual(completion["source"], "default_pause_automation_on_completion")
+        self.assertEqual(stall["decision"], "allowed")
+        self.assertEqual(stall["source"], "default_pause_automation_on_stall")
+
+    def test_explicit_false_pause_flag_disables_default_terminal_pause(self):
+        policy = {
+            "operations": approved_operations_for_mode("conservative"),
+            "pause_automation_on_completion": False,
+            "pause_automation_on_stall": False,
+        }
+
+        completion = approval_decision_for_pause_context(policy, "completion")
+        stall = approval_decision_for_pause_context(policy, "stall")
+
+        self.assertEqual(completion["decision"], "ask")
+        self.assertEqual(completion["source"], "pause_automation_on_completion")
+        self.assertEqual(stall["decision"], "ask")
+        self.assertEqual(stall["source"], "pause_automation_on_stall")
+
+    def test_completion_validation_without_policy_still_requires_pause_readback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            alert = repo_root / "completed.md"
+            alert.write_text("completed alert\n", encoding="utf-8")
+            state = {
+                "status": "completed",
+                "last_operator_alert": {
+                    "kind": "completed",
+                    "file": str(alert),
+                    "notification_status": "local_alert_only",
+                },
+            }
+            errors = []
+            warnings = []
+
+            result = validate_completion_flow(
+                repo_root,
+                state,
+                True,
+                {"last_operator_alert": state["last_operator_alert"]},
+                "ACTIVE",
+                None,
+                errors,
+                warnings,
+            )
+
+            self.assertTrue(result["completion_pause_required"])
+            self.assertEqual(result["completion_pause_decision"]["decision"], "allowed")
+            self.assertEqual(result["completion_pause_decision"]["source"], "default_pause_automation_on_completion")
+            self.assertIn("completed_state_pause_readback_missing", {item["code"] for item in errors})
+
     def test_validation_errors_when_completed_active_despite_allowed_pause(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp)

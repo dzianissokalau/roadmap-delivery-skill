@@ -14,8 +14,8 @@
     },
     {
       "path": "skills/roadmap-delivery-skill/SKILL.md",
-      "sha256": "5ebb410aef5ed50284f2ab6cd9384ba1462eedfd44d6ec95fc96165feff4e87d",
-      "size": 5536
+      "sha256": "bc7ad632f6e10997aae2f2ef52d88b133273e11d7a559ad01b76e32f3ff9f734",
+      "size": 5790
     },
     {
       "path": "agents/reviewer.md",
@@ -35,19 +35,19 @@
     },
     {
       "path": "skills/roadmap-delivery-skill/references/finalization-and-promotion.md",
-      "sha256": "1332711bdfd345da77b49ed5f6564d6ac4b8ad8ca499b81d8c73238d7b94d0b9",
-      "size": 3262,
+      "sha256": "bb307b836e27c67a4c129b1b108a4157413b25c91751657cd7807660055404f5",
+      "size": 3368,
       "core_source": "core/references/finalization-and-promotion.md",
-      "core_sha256": "1332711bdfd345da77b49ed5f6564d6ac4b8ad8ca499b81d8c73238d7b94d0b9",
-      "core_size": 3262
+      "core_sha256": "bb307b836e27c67a4c129b1b108a4157413b25c91751657cd7807660055404f5",
+      "core_size": 3368
     },
     {
       "path": "skills/roadmap-delivery-skill/references/model-policy-and-stall-control.md",
-      "sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
-      "size": 7819,
+      "sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
+      "size": 8066,
       "core_source": "core/references/model-policy-and-stall-control.md",
-      "core_sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
-      "core_size": 7819
+      "core_sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
+      "core_size": 8066
     },
     {
       "path": "skills/roadmap-delivery-skill/references/phase-loop.md",

@@ -257,18 +257,20 @@ Roadmap delivery uses a single-phase loop:
 6. Preserve publication, promotion, installed-skill sync, destructive git, and
    credential use as explicit human-approved actions.
 
-Completed roadmaps hard-stop before new phase work. When approval policy or an
-explicit operator decision allows it, the framework can pause a saved automation
-and record readback evidence. Otherwise, the local completion alert is the
-durable fallback and the pause remains a human-approved operation.
+Completed roadmaps hard-stop before new phase work. The framework attempts the
+narrow status-only completion or stall self-pause by default unless the
+roadmap policy explicitly disables that context. If pause tooling or readback
+is unavailable, the local completion alert is the durable fallback and the
+state records the missing pause action.
 
 ## Autonomy Controls
 
 Autonomy is selected per roadmap automation with `approval_policy.json`.
 Existing automations without that file stay conservative: they may edit
 phase-owned files, write state/log/review artifacts, create or switch the
-current phase branch, and run verification. Retargeting saved automation
-model/reasoning, pausing a saved automation, committing locally, pushing a
+current phase branch, run verification, and perform terminal status-only
+self-pause on completion or repeated stall. Retargeting saved automation
+model/reasoning, ordinary saved automation edits, committing locally, pushing a
 branch, publication, promotion, credential use, installed-skill sync, and
 destructive git remain approval-gated unless a durable policy explicitly allows
 the lower-risk operation.

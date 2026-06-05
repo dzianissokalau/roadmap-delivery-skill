@@ -16,7 +16,7 @@ automatic action relies on it.
 
 | Mode | Intent | Allowed without new approval |
 |---|---|---|
-| `conservative` | Preserve current behavior. | Edit phase-owned files, write local state/log/review artifacts, create or switch the current phase branch, and run verification. Ask before automation config edits, pushes, commits if not explicitly enabled, publication, promotion, installed-skill sync, external side effects, or destructive git. |
+| `conservative` | Preserve current behavior. | Edit phase-owned files, write local state/log/review artifacts, create or switch the current phase branch, run verification, and perform terminal status-only self-pause by default. Ask before runner retargets, ordinary automation config edits, pushes, commits if not explicitly enabled, publication, promotion, installed-skill sync, external side effects, or destructive git. |
 | `delegated_local` | Let the automation finish local delivery loops. | Everything in `conservative`, plus local commits for delivered phase-owned changes when state enables local commits, saved automation retargeting for model/reasoning when policy and readback agree, and saved automation pause on completion or stall threshold. |
 | `delegated_delivery` | Allow routine branch publication while preserving high-risk approval gates. | Everything in `delegated_local`, plus pushing the current phase branch when the branch name, remote, and policy match, and updating saved automation config fields already covered by policy. |
 | `custom` | Explicit operation map. | Only operations set to allow in the durable custom policy. Missing entries default to deny. |
@@ -32,7 +32,7 @@ without another prompt:
 
 | Need | Mode to start with | Why |
 |---|---|---|
-| Local phase edits and verification only | `conservative` | This is the legacy fallback and keeps saved automation config, commits, pushes, and pause operations ask-first. |
+| Local phase edits and verification only | `conservative` | This is the legacy fallback and keeps saved automation config, commits, pushes, and retarget operations ask-first while allowing terminal status-only self-pause by default. |
 | Unattended local delivery and closeout | `delegated_local` | Allows local commits, saved model/reasoning retargets, and completion or stall pauses when readback proves the result. |
 | Routine phase branch publication | `delegated_delivery` | Adds current phase branch push approval while keeping promotion, release publication, and destructive operations forbidden. |
 | A narrower exception set | `custom` | Every allowed operation is named explicitly; missing entries stay denied. |
@@ -55,7 +55,7 @@ operation is phase-scoped and every readback check passes:
 | Run verification | yes | yes | yes | Command is roadmap-required or targeted to changed behavior. |
 | Commit delivered phase locally | ask unless state enables | yes | yes | Only phase-owned files and bookkeeping are staged by explicit path. |
 | Retarget saved automation model/reasoning | ask | yes | yes | Required model/reasoning come from policy and saved config reads back matching values. |
-| Pause saved automation on completion or stall | ask | yes | yes | Completion or stall state is recorded and pause readback confirms `PAUSED`. |
+| Pause saved automation on completion or stall | yes unless explicit flag disables it | yes | yes | Completion or stall state is recorded, only status is changed, and pause readback confirms `PAUSED`. |
 | Push current phase branch | ask | ask | yes | Remote, branch name, and push policy match; no force push. |
 
 Pre-approval never removes the requirement to record evidence. State, delivery
@@ -117,7 +117,8 @@ Self-pause is allowed only when all of these are true:
 1. The durable state is `completed`, `completed_pending_pause`, or blocked by a
    stall threshold that policy says should pause.
 2. The selected approval mode or custom policy allows pause for that condition,
-   or the operator explicitly approves the pause.
+   the context-specific pause flag is absent and default terminal safety pause
+   applies, or the operator explicitly approves the pause.
 3. A local alert file has been written with the reason and next human action.
 4. The saved automation config is updated only for the pause operation.
 5. Readback confirms `status = "PAUSED"` and the result is recorded in state,

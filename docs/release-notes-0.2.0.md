@@ -15,7 +15,10 @@ external package registry or marketplace.
   automation run within explicit policy caps and readback checks.
 - Completion and stalled-run self-pause are default safety behaviors for
   generated policies, with local alert fallbacks when saved automation pause is
-  unavailable or not approved.
+  unavailable, explicitly disabled, or readback cannot prove `PAUSED`.
+- Missing approval policy artifacts no longer turn terminal self-pause into a
+  human-approval blocker; completion and repeated-stall pause remain allowed by
+  default unless a context flag is explicitly `false`.
 - Setup reconciliation now treats an operator-started `ACTIVE` automation
   after paused setup as normal activation when model, reasoning, cwd, prompt,
   and safety guards still match.

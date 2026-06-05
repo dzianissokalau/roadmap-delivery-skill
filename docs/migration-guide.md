@@ -112,5 +112,6 @@ python3 scripts/build_codex_package.py --check
 - Do not rewrite historical roadmap evidence to satisfy new schemas unless a
   roadmap phase explicitly owns that migration.
 - Keep generated package updates committed and reviewable.
-- Treat publication, promotion, live automation config edits, and installed
-  skill synchronization as human-approved follow-ups.
+- Treat publication, promotion, live automation config edits beyond terminal
+  status-only self-pause, and installed skill synchronization as
+  human-approved follow-ups.

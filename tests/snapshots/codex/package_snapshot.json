@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "5a129b01506411e1bdbaa07993b06d26448ffa635719b0a882350c2cf1bf4539",
-      "size": 5285
+      "sha256": "7adfd23efe898e8d796f7f640e84630c708f36216438d948a3f7ee4d37506574",
+      "size": 5567
     },
     {
       "path": "agents/openai.yaml",
@@ -14,19 +14,19 @@
     },
     {
       "path": "references/finalization-and-promotion.md",
-      "sha256": "b38963686f67086c47d7a77f9e200691862dece3ece4cab865769063a34f2288",
-      "size": 8441,
+      "sha256": "4d42ab6d366bf3fde51ffd399e5a352a343f583568d62302079870192a10f47d",
+      "size": 8680,
       "core_source": "core/references/finalization-and-promotion.md",
-      "core_sha256": "1332711bdfd345da77b49ed5f6564d6ac4b8ad8ca499b81d8c73238d7b94d0b9",
-      "core_size": 3262
+      "core_sha256": "bb307b836e27c67a4c129b1b108a4157413b25c91751657cd7807660055404f5",
+      "core_size": 3368
     },
     {
       "path": "references/model-policy-and-stall-control.md",
-      "sha256": "6ba61895dffd38554b7b7c39f92982121a1fbdfec4dca9a88324c7bcfaeb197e",
-      "size": 16939,
+      "sha256": "c1c6c5035367729aa7c6128cca8d3dc2a51d105316864def5ecfb33f88d5e094",
+      "size": 17013,
       "core_source": "core/references/model-policy-and-stall-control.md",
-      "core_sha256": "9a22e541e51585bf7f4f01ee72994cf9a0dcf5167eb8fa89de8b09f94e88ecd3",
-      "core_size": 7819
+      "core_sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
+      "core_size": 8066
     },
     {
       "path": "references/phase-loop.md",
