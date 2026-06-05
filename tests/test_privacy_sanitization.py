@@ -102,9 +102,9 @@ class PrivacySanitizationTests(unittest.TestCase):
             leaked_file.write_text("local automation evidence\n", encoding="utf-8")
             for arcname in (
                 "automation/private.md",
-                "roadmap-delivery-0.1.0/automation/private.md",
-                "roadmap-delivery-0.1.0/roadmaps/private.md",
-                "roadmap-delivery-0.1.0/.git/config",
+                "roadmap-delivery-0.2.0/automation/private.md",
+                "roadmap-delivery-0.2.0/roadmaps/private.md",
+                "roadmap-delivery-0.2.0/.git/config",
             ):
                 with self.subTest(arcname=arcname):
                     bundle = root / f"{arcname.replace('/', '-')}.tar.gz"

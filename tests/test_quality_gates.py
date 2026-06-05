@@ -4,6 +4,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_DIR = REPO_ROOT / ".github" / "workflows"
+VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 QUALITY_ROOTS = (
     REPO_ROOT / "README.md",
     REPO_ROOT / "CHANGELOG.md",
@@ -131,7 +132,7 @@ class QualityGateTests(unittest.TestCase):
             "python3 -m roadmap_delivery.cli validate",
             "git diff --check",
             "CODEX_QUICK_VALIDATE",
-            "roadmap-delivery-0.1.0-checksums.sha256",
+            f"roadmap-delivery-{VERSION}-checksums.sha256",
         )
         for snippet in required_snippets:
             with self.subTest(snippet=snippet):

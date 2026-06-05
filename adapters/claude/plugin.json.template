@@ -3,7 +3,7 @@
   "name": "roadmap-delivery",
   "displayName": "Roadmap Delivery Skill",
   "description": "Local file-backed roadmap delivery workflow package for Claude Code compatibility.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Roadmap Delivery"
   },

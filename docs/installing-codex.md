@@ -19,7 +19,7 @@ install:
 export SMOKE_HOME="$(mktemp -d)"
 python3 scripts/build_release.py --output-dir dist --json
 mkdir -p "$SMOKE_HOME/.codex/skills/roadmap-delivery-skill"
-tar -xzf dist/roadmap-delivery-codex-skill-0.1.0.tar.gz \
+tar -xzf dist/roadmap-delivery-codex-skill-0.2.0.tar.gz \
   -C "$SMOKE_HOME/.codex/skills/roadmap-delivery-skill" \
   --strip-components=1
 ```
@@ -55,7 +55,7 @@ sync an installed skill, or use credentials.
 
 | Area | Codex package evidence |
 |---|---|
-| Required metadata | `skill/roadmap-delivery-skill/SKILL.md` declares the skill name and description; release notes and the release manifest record version `0.1.0`, Apache-2.0 licensing, checksums, and package identity. |
+| Required metadata | `skill/roadmap-delivery-skill/SKILL.md` declares the skill name and description; release notes and the release manifest record version `0.2.0`, Apache-2.0 licensing, checksums, and package identity. |
 | Package contents | `SKILL.md`, `agents/openai.yaml`, canonical `references/`, and helper `scripts/` are generated from adapter metadata and checked by `python3 scripts/build_adapters.py --adapter codex --check`. |
 | Compatibility limits | Support is limited to file-backed roadmap artifacts, local helper scripts, saved automation readback when available, and documented Codex runner behavior. Optional live `codex --help` does not prove full host feature parity. |
 | Privacy limits | Release-bound packages must exclude `automation/`, `roadmaps/`, `.git/`, `.codex/`, local alerts, review transcripts, private paths, and credentials; run `python3 scripts/check_release_privacy.py --repo-root .`. |
@@ -84,7 +84,7 @@ and extract the Codex package into the same isolated package directory:
 ```bash
 python3 scripts/build_release.py --output-dir dist --json
 mkdir -p "$SMOKE_HOME/.codex/skills/roadmap-delivery-skill"
-tar -xzf dist/roadmap-delivery-codex-skill-0.1.0.tar.gz \
+tar -xzf dist/roadmap-delivery-codex-skill-0.2.0.tar.gz \
   -C "$SMOKE_HOME/.codex/skills/roadmap-delivery-skill" \
   --strip-components=1
 ```

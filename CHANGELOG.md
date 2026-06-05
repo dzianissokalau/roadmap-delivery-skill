@@ -2,6 +2,49 @@
 
 All notable local framework release changes are recorded here.
 
+## 0.2.0 - 2026-06-05
+
+Second local framework release candidate focused on user-ready setup,
+automation lifecycle reliability, and distribution trust.
+
+### Added
+
+- Onboarding wizard, quickstart, fit guidance, and offline proof demos for
+  first-use validation without live host mutation.
+- Durable approval policy modes, adaptive model policy evidence, and default
+  completion or stalled-run self-pause controls with saved automation readback.
+- Release install and distribution trust documentation, local release process,
+  privacy guardrails, public contribution surfaces, security policy, and
+  trademark/licensing boundaries.
+- Generated GitHub Action companion and optional host smoke harnesses for
+  Codex and Claude, with skipped live checks kept separate from offline
+  validation.
+- Host capability metadata and compatibility docs for Codex, Claude, and the
+  generic documentation pack.
+
+### Fixed
+
+- Lifecycle filename validation now catches active roadmaps that still use a
+  `not_started_` prefix after Phase 0.
+- Final roadmap closeout now requires a final deep review prompt or recorded
+  human waiver before completion state is accepted.
+- Saved automation activation is reconciled before generic mismatch blocking,
+  so a user-started `ACTIVE` runner after paused setup does not waste a run or
+  block delivery when model, cwd, prompt, and safety guards still match.
+- Release and GitHub Action checks include portability fixes and stronger
+  generated-package drift coverage.
+
+### Compatibility Notes
+
+- The project remains a local, file-backed, pre-1.0 framework. External
+  publication, marketplace submission, installed skill synchronization,
+  branch promotion, credentials, and destructive operations remain explicitly
+  human-approved.
+- `skill/roadmap-delivery-skill/` remains the installable Codex package path.
+- `dist/claude/` remains the local Claude plugin package snapshot.
+- Existing `0.1.0` release notes are retained as historical release-candidate
+  documentation.
+
 ## 0.1.0 - 2026-06-02
 
 Initial framework-core and multi-host adapter release candidate.

@@ -601,7 +601,7 @@ def build_once(repo_root: Path, output_dir: Path, *, include_paths: bool) -> Dic
         "release_notes": {
             "path": release_notes_path(version),
             "source_of_truth_for": [
-                "first-release contents",
+                "release contents",
                 "known limitations",
                 "local verification commands",
                 "publication boundary",

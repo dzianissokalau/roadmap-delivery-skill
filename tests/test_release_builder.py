@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
 class ReleaseBuilderTests(unittest.TestCase):
@@ -85,29 +86,29 @@ class ReleaseBuilderTests(unittest.TestCase):
             with tarfile.open(artifacts["claude_plugin_package"], "r:gz") as archive:
                 names = set(archive.getnames())
             self.assertIn(
-                "roadmap-delivery-claude-plugin-0.1.0/.claude-plugin/plugin.json",
+                f"roadmap-delivery-claude-plugin-{VERSION}/.claude-plugin/plugin.json",
                 names,
             )
             self.assertIn(
-                "roadmap-delivery-claude-plugin-0.1.0/skills/roadmap-delivery-skill/SKILL.md",
+                f"roadmap-delivery-claude-plugin-{VERSION}/skills/roadmap-delivery-skill/SKILL.md",
                 names,
             )
-            self.assertIn("roadmap-delivery-claude-plugin-0.1.0/agents/reviewer.md", names)
-            self.assertIn("roadmap-delivery-claude-plugin-0.1.0/hooks/hooks.json", names)
+            self.assertIn(f"roadmap-delivery-claude-plugin-{VERSION}/agents/reviewer.md", names)
+            self.assertIn(f"roadmap-delivery-claude-plugin-{VERSION}/hooks/hooks.json", names)
 
             with tarfile.open(artifacts["generic_markdown_pack"], "r:gz") as archive:
                 names = set(archive.getnames())
-            self.assertIn("roadmap-delivery-generic-markdown-pack-0.1.0/README.md", names)
+            self.assertIn(f"roadmap-delivery-generic-markdown-pack-{VERSION}/README.md", names)
             self.assertIn(
-                "roadmap-delivery-generic-markdown-pack-0.1.0/workflow/phase-loop.md",
+                f"roadmap-delivery-generic-markdown-pack-{VERSION}/workflow/phase-loop.md",
                 names,
             )
             self.assertIn(
-                "roadmap-delivery-generic-markdown-pack-0.1.0/schemas/delivery_state.schema.json",
+                f"roadmap-delivery-generic-markdown-pack-{VERSION}/schemas/delivery_state.schema.json",
                 names,
             )
 
-            manifest = json.loads((output_dir / "roadmap-delivery-0.1.0-manifest.json").read_text(encoding="utf-8"))
+            manifest = json.loads((output_dir / f"roadmap-delivery-{VERSION}-manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["compatibility"]["supported_host_packages"], ["codex", "claude"])
             self.assertEqual(manifest["compatibility"]["claude_plugin_path"], "dist/claude")
 
@@ -138,14 +139,14 @@ class ReleaseBuilderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             output_dir = Path(tmp) / "dist"
             report = self.build_release(output_dir)
-            manifest = json.loads((output_dir / "roadmap-delivery-0.1.0-manifest.json").read_text(encoding="utf-8"))
+            manifest = json.loads((output_dir / f"roadmap-delivery-{VERSION}-manifest.json").read_text(encoding="utf-8"))
 
             artifact_by_filename = {
                 item["filename"]: item
                 for item in report["artifacts"]
                 if item["kind"] not in {"release_manifest", "checksums"}
             }
-            self.assertEqual(manifest["release_notes"]["path"], "docs/release-notes-0.1.0.md")
+            self.assertEqual(manifest["release_notes"]["path"], f"docs/release-notes-{VERSION}.md")
             self.assertIn("known limitations", manifest["release_notes"]["source_of_truth_for"])
             self.assertIn("python3 scripts/build_release.py --check --json", manifest["verification_commands"])
 
@@ -160,7 +161,7 @@ class ReleaseBuilderTests(unittest.TestCase):
             )
             for package in packages.values():
                 with self.subTest(package=package["name"]):
-                    self.assertEqual(package["version"], "0.1.0")
+                    self.assertEqual(package["version"], VERSION)
                     self.assertIn(package["artifact"], artifact_by_filename)
                     self.assertEqual(package["sha256"], artifact_by_filename[package["artifact"]]["sha256"])
                     self.assertGreater(len(package["capability_summary"]), 1)
@@ -178,8 +179,8 @@ class ReleaseBuilderTests(unittest.TestCase):
             self.build_release(second_dir)
 
             for filename in (
-                "roadmap-delivery-0.1.0-manifest.json",
-                "roadmap-delivery-0.1.0-checksums.sha256",
+                f"roadmap-delivery-{VERSION}-manifest.json",
+                f"roadmap-delivery-{VERSION}-checksums.sha256",
             ):
                 with self.subTest(filename=filename):
                     self.assertEqual(

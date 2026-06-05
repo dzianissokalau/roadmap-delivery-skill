@@ -17,6 +17,7 @@ HOOK_SCRIPT = DIST_ROOT / "hooks" / "roadmap_delivery_safety.py"
 REFERENCE_ROOT = SKILL_ROOT / "references"
 CORE_REFERENCE_ROOT = REPO_ROOT / "core" / "references"
 SNAPSHOT = REPO_ROOT / "tests" / "snapshots" / "claude" / "package_snapshot.json"
+VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 CORE_REFERENCES = (
     "finalization-and-promotion.md",
@@ -77,7 +78,7 @@ class ClaudePluginPackageTests(unittest.TestCase):
 
         self.assertEqual(manifest["name"], "roadmap-delivery")
         self.assertEqual(manifest["displayName"], "Roadmap Delivery Skill")
-        self.assertEqual(manifest["version"], "0.1.0")
+        self.assertEqual(manifest["version"], VERSION)
         self.assertEqual(manifest["license"], "Apache-2.0")
         self.assertIsInstance(manifest["description"], str)
         self.assertTrue(manifest["description"])

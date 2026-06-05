@@ -14,6 +14,7 @@ CLAUDE_PACKAGE = REPO_ROOT / "dist" / "claude"
 DEMO_ROOT = REPO_ROOT / "examples" / "demo-roadmap"
 DEMO_SLUG = "demo-roadmap"
 DEMO_AUTOMATION_ID = "demo-roadmap-delivery"
+VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
 class InstallSmokeTests(unittest.TestCase):
@@ -218,8 +219,8 @@ class InstallSmokeTests(unittest.TestCase):
             shutil.unpack_archive(str(artifacts["codex_skill_package"]), codex_unpack)
             shutil.unpack_archive(str(artifacts["claude_plugin_package"]), claude_unpack)
 
-            codex_package = codex_unpack / "roadmap-delivery-codex-skill-0.1.0"
-            claude_package = claude_unpack / "roadmap-delivery-claude-plugin-0.1.0"
+            codex_package = codex_unpack / f"roadmap-delivery-codex-skill-{VERSION}"
+            claude_package = claude_unpack / f"roadmap-delivery-claude-plugin-{VERSION}"
             self.assertTrue((codex_package / "SKILL.md").is_file())
             self.assertTrue((codex_package / "references" / "phase-loop.md").is_file())
             self.assertTrue((codex_package / "scripts" / "validate_delivery_artifacts.py").is_file())

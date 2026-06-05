@@ -27,7 +27,7 @@ Key docs:
 - Onboarding wizard contract: `docs/onboarding-wizard.md`
 - Privacy and release sanitization: `docs/privacy-and-sanitization.md`
 - Release process: `docs/release-process.md`
-- Release notes: `docs/release-notes-0.1.0.md`
+- Release notes: `docs/release-notes-0.2.0.md`
 - Security policy: `SECURITY.md`
 - Trademark and licensing: `docs/trademark-and-licensing.md`
 - Who this is for: `docs/who-this-is-for.md`
@@ -441,20 +441,20 @@ Local equivalent for the release-check artifact build:
 ```bash
 python3 scripts/build_release.py --check
 python3 scripts/build_release.py --output-dir dist --json
-(cd dist && shasum -a 256 -c roadmap-delivery-0.1.0-checksums.sha256)
+(cd dist && shasum -a 256 -c roadmap-delivery-0.2.0-checksums.sha256)
 python3 scripts/check_release_privacy.py --repo-root . \
-  --bundle dist/roadmap-delivery-0.1.0-source.tar.gz \
-  --bundle dist/roadmap-delivery-codex-skill-0.1.0.tar.gz \
-  --bundle dist/roadmap-delivery-claude-plugin-0.1.0.tar.gz \
-  --bundle dist/roadmap-delivery-schemas-0.1.0.tar.gz \
-  --bundle dist/roadmap-delivery-cli-0.1.0.tar.gz \
-  --bundle dist/roadmap-delivery-generic-markdown-pack-0.1.0.tar.gz
+  --bundle dist/roadmap-delivery-0.2.0-source.tar.gz \
+  --bundle dist/roadmap-delivery-codex-skill-0.2.0.tar.gz \
+  --bundle dist/roadmap-delivery-claude-plugin-0.2.0.tar.gz \
+  --bundle dist/roadmap-delivery-schemas-0.2.0.tar.gz \
+  --bundle dist/roadmap-delivery-cli-0.2.0.tar.gz \
+  --bundle dist/roadmap-delivery-generic-markdown-pack-0.2.0.tar.gz
 ```
 
 Release links:
 
 - Changelog: `CHANGELOG.md`
-- Release notes: `docs/release-notes-0.1.0.md`
+- Release notes: `docs/release-notes-0.2.0.md`
 - Release check workflow:
   `https://github.com/dzianissokalau/roadmap-delivery-skill/actions/workflows/release-check.yml`
 

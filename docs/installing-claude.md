@@ -21,7 +21,7 @@ touching an active plugin directory:
 export SMOKE_HOME="$(mktemp -d)"
 python3 scripts/build_release.py --output-dir dist --json
 mkdir -p "$SMOKE_HOME/claude/plugins/roadmap-delivery"
-tar -xzf dist/roadmap-delivery-claude-plugin-0.1.0.tar.gz \
+tar -xzf dist/roadmap-delivery-claude-plugin-0.2.0.tar.gz \
   -C "$SMOKE_HOME/claude/plugins/roadmap-delivery" \
   --strip-components=1
 ```
@@ -47,7 +47,7 @@ publish, sync an installed plugin, or use credentials.
 
 | Area | Claude package evidence |
 |---|---|
-| Required metadata | `dist/claude/.claude-plugin/plugin.json` declares plugin identity, version `0.1.0`, author, description, and Apache-2.0 license; release notes and the release manifest record checksums and package identity. |
+| Required metadata | `dist/claude/.claude-plugin/plugin.json` declares plugin identity, version `0.2.0`, author, description, and Apache-2.0 license; release notes and the release manifest record checksums and package identity. |
 | Package contents | `.claude-plugin/plugin.json`, `README.md`, `skills/roadmap-delivery-skill/`, `agents/reviewer.md`, and `hooks/` are generated from adapter metadata and checked by `python3 scripts/build_adapters.py --adapter claude --check`. |
 | Compatibility limits | Support is limited to the generated local Claude Code plugin package, file-backed validators, repository-local review artifacts, safety hook reminders, and optional live `claude --help` smoke coverage. |
 | Privacy limits | Release-bound packages must exclude `automation/`, `roadmaps/`, `.git/`, `.codex/`, local alerts, review transcripts, private paths, and credentials; run `python3 scripts/check_release_privacy.py --repo-root .`. |
@@ -74,7 +74,7 @@ and extract the Claude plugin package into the same isolated plugin directory:
 ```bash
 python3 scripts/build_release.py --output-dir dist --json
 mkdir -p "$SMOKE_HOME/claude/plugins/roadmap-delivery"
-tar -xzf dist/roadmap-delivery-claude-plugin-0.1.0.tar.gz \
+tar -xzf dist/roadmap-delivery-claude-plugin-0.2.0.tar.gz \
   -C "$SMOKE_HOME/claude/plugins/roadmap-delivery" \
   --strip-components=1
 ```

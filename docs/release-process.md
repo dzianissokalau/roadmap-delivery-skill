@@ -26,7 +26,7 @@ contains all of the following:
 
 | Evidence | Expected source |
 |---|---|
-| Release notes | `docs/release-notes-0.1.0.md` or the current versioned notes file; this is the source of truth for contents, limitations, verification, and publication boundaries |
+| Release notes | `docs/release-notes-0.2.0.md` or the current versioned notes file; this is the source of truth for contents, limitations, verification, and publication boundaries |
 | Changelog entry | `CHANGELOG.md` entry matching `VERSION` |
 | Release manifest | `dist/roadmap-delivery-<VERSION>-manifest.json` |
 | SHA-256 checksums | `dist/roadmap-delivery-<VERSION>-checksums.sha256` |

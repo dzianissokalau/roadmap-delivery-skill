@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roadmap-delivery"
-version = "0.1.0"
+version = "0.2.0"
 description = "Shared helpers for phase-gated roadmap delivery workflows."
 requires-python = ">=3.9"
 
