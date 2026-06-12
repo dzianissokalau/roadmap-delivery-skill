@@ -44,7 +44,10 @@ Flag at least these categories:
 - network/API requirements when `CODEX_SANDBOX_NETWORK_DISABLED=1`
 - install/download/upload commands that need network access or approval
 - `commit`, `push`, saved automation retarget, pause, promotion, publication,
-  installed skill sync, credential use, and destructive git operations
+  installed skill sync, repository security/billing changes, and destructive
+  git operations
+- credential-backed work that needs both present environment variables and
+  explicit operator approval before use
 - local tools that are not on `PATH`
 - external account, billing, product, policy, or scope decisions
 
@@ -52,6 +55,9 @@ Use `approval_policy.json` to resolve every named operation to `allowed`,
 `ask`, or `forbidden`. Missing policy falls back to conservative behavior, so a
 later model retarget, local commit, push, or publication must be surfaced as a
 future operator action instead of discovered only at the phase gate.
+Credential use is not pre-approved by policy; report missing credentials as
+blockers and present credentials as explicit approval actions without printing
+secret values.
 
 ## Mitigation Format
 

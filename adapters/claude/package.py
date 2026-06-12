@@ -12,7 +12,7 @@ CAPABILITY_FILE = "host-capabilities/claude.yaml"
 TEMPLATE_DIR = "adapters/claude"
 
 SKILL_ROOT = "skills/roadmap-delivery-skill"
-CORE_REFERENCES = (
+REFERENCE_SOURCES = (
     "finalization-and-promotion.md",
     "model-policy-and-stall-control.md",
     "phase-preflight.md",
@@ -87,10 +87,11 @@ def adapter_metadata(repo_root: Path) -> AdapterMetadata:
     reference_files = [
         FileSpec(
             output=f"{SKILL_ROOT}/references/{name}",
-            source=f"core/references/{name}",
+            template="templates/references/phase-preflight.md" if name == "phase-preflight.md" else None,
+            source=None if name == "phase-preflight.md" else f"core/references/{name}",
             core_source=f"core/references/{name}",
         )
-        for name in CORE_REFERENCES
+        for name in REFERENCE_SOURCES
     ]
     return AdapterMetadata(
         adapter=ADAPTER,

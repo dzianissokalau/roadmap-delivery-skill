@@ -50,12 +50,12 @@
       "size": 8066
     },
     {
-      "core_sha256": "fa57b47d9a3ead937634bffcb2863cc160f888f7377d9d63e8e92d5bcb06d7d9",
-      "core_size": 2059,
+      "core_sha256": "b53251e6820ebfb3f1d755add3992ce8d996def8983f0aa7b5432473a5bb9b75",
+      "core_size": 2274,
       "core_source": "core/references/phase-preflight.md",
       "path": "skills/roadmap-delivery-skill/references/phase-preflight.md",
-      "sha256": "fa57b47d9a3ead937634bffcb2863cc160f888f7377d9d63e8e92d5bcb06d7d9",
-      "size": 2059
+      "sha256": "23aafd110b7037cf585c2b2a73fa1097f1ede2e0109beb46f618a6c861c72625",
+      "size": 2999
     },
     {
       "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",

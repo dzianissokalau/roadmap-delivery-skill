@@ -50,7 +50,6 @@ FORBIDDEN_NAMED_OPERATIONS = {
     "sync_installed_skill": "Installed skill or plugin synchronization is never automatic.",
     "publish_release_or_package": "Publication to release or package registries is never automatic.",
     "promote_to_main": "Merging or promoting work to main is never automatic.",
-    "use_credentials": "Credential use requires explicit human approval and available credentials.",
     "destructive_git": "Destructive git operations are never automatic.",
 }
 
@@ -69,7 +68,7 @@ NEVER_AUTO_REASONS = {
 APPROVAL_MODES = ("conservative", "delegated_local", "delegated_delivery", "custom")
 REASONING_ORDER = ("minimal", "low", "medium", "high", "xhigh")
 ENV_VAR_RE = re.compile(
-    r"\b(?:[A-Z][A-Z0-9]*_)*(?:API_KEY|TOKEN|SECRET|CREDENTIALS|PASSWORD|ACCESS_KEY|PRIVATE_KEY|DATABASE_URL|DSN)\b"
+    r"\b(?:[A-Z][A-Z0-9]*_)*(?:API_KEY|TOKEN|SECRET|CREDENTIALS|CREDENTIALS_JSON|PASSWORD|ACCESS_KEY|PRIVATE_KEY|DATABASE_URL|DSN|SERVICE_ACCOUNT|ORG_ID|PROJECT_ID)\b"
 )
 PHASE_HEADING_RE = re.compile(r"^#{2,3}\s+Phase\s+(\d+)\s*(?:[-:]\s*)?(.+?)\s*$", re.IGNORECASE)
 FINALIZATION_HEADING_RE = re.compile(r"^#{2,3}\s+Finalization\b(?:\s*[-:]\s*(.+?))?\s*$", re.IGNORECASE)
@@ -573,10 +572,18 @@ def command_requires_network(command: str) -> bool:
         for token in (
             "curl ",
             "wget ",
+            "git clone",
+            "git fetch",
+            "git pull",
             "pip install",
             "npm install",
             "pnpm install",
             "yarn install",
+            "docker pull",
+            "apt-get install",
+            "apt install",
+            "ssh ",
+            "scp ",
             "git push",
             "gh ",
         )
@@ -603,18 +610,112 @@ def detect_operations(body: str) -> List[str]:
         ("publish_release_or_package", ("publish release", "package registry", "marketplace submission", "release registry")),
         ("promote_to_main", ("promote to main", "merge to main", "merge into main", "main promotion")),
         ("destructive_git", ("reset --hard", "force push", "delete branch", "delete tag", "rewrite history")),
+        ("change_repository_security_or_billing", ("billing", "repository security", "repository permission", "repo permission", "branch protection", "repository visibility", "secret setting")),
+        ("destructive_filesystem_outside_phase_scope", ("rm -rf", "delete files outside", "remove files outside", "outside phase scope", "outside owned files")),
     )
     for operation, needles in checks:
         if any(needle in lower for needle in needles):
             operations.append(operation)
-    if detect_env_vars(body) or "credential" in lower or "secret" in lower:
-        operations.append("use_credentials")
     return unique(operations)
 
 
+def network_need_is_negated(segment: str) -> bool:
+    lower = segment.lower()
+    return bool(
+        re.search(r"\b(no|without|offline|not|never)\b.{0,60}\b(network|internet|api access|external api|download|upload|fetch)\b", lower)
+        or re.search(r"\b(network|internet|api access|external api|download|upload|fetch)\b.{0,60}\b(not required|not needed|unneeded|unnecessary|optional|disabled)\b", lower)
+    )
+
+
+def network_segments(body: str) -> List[str]:
+    segments: List[str] = []
+    for line in body.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        segments.extend(part.strip() for part in re.split(r"(?<=[.!?])\s+", stripped) if part.strip())
+    return segments
+
+
 def body_requires_network(body: str, commands: Sequence[str]) -> bool:
+    if any(command_requires_network(command) for command in commands):
+        return True
+    for segment in network_segments(body):
+        lower = segment.lower()
+        if any(term in lower for term in NETWORK_TERMS) and not network_need_is_negated(segment):
+            return True
+    return False
+
+
+def issue_key(issue: Dict[str, Any]) -> Tuple[Any, ...]:
+    return (
+        issue.get("code"),
+        issue.get("operation"),
+        issue.get("name"),
+        issue.get("tool"),
+        issue.get("message"),
+    )
+
+
+def approval_key(approval: Dict[str, Any]) -> Tuple[Any, ...]:
+    return (
+        approval.get("operation"),
+        approval.get("decision"),
+        approval.get("context"),
+    )
+
+
+def append_issue(phase: Dict[str, Any], issue: Dict[str, Any]) -> None:
+    existing = {issue_key(item) for item in phase.get("issues", [])}
+    if issue_key(issue) not in existing:
+        phase.setdefault("issues", []).append(issue)
+
+
+def append_approval(phase: Dict[str, Any], approval: Dict[str, Any]) -> None:
+    existing = {approval_key(item) for item in phase.get("approvals", [])}
+    if approval_key(approval) not in existing:
+        phase.setdefault("approvals", []).append(approval)
+
+
+def add_credential_approval_issue(phase: Dict[str, Any], checked_env: Sequence[Dict[str, Any]]) -> None:
+    if not checked_env or not all(item.get("present") for item in checked_env):
+        return
+    append_approval(
+        phase,
+        {
+            "operation": "use_credentials",
+            "decision": "ask",
+            "reason": "Credential value is present; explicit human approval is still required before using it.",
+            "context": "credential-backed phase work",
+        },
+    )
+    append_issue(
+        phase,
+        finding(
+            "credential_approval_required",
+            "approval",
+            "Credential-backed phase work has the required environment variables present, but credential use still needs explicit human approval.",
+            "Record explicit operator approval for credential use before this phase, or replace the phase with an offline fixture/dry-run path.",
+            operation="use_credentials",
+            decision="ask",
+        ),
+    )
+
+
+def add_unresolved_credential_issue(phase: Dict[str, Any], body: str, checked_env: Sequence[Dict[str, Any]]) -> None:
     lower = body.lower()
-    return any(term in lower for term in NETWORK_TERMS) or any(command_requires_network(command) for command in commands)
+    if checked_env or not ("credential" in lower or "secret" in lower or "api key" in lower):
+        return
+    append_issue(
+        phase,
+        finding(
+            "credential_requirement_unresolved",
+            "approval",
+            "The phase mentions credentials or secrets but no concrete environment variable name was detected.",
+            "Name the required environment variable explicitly, then preflight again without exposing its value.",
+            operation="use_credentials",
+        ),
+    )
 
 
 def add_approval_issue(
@@ -624,9 +725,10 @@ def add_approval_issue(
     context: str,
 ) -> None:
     decision = approval_decision_for_operation(approval_policy.get("operations", {}), operation)
-    phase["approvals"].append({**decision, "context": context})
+    append_approval(phase, {**decision, "context": context})
     if decision["decision"] == "ask":
-        phase["issues"].append(
+        append_issue(
+            phase,
             finding(
                 "approval_required",
                 "approval",
@@ -637,7 +739,8 @@ def add_approval_issue(
             )
         )
     elif decision["decision"] == "forbidden":
-        phase["issues"].append(
+        append_issue(
+            phase,
             finding(
                 "forbidden_operation",
                 "blocker",
@@ -676,7 +779,8 @@ def analyze_phase(
         present = bool(os.environ.get(env_var))
         checked_env.append({"name": env_var, "present": present})
         if not present:
-            result["issues"].append(
+            append_issue(
+                result,
                 finding(
                     "missing_environment_variable",
                     "blocker",
@@ -686,13 +790,14 @@ def analyze_phase(
                 )
             )
 
-    if checked_env:
-        add_approval_issue(result, approval_policy, "use_credentials", "credential-backed phase work")
+    add_credential_approval_issue(result, checked_env)
+    add_unresolved_credential_issue(result, body, checked_env)
 
     network_required = body_requires_network(body, commands)
     result["network_required"] = network_required
     if network_required and network_disabled:
-        result["issues"].append(
+        append_issue(
+            result,
             finding(
                 "network_disabled",
                 "blocker",
@@ -707,7 +812,8 @@ def analyze_phase(
         if not token or token.startswith("./") or "/" in token:
             continue
         if token in KNOWN_COMMANDS and shutil.which(token) is None:
-            result["issues"].append(
+            append_issue(
+                result,
                 finding(
                     "missing_local_tool",
                     "mitigation",
@@ -720,6 +826,9 @@ def analyze_phase(
 
     for operation in detect_operations(body):
         add_approval_issue(result, approval_policy, operation, "phase text")
+
+    if str(phase.get("key")) == "finalization":
+        add_approval_issue(result, approval_policy, "pause_saved_automation", "finalization terminal runner pause")
 
     if phase_model_policy:
         target = resolve_policy_target(phase_model_policy, str(phase.get("key")))
@@ -742,7 +851,8 @@ def analyze_phase(
             )
             readback_missing = bool((target.get("model") and not configured_model) or (target.get("reasoning_effort") and not configured_reasoning))
             if readback_missing:
-                result["issues"].append(
+                append_issue(
+                    result,
                     finding(
                         "runner_readback_missing",
                         "blocker",
@@ -753,7 +863,8 @@ def analyze_phase(
             elif model_mismatch or reasoning_mismatch:
                 configured = f"{configured_model or 'unknown'} / {configured_reasoning or 'unknown'}"
                 required = f"{target.get('model') or 'unknown'} / {target.get('reasoning_effort') or 'unknown'}"
-                result["issues"].append(
+                append_issue(
+                    result,
                     finding(
                         "runner_retarget_needed",
                         "approval",
@@ -902,6 +1013,10 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
         status = "needs_operator_setup"
     elif summary.get("needs_approval") or summary.get("needs_mitigation") or warnings:
         status = "warning"
+    caveats = [
+        "This is a static preflight report. Environment variables, local tool availability, and network flags were checked on the preflight host and may differ from the saved automation runner.",
+        "Secret values are never printed; only variable names and presence are reported.",
+    ]
 
     return {
         "schema_version": 1,
@@ -926,6 +1041,7 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
         },
         "approval_policy": approval_policy,
         "summary": summary,
+        "caveats": caveats,
         "operator_actions": build_operator_actions(analyzed, warnings),
         "phases": analyzed,
         "warnings": warnings,
@@ -952,6 +1068,12 @@ def markdown_report(report: Dict[str, Any]) -> str:
         f"State: `{report.get('state_file')}`",
         "",
     ]
+    caveats = report.get("caveats") or []
+    if caveats:
+        lines.extend(["## Caveats", ""])
+        for caveat in caveats:
+            lines.append(f"- {caveat}")
+        lines.append("")
     actions = report.get("operator_actions") or []
     if actions:
         lines.extend(["## Operator Actions", ""])

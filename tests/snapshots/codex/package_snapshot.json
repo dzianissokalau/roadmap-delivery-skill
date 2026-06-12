@@ -29,12 +29,12 @@
       "size": 17013
     },
     {
-      "core_sha256": "fa57b47d9a3ead937634bffcb2863cc160f888f7377d9d63e8e92d5bcb06d7d9",
-      "core_size": 2059,
+      "core_sha256": "b53251e6820ebfb3f1d755add3992ce8d996def8983f0aa7b5432473a5bb9b75",
+      "core_size": 2274,
       "core_source": "core/references/phase-preflight.md",
       "path": "references/phase-preflight.md",
-      "sha256": "2132b7ddc59acaee89dcb529d0de7bd8797b49e7c049953051116e2089a4ab80",
-      "size": 3427
+      "sha256": "0273576cf8a21ce9beffd693d5117e4f927a80d997090d5691dd2eae8f5296c1",
+      "size": 3735
     },
     {
       "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
@@ -97,8 +97,8 @@
     {
       "mode": "0755",
       "path": "scripts/plan_phase_prerequisites.py",
-      "sha256": "74703c5689cf995db0136c018890bf953e2af78867e53041361605889c73c4de",
-      "size": 40288
+      "sha256": "54e9fb85d35f3af249c17c08046ec6900dfa47caa5bb4f14529d05f31bcd66ff",
+      "size": 44913
     },
     {
       "mode": "0755",

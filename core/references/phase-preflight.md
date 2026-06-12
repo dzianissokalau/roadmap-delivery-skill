@@ -30,6 +30,10 @@ prerequisite, approval operation, current decision, and mitigation. If the
 preflight is static and cannot prove availability, say that explicitly instead
 of claiming certainty.
 
+For credentials, report only variable names and presence. Missing credentials
+are blockers. Present credentials still need explicit operator approval before
+use; do not treat a secret value's presence as approval.
+
 Preflight evidence should be stored near the roadmap automation artifacts, for
 example as `phase_prerequisites.json` plus a human-readable
 `phase_preflight.md`. Later runs must read those files when present and update

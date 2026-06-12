@@ -100,10 +100,14 @@ class ClaudePluginPackageTests(unittest.TestCase):
                 output = f"skills/roadmap-delivery-skill/references/{name}"
                 self.assertIn(output, files)
                 self.assertEqual(files[output]["core_source"], f"core/references/{name}")
-                self.assertEqual(
-                    (REFERENCE_ROOT / name).read_text(encoding="utf-8"),
-                    (CORE_REFERENCE_ROOT / name).read_text(encoding="utf-8"),
-                )
+                generated = (REFERENCE_ROOT / name).read_text(encoding="utf-8")
+                core = (CORE_REFERENCE_ROOT / name).read_text(encoding="utf-8")
+                if name == "phase-preflight.md":
+                    self.assertIn("## Claude Manual Procedure", generated)
+                    self.assertIn("## Core Contract", generated)
+                    self.assertNotEqual(generated, core)
+                else:
+                    self.assertEqual(generated, core)
 
     def test_skill_preserves_core_phase_gate_safety_rules(self):
         self.run_build_check()
