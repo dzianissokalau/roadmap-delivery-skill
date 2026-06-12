@@ -50,6 +50,7 @@ Create this repository-local layout:
 ```text
 automation/<roadmap-slug>/
   automation_guide.md
+  approval_policy.json
   delivery_state.json
   delivery_log.md
   review_fix_state.json
@@ -62,6 +63,12 @@ automation/<roadmap-slug>/
 
 Keep app automation config outside the repository unless the user explicitly
 asks to edit it. Keep the automation `cwd` rooted at the repository root.
+
+Create `approval_policy.json` during setup and record its path, active mode,
+and last readback in `delivery_state.json`. Start conservative unless the
+operator explicitly selects a delegated or custom mode. Do not leave model
+retargeting dependent on a missing policy file; a later phase may need
+`retarget_saved_automation` before it can safely start.
 
 If the operator manually activates an automation that setup originally recorded
 as paused, the next run should reconcile that accepted ACTIVE state when it is

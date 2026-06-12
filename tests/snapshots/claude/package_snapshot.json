@@ -67,11 +67,11 @@
     },
     {
       "path": "skills/roadmap-delivery-skill/references/setup-automation.md",
-      "sha256": "c4475f8ef4626e34d14305b50730593fa53915a1bc0b618dae550edfd70a11b7",
-      "size": 5338,
+      "sha256": "980fa5b77aa2a4c33ea5f50d281a46db21d9c373e23564b92ff568813c3ea6aa",
+      "size": 5488,
       "core_source": "core/references/setup-automation.md",
-      "core_sha256": "c4475f8ef4626e34d14305b50730593fa53915a1bc0b618dae550edfd70a11b7",
-      "core_size": 5338
+      "core_sha256": "980fa5b77aa2a4c33ea5f50d281a46db21d9c373e23564b92ff568813c3ea6aa",
+      "core_size": 5488
     },
     {
       "path": "skills/roadmap-delivery-skill/references/state-log-and-branches.md",

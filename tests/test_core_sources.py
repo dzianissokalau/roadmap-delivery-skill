@@ -91,6 +91,26 @@ class CoreSourceTests(unittest.TestCase):
         self.assertIn(activation_marker, setup_reference)
         self.assertIn("Do not stop just because the saved automation is ACTIVE", normalized_setup)
 
+    def test_setup_references_require_approval_policy_artifact(self):
+        references = {
+            "core": CORE_ROOT / "references" / "setup-automation.md",
+            "skill": SKILL_REFERENCES / "setup-automation.md",
+            "codex-template": REPO_ROOT
+            / "adapters"
+            / "codex"
+            / "templates"
+            / "references"
+            / "setup-automation.md",
+        }
+
+        for name, path in references.items():
+            with self.subTest(reference=name):
+                text = path.read_text(encoding="utf-8")
+                artifact_list_start = text.index("automation/<roadmap-slug>/")
+                artifact_list = text[artifact_list_start : text.index("```", artifact_list_start)]
+                self.assertIn("approval_policy.json", artifact_list)
+                self.assertIn("retarget_saved_automation", text)
+
 
 if __name__ == "__main__":
     unittest.main()

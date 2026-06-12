@@ -62,6 +62,8 @@ selects `delegated_local`, `delegated_delivery`, or `custom`. A missing approval
 policy keeps legacy conservative behavior. An invalid approval policy must fail
 validation before delivery relies on pre-approval. Custom policy must provide an
 operation allow/deny map, with missing operations treated as denied.
+Record the `retarget_saved_automation` decision because later phases may need a
+runner model or reasoning retarget before delivery can safely resume.
 
 The initial delivery log must describe the roadmap, state path, review path,
 operating policy, configured runner, and next action. The log is append-only

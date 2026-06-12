@@ -46,11 +46,11 @@
     },
     {
       "path": "references/setup-automation.md",
-      "sha256": "0fd7b65d74777ab3b595adf300bed428176b8cbd847cb0bd9b9365a67a98df9b",
-      "size": 18469,
+      "sha256": "abe335f5cb43ba2230020245dd65e6bd42bd6ec181479450748ee34174471bfe",
+      "size": 18846,
       "core_source": "core/references/setup-automation.md",
-      "core_sha256": "c4475f8ef4626e34d14305b50730593fa53915a1bc0b618dae550edfd70a11b7",
-      "core_size": 5338
+      "core_sha256": "980fa5b77aa2a4c33ea5f50d281a46db21d9c373e23564b92ff568813c3ea6aa",
+      "core_size": 5488
     },
     {
       "path": "references/state-log-and-branches.md",
