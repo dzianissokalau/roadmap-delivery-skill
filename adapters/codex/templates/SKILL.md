@@ -24,6 +24,7 @@ Use this skill for file-backed, phase-gated roadmap delivery workflows. Keep wor
 - Finalize, promote, or close out delivered work: read `references/finalization-and-promotion.md`.
 - Repair bad state, stale paths, blocked runs, or lifecycle drift: read `references/troubleshooting.md`.
 - Use phase model policy, stalled-run handling, or model-aware automation: read `references/model-policy-and-stall-control.md`.
+- Preflight future phases, prerequisites, mitigations, or approvals: read `references/phase-preflight.md`.
 
 ## Package Readiness
 

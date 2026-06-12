@@ -36,8 +36,10 @@ MARKETPLACE_READINESS = {
             "SKILL.md",
             "agents/openai.yaml",
             "references/phase-loop.md",
+            "references/phase-preflight.md",
             "references/review-and-fix.md",
             "scripts/inspect_delivery_state.py",
+            "scripts/plan_phase_prerequisites.py",
             "scripts/validate_delivery_artifacts.py",
             "scripts/plan_automation_retarget.py",
         ],
@@ -79,6 +81,7 @@ MARKETPLACE_READINESS = {
             "hooks/hooks.json",
             "hooks/roadmap_delivery_safety.py",
             "skills/roadmap-delivery-skill/references/phase-loop.md",
+            "skills/roadmap-delivery-skill/references/phase-preflight.md",
             "skills/roadmap-delivery-skill/references/review-and-fix.md",
         ],
         "docs": {

@@ -16,6 +16,8 @@ Read these files before acting:
 - `automation/<roadmap-slug>/review_fix_state.json`
 - `automation/<roadmap-slug>/phase_model_policy.json`
 - `automation/<roadmap-slug>/approval_policy.json` when present
+- `automation/<roadmap-slug>/phase_prerequisites.json` and
+  `automation/<roadmap-slug>/phase_preflight.md` when present
 
 Operate on exactly one current phase at a time. Resolve the roadmap from state,
 then reconcile roadmap, state, log, review files, phase model policy, approval
@@ -33,6 +35,12 @@ runner is ACTIVE after the operator started it.
 Validate approval policy before relying on pre-approved operations. If the
 policy is missing, use conservative legacy behavior. If the policy is invalid,
 record the blocker and stop before delivery work.
+
+Before delivery starts, read existing phase preflight evidence when present. If
+future phases or finalization have no recent preflight evidence, perform a
+read-only scan for later model, credential, network, tooling, external
+decision, and approval prerequisites. Record mitigations and required operator
+actions without implementing future phases.
 
 If state is blocked, enter Blocked Remediation Mode before normal delivery.
 Hard stop before delivery if all phases are complete, status is completed, or

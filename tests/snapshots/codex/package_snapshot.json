@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "7adfd23efe898e8d796f7f640e84630c708f36216438d948a3f7ee4d37506574",
-      "size": 5567
+      "sha256": "eba8b668eccbaf27365f40d77171eea53f5a151208d45d5268e03f3a2fd1eb93",
+      "size": 5674
     },
     {
       "path": "agents/openai.yaml",
@@ -13,90 +13,104 @@
       "size": 217
     },
     {
+      "core_sha256": "bb307b836e27c67a4c129b1b108a4157413b25c91751657cd7807660055404f5",
+      "core_size": 3368,
+      "core_source": "core/references/finalization-and-promotion.md",
       "path": "references/finalization-and-promotion.md",
       "sha256": "4d42ab6d366bf3fde51ffd399e5a352a343f583568d62302079870192a10f47d",
-      "size": 8680,
-      "core_source": "core/references/finalization-and-promotion.md",
-      "core_sha256": "bb307b836e27c67a4c129b1b108a4157413b25c91751657cd7807660055404f5",
-      "core_size": 3368
+      "size": 8680
     },
     {
+      "core_sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
+      "core_size": 8066,
+      "core_source": "core/references/model-policy-and-stall-control.md",
       "path": "references/model-policy-and-stall-control.md",
       "sha256": "c1c6c5035367729aa7c6128cca8d3dc2a51d105316864def5ecfb33f88d5e094",
-      "size": 17013,
-      "core_source": "core/references/model-policy-and-stall-control.md",
-      "core_sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
-      "core_size": 8066
+      "size": 17013
     },
     {
+      "core_sha256": "fa57b47d9a3ead937634bffcb2863cc160f888f7377d9d63e8e92d5bcb06d7d9",
+      "core_size": 2059,
+      "core_source": "core/references/phase-preflight.md",
+      "path": "references/phase-preflight.md",
+      "sha256": "2132b7ddc59acaee89dcb529d0de7bd8797b49e7c049953051116e2089a4ab80",
+      "size": 3427
+    },
+    {
+      "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
+      "core_size": 6149,
+      "core_source": "core/references/phase-loop.md",
       "path": "references/phase-loop.md",
       "sha256": "1f2449dd551d543d98a53fbdf767e52e54cc9fd8de445966847f14ec58d1b37a",
-      "size": 14552,
-      "core_source": "core/references/phase-loop.md",
-      "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
-      "core_size": 6149
+      "size": 14552
     },
     {
+      "core_sha256": "2b4e45837764e55495bf3707fb398ddf0e3a3cc1c8ce15ff442c6a2623ae9ae7",
+      "core_size": 2595,
+      "core_source": "core/references/review-and-fix.md",
       "path": "references/review-and-fix.md",
       "sha256": "a9c8b8c69bc54b23678254ce26152da8ad7d0c6957f960bdcc5fb8c7bc174b1b",
-      "size": 5619,
-      "core_source": "core/references/review-and-fix.md",
-      "core_sha256": "2b4e45837764e55495bf3707fb398ddf0e3a3cc1c8ce15ff442c6a2623ae9ae7",
-      "core_size": 2595
+      "size": 5619
     },
     {
-      "path": "references/setup-automation.md",
-      "sha256": "abe335f5cb43ba2230020245dd65e6bd42bd6ec181479450748ee34174471bfe",
-      "size": 18846,
+      "core_sha256": "51fd0543b4d97b4be514d502cab1ae2815dd7ea696af5030fbfb6758ee4d4547",
+      "core_size": 6128,
       "core_source": "core/references/setup-automation.md",
-      "core_sha256": "980fa5b77aa2a4c33ea5f50d281a46db21d9c373e23564b92ff568813c3ea6aa",
-      "core_size": 5488
+      "path": "references/setup-automation.md",
+      "sha256": "0f796fb07b2cd8bc259bf1a1cf603c40db296348ce48835e7e2a4096c4e8b56d",
+      "size": 19909
     },
     {
+      "core_sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
+      "core_size": 3187,
+      "core_source": "core/references/state-log-and-branches.md",
       "path": "references/state-log-and-branches.md",
       "sha256": "e2d5e3ef98a89d8b8daf6ea7bb8491f8c3731271ab207dfe7d061b4eac60607a",
-      "size": 10919,
-      "core_source": "core/references/state-log-and-branches.md",
-      "core_sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
-      "core_size": 3187
+      "size": 10919
     },
     {
+      "core_sha256": "3229a3dd93110247f6ca03ce28ae74370efa79ec4592573e059ce0f895f0c049",
+      "core_size": 5491,
+      "core_source": "core/references/troubleshooting.md",
       "path": "references/troubleshooting.md",
       "sha256": "f4a3383f3151c602b7bf1a2ca2e1d868c21f99631b6041a5114eb5cd6262eddc",
-      "size": 18277,
-      "core_source": "core/references/troubleshooting.md",
-      "core_sha256": "3229a3dd93110247f6ca03ce28ae74370efa79ec4592573e059ce0f895f0c049",
-      "core_size": 5491
+      "size": 18277
     },
     {
+      "mode": "0644",
       "path": "scripts/compute_progress_signature.py",
       "sha256": "3a6397e6c14fbbddb5ed22983b345e24b304c8c4a681233f04229463a7ff478b",
-      "size": 885,
-      "mode": "0644"
+      "size": 885
     },
     {
+      "mode": "0755",
       "path": "scripts/inspect_delivery_state.py",
       "sha256": "68ce88bbb1e32884724109c1263017216d2bb1b01a8b5d7205a1476ddd5fcb6c",
-      "size": 883,
-      "mode": "0755"
+      "size": 883
     },
     {
+      "mode": "0755",
       "path": "scripts/plan_automation_retarget.py",
       "sha256": "ededf9dfc412635f4a7e5251e3370dbb64542caa302b5585603c73516ef32b46",
-      "size": 34043,
-      "mode": "0755"
+      "size": 34043
     },
     {
+      "mode": "0755",
+      "path": "scripts/plan_phase_prerequisites.py",
+      "sha256": "74703c5689cf995db0136c018890bf953e2af78867e53041361605889c73c4de",
+      "size": 40288
+    },
+    {
+      "mode": "0755",
       "path": "scripts/validate_delivery_artifacts.py",
       "sha256": "efc29a1589c051ed139ff6135590d10003f6ab95af2d0f6e7f0639a037835f24",
-      "size": 889,
-      "mode": "0755"
+      "size": 889
     },
     {
+      "mode": "0644",
       "path": "scripts/write_operator_alert.py",
       "sha256": "fa3a3f665b0195a6c5633f99e3077752a3760be3d8268f49cf6bad3d902c154a",
-      "size": 881,
-      "mode": "0644"
+      "size": 881
     }
   ]
 }

@@ -23,6 +23,11 @@
       "core_source": "core/references/model-policy-and-stall-control.md"
     },
     {
+      "output": "references/phase-preflight.md",
+      "template": "references/phase-preflight.md",
+      "core_source": "core/references/phase-preflight.md"
+    },
+    {
       "output": "references/phase-loop.md",
       "template": "references/phase-loop.md",
       "core_source": "core/references/phase-loop.md"
@@ -60,6 +65,11 @@
     {
       "output": "scripts/plan_automation_retarget.py",
       "template": "scripts/plan_automation_retarget.py",
+      "mode": "0755"
+    },
+    {
+      "output": "scripts/plan_phase_prerequisites.py",
+      "template": "scripts/plan_phase_prerequisites.py",
       "mode": "0755"
     },
     {

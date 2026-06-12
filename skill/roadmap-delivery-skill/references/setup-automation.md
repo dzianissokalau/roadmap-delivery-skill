@@ -53,6 +53,8 @@ automation/<roadmap-slug>/
   approval_policy.json
   delivery_state.json
   delivery_log.md
+  phase_prerequisites.json
+  phase_preflight.md
   review_fix_state.json
   review_fix_log.md
   phase_model_policy.json
@@ -69,6 +71,22 @@ and last readback in `delivery_state.json`. Start conservative unless the
 operator explicitly selects a delegated or custom mode. Do not leave model
 retargeting dependent on a missing policy file; a later phase may need
 `retarget_saved_automation` before it can safely start.
+
+Before activation, run phase preflight and save the report beside the other
+automation artifacts:
+
+```bash
+python3 skill/roadmap-delivery-skill/scripts/plan_phase_prerequisites.py \
+  --repo-root <repo-root> \
+  --roadmap-slug <roadmap-slug> \
+  --automation-id <automation-id> \
+  --output-json automation/<roadmap-slug>/phase_prerequisites.json \
+  --output-markdown automation/<roadmap-slug>/phase_preflight.md
+```
+
+Resolve every future `ask` or `forbidden` approval, missing credential, missing
+tool, model/reasoning retarget, and `CODEX_SANDBOX_NETWORK_DISABLED=1` network
+blocker before activation when the goal is unattended phase flow.
 
 If the operator manually activates an automation that setup originally recorded
 as paused, the next run should reconcile that accepted ACTIVE state when it is
@@ -231,6 +249,9 @@ Read these first:
 - `automation/<roadmap-slug>/delivery_log.md`
 - `automation/<roadmap-slug>/review_fix_state.json` when present
 - `automation/<roadmap-slug>/phase_model_policy.json`
+- `automation/<roadmap-slug>/approval_policy.json`
+- `automation/<roadmap-slug>/phase_prerequisites.json` and
+  `automation/<roadmap-slug>/phase_preflight.md` when present
 
 Operate on exactly one current phase at a time. Resolve the roadmap from state,
 then reconcile roadmap, state, log, review files, phase model policy, git
@@ -254,6 +275,10 @@ blockers, rerun validation, clear `blocked_reason` only when the repair is
 verified, and then resume the current phase. If the blocker needs credentials,
 approval, a product decision, or destructive git, keep state blocked and ask for
 the missing human action.
+
+When a blocker is permission-gated, rerun phase preflight so the operator sees
+all known credential, network, approval, model, and tooling mitigations rather
+than only the first phase that failed.
 
 Hard stop before delivery if `all_phases_complete` is true, state is
 `completed`, or state is `completed_pending_pause`. Confirm the automation is

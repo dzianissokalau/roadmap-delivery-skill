@@ -56,6 +56,7 @@ class AdapterBuildSystemTests(unittest.TestCase):
                 "hooks/roadmap_delivery_safety.py",
                 "skills/roadmap-delivery-skill/references/finalization-and-promotion.md",
                 "skills/roadmap-delivery-skill/references/model-policy-and-stall-control.md",
+                "skills/roadmap-delivery-skill/references/phase-preflight.md",
                 "skills/roadmap-delivery-skill/references/phase-loop.md",
                 "skills/roadmap-delivery-skill/references/review-and-fix.md",
                 "skills/roadmap-delivery-skill/references/setup-automation.md",

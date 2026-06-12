@@ -72,6 +72,11 @@ PARITY_RULES = {
         "run quality",
         "next run",
     ),
+    "future phase preflight": (
+        "phase preflight",
+        "mitigations",
+        "operator actions",
+    ),
     "completion and stall self-pause": (
         "pause_automation_on_completion",
         "pause_automation_on_stall",

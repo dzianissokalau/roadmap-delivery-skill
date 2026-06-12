@@ -17,6 +17,7 @@ REQUIRED_REFERENCE_FILES = {
     "finalization-and-promotion.md",
     "troubleshooting.md",
     "model-policy-and-stall-control.md",
+    "phase-preflight.md",
 }
 
 REQUIRED_TEMPLATE_FILES = {

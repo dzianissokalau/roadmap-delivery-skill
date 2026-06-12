@@ -81,6 +81,7 @@ class CodexAdapterGenerationTests(unittest.TestCase):
             "scripts/compute_progress_signature.py",
             "scripts/inspect_delivery_state.py",
             "scripts/plan_automation_retarget.py",
+            "scripts/plan_phase_prerequisites.py",
             "scripts/validate_delivery_artifacts.py",
             "scripts/write_operator_alert.py",
         ):
@@ -89,6 +90,7 @@ class CodexAdapterGenerationTests(unittest.TestCase):
 
         self.assertEqual(files["scripts/inspect_delivery_state.py"]["mode"], "0755")
         self.assertEqual(files["scripts/plan_automation_retarget.py"]["mode"], "0755")
+        self.assertEqual(files["scripts/plan_phase_prerequisites.py"]["mode"], "0755")
         self.assertEqual(files["scripts/validate_delivery_artifacts.py"]["mode"], "0755")
 
     def test_skill_top_level_policy_gates_are_packaged(self):

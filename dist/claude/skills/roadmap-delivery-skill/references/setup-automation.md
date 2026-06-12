@@ -20,6 +20,8 @@ automation/<roadmap-slug>/
   approval_policy.json
   delivery_state.json
   delivery_log.md
+  phase_prerequisites.json
+  phase_preflight.md
   review_fix_state.json
   review_fix_log.md
   phase_model_policy.json
@@ -77,6 +79,14 @@ readback proves them. Reasoning requirements are floors, not exact ceilings:
 `xhigh` readback satisfies a policy requiring `high`, and setup must not block
 or ask for approval merely to downgrade reasoning.
 
+Before activation, perform a read-only phase preflight across all remaining
+phases and finalization. Record future model/reasoning retargets, missing
+environment variables, network requirements, tool or dataset prerequisites,
+external decisions, and approval-policy operations in durable
+`phase_prerequisites.json` and `phase_preflight.md` evidence. Do not activate
+scheduled delivery until any known human actions are either completed,
+explicitly approved, or intentionally accepted as future blockers.
+
 ## Prompt Requirements
 
 The saved runner prompt must require the agent to:
@@ -86,6 +96,8 @@ The saved runner prompt must require the agent to:
 - resolve the current roadmap path from `delivery_state.json`, treating the
   state roadmap field as authoritative across lifecycle renames
 - read and validate approval policy before relying on pre-approved operations
+- read phase preflight evidence when present and update it after permission
+  blockers
 - use conservative legacy behavior when approval policy is missing
 - stop before delivery when approval policy is invalid
 - operate on exactly one current phase

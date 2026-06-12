@@ -34,6 +34,8 @@ branch and commit history, verification output, and runner configuration.
   `references/troubleshooting.md`.
 - Use phase model policy, stalled-run handling, or model-aware automation: read
   `references/model-policy-and-stall-control.md`.
+- Preflight future phases, prerequisites, mitigations, or approvals: read
+  `references/phase-preflight.md`.
 
 ## Package Readiness
 
