@@ -15,6 +15,7 @@ SKILL_ROOT = "skills/roadmap-delivery-skill"
 REFERENCE_SOURCES = (
     "finalization-and-promotion.md",
     "model-policy-and-stall-control.md",
+    "network-blocker-remediation.md",
     "phase-preflight.md",
     "phase-loop.md",
     "review-and-fix.md",

@@ -22,6 +22,7 @@ VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 CORE_REFERENCES = (
     "finalization-and-promotion.md",
     "model-policy-and-stall-control.md",
+    "network-blocker-remediation.md",
     "phase-preflight.md",
     "phase-loop.md",
     "review-and-fix.md",

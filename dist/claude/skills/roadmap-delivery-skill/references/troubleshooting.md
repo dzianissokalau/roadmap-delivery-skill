@@ -45,6 +45,8 @@ modes.
 - Dirty worktree includes unexplained current-phase owned files.
 - Branch exists with unexpected base or unexplained changes.
 - Required verification cannot run.
+- Static network preflight reports a blocker before an approved direct public
+  probe path has been checked.
 
 ## Warning Handling
 
@@ -60,6 +62,11 @@ authoritative. In that case, perform the lifecycle rename and repository-local
 reference repair without requiring a saved runner prompt edit. If the prompt
 hardcodes the lifecycle roadmap path and lacks the state-resolved guard, treat
 the saved prompt update as an automation-config repair that needs approval.
+
+For network-disabled blockers, read `network-blocker-remediation.md` before
+stopping. A host environment flag may not prove that all network surfaces are
+unusable; direct public probes can sometimes provide an approved,
+artifact-backed repair path for public unauthenticated source recovery.
 
 ## Blocked Run Remediation
 

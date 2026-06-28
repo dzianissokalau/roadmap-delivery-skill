@@ -39,6 +39,11 @@ example as `phase_prerequisites.json` plus a human-readable
 `phase_preflight.md`. Later runs must read those files when present and update
 them when a newly discovered blocker changes the mitigation list.
 
+If static preflight reports a network blocker for a current phase, consult
+`network-blocker-remediation.md` before preserving that blocker. Another
+approved host network surface may still provide a verified public-source
+recovery path.
+
 ## Host Adapter Boundary
 
 The core defines the preflight categories and durable evidence shape. Host

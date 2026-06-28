@@ -78,6 +78,10 @@ runner", or similar phase text as requiring both `OPENAI_API_KEY` and network
 access unless the phase explicitly provides an offline fixture path. If the
 current runtime has `CODEX_SANDBOX_NETWORK_DISABLED=1`, record a blocker and
 recommend a network-enabled execution surface or an approved offline split.
+When the blocked phase becomes current, `references/network-blocker-remediation.md`
+must be consulted before preserving the blocker; direct terminal `curl` may
+still provide a verified public-source recovery path even when Python or
+browser network surfaces are unavailable.
 
 ## Host Adapter Boundary
 

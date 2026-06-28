@@ -23,6 +23,11 @@
       "core_source": "core/references/model-policy-and-stall-control.md"
     },
     {
+      "output": "references/network-blocker-remediation.md",
+      "template": "references/network-blocker-remediation.md",
+      "core_source": "core/references/network-blocker-remediation.md"
+    },
+    {
       "output": "references/phase-preflight.md",
       "template": "references/phase-preflight.md",
       "core_source": "core/references/phase-preflight.md"

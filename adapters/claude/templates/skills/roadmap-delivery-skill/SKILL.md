@@ -32,6 +32,8 @@ branch and commit history, verification output, and runner configuration.
   `references/finalization-and-promotion.md`.
 - Repair bad state, stale paths, blocked runs, or lifecycle drift: read
   `references/troubleshooting.md`.
+- Diagnose or repair network-disabled blockers before stopping on them: read
+  `references/network-blocker-remediation.md`.
 - Use phase model policy, stalled-run handling, or model-aware automation: read
   `references/model-policy-and-stall-control.md`.
 - Preflight future phases, prerequisites, mitigations, or approvals: read

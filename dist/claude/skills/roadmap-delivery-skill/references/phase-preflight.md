@@ -59,6 +59,11 @@ Credential handling must report only variable names and presence. A missing
 credential is a blocker. A present credential still requires explicit operator
 approval before use.
 
+If static preflight reports a network blocker for a current phase, consult
+`network-blocker-remediation.md` before preserving that blocker. Another
+approved host network surface may still provide a verified public-source
+recovery path.
+
 ## Host Adapter Boundary
 
 Claude relies on repository-local files, the current shell environment, and any

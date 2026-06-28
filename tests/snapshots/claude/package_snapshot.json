@@ -1,5 +1,4 @@
 {
-  "schema_version": 1,
   "adapter": "claude",
   "files": [
     {
@@ -14,8 +13,8 @@
     },
     {
       "path": "skills/roadmap-delivery-skill/SKILL.md",
-      "sha256": "64b2d450b1ce5f440998f708ebcac9adeb99558fb4c3731e2d542935d03f7de7",
-      "size": 5899
+      "sha256": "d44ebbbdf3f2f7297bbe4bfde2aa3786994b39b15e75be463d7e6e5e2a3dd9b3",
+      "size": 6023
     },
     {
       "path": "agents/reviewer.md",
@@ -50,12 +49,20 @@
       "size": 8066
     },
     {
-      "core_sha256": "b53251e6820ebfb3f1d755add3992ce8d996def8983f0aa7b5432473a5bb9b75",
-      "core_size": 2274,
+      "core_sha256": "8ae65315fed0d404d88d5733205ef62e75b762385867fff1f61b4bebe058d330",
+      "core_size": 3919,
+      "core_source": "core/references/network-blocker-remediation.md",
+      "path": "skills/roadmap-delivery-skill/references/network-blocker-remediation.md",
+      "sha256": "8ae65315fed0d404d88d5733205ef62e75b762385867fff1f61b4bebe058d330",
+      "size": 3919
+    },
+    {
+      "core_sha256": "71f10738a9ddcb0c9dba398328184727d52d80ac0c5ca9b64307660e6df3a16c",
+      "core_size": 2511,
       "core_source": "core/references/phase-preflight.md",
       "path": "skills/roadmap-delivery-skill/references/phase-preflight.md",
-      "sha256": "23aafd110b7037cf585c2b2a73fa1097f1ede2e0109beb46f618a6c861c72625",
-      "size": 2999
+      "sha256": "567f9016318240e6eb6da0b19774ea8adf48246d4155fbde6a1ae5c4bf1b82b1",
+      "size": 3236
     },
     {
       "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
@@ -90,12 +97,13 @@
       "size": 3187
     },
     {
-      "core_sha256": "3229a3dd93110247f6ca03ce28ae74370efa79ec4592573e059ce0f895f0c049",
-      "core_size": 5491,
+      "core_sha256": "eee8180c38aecb6da0d3e6130089fc1b8282fd92d08065d6152c705f078f07bb",
+      "core_size": 5893,
       "core_source": "core/references/troubleshooting.md",
       "path": "skills/roadmap-delivery-skill/references/troubleshooting.md",
-      "sha256": "3229a3dd93110247f6ca03ce28ae74370efa79ec4592573e059ce0f895f0c049",
-      "size": 5491
+      "sha256": "eee8180c38aecb6da0d3e6130089fc1b8282fd92d08065d6152c705f078f07bb",
+      "size": 5893
     }
-  ]
+  ],
+  "schema_version": 1
 }
