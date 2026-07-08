@@ -201,6 +201,8 @@ class OnboardingWizardTests(unittest.TestCase):
             self.assertEqual(report["setup_choices"]["max_stalled_runs"], 4)
             self.assertFalse(report["setup_choices"]["pause_automation_on_completion"])
             self.assertFalse(report["setup_choices"]["pause_automation_on_stall"])
+            self.assertIn("pause_automation_on_completion_reason", report["approval_policy"]["policy"])
+            self.assertIn("pause_automation_on_stall_reason", report["approval_policy"]["policy"])
             self.assertEqual(report["model_policy"]["policy"]["max_stalled_runs"], 4)
 
     def test_wizard_write_refuses_existing_artifacts_without_force(self):

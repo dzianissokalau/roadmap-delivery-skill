@@ -37,6 +37,10 @@ class ApprovalPolicyTests(unittest.TestCase):
         self.assertTrue(default_approval_policy("conservative")["pause_automation_on_completion"])
         self.assertTrue(default_approval_policy("conservative")["pause_automation_on_stall"])
         self.assertTrue(default_approval_policy("delegated_local")["pause_automation_on_completion"])
+        opt_out = default_approval_policy("conservative", pause_on_completion=False, pause_on_stall=False)
+        self.assertFalse(opt_out["pause_automation_on_completion"])
+        self.assertIn("pause_automation_on_completion_reason", opt_out)
+        self.assertIn("pause_automation_on_stall_reason", opt_out)
 
     def test_operation_resolver_distinguishes_allowed_ask_and_forbidden(self):
         conservative = approved_operations_for_mode("conservative")

@@ -227,6 +227,8 @@ class CliTests(unittest.TestCase):
             self.assertEqual(report["model_policy"]["policy"]["max_stalled_runs"], 5)
             self.assertFalse(policy["pause_automation_on_completion"])
             self.assertFalse(policy["pause_automation_on_stall"])
+            self.assertIn("pause_automation_on_completion_reason", policy)
+            self.assertIn("pause_automation_on_stall_reason", policy)
 
     def test_scaffold_custom_approval_policy_reports_selected_operations(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from roadmap_delivery.approval import default_approval_policy
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SKILL_ROOT = REPO_ROOT / "skill" / "roadmap-delivery-skill"
@@ -780,6 +782,27 @@ class HelperScriptTests(unittest.TestCase):
             codes = self.error_codes(validate)
             self.assertIn("approval_policy_state_mismatch", codes)
             self.assertIn("approval_policy_readback_stale", codes)
+
+    def test_validate_warns_on_silent_safety_pause_opt_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = DeliveryFixture(tmp)
+            policy_path = fixture.state_dir / "approval_policy.json"
+            policy = default_approval_policy("conservative", pause_on_completion=False, pause_on_stall=False)
+            policy.pop("pause_automation_on_completion_reason")
+            policy.pop("pause_automation_on_stall_reason")
+            policy_path.write_text(json.dumps(policy, indent=2), encoding="utf-8")
+
+            validate = self.run_validate(fixture)
+
+            self.assertIn("safety_pause_disabled_without_reason", self.warning_codes(validate))
+
+            policy["pause_automation_on_completion_reason"] = "Operator explicitly keeps the schedule active after completion."
+            policy["pause_automation_on_stall_reason"] = "Operator explicitly keeps the schedule active after repeated stalls."
+            policy_path.write_text(json.dumps(policy, indent=2), encoding="utf-8")
+
+            validate_with_reason = self.run_validate(fixture)
+
+            self.assertNotIn("safety_pause_disabled_without_reason", self.warning_codes(validate_with_reason))
 
     def test_root_automation_layout_is_supported_by_both_helpers(self):
         with tempfile.TemporaryDirectory() as tmp:

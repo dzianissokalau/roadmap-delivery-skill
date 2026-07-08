@@ -103,6 +103,9 @@ The saved runner prompt must require the agent to:
 - operate on exactly one current phase
 - enter blocked remediation before retrying delivery when state is blocked
 - hard-stop on completed or completed-pending-pause state
+- perform completion/stall status-only self-pause by default unless the
+  matching context flag is explicitly `false` or pause tooling/readback is
+  unavailable
 - verify model and reasoning against policy before phase-owned edits
 - classify run quality and apply adaptive model policy only to the next run
 - preserve unrelated worktree changes

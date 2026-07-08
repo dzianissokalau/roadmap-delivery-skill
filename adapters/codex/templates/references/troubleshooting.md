@@ -227,8 +227,10 @@ If state says the roadmap is complete and the automation is active:
 - verify the saved prompt has a completed-state hard-stop guard
 - confirm a `completed` alert file exists and includes enough operator context
 - record a pause-required warning in state/log or inspection output
-- ask whether to pause the automation, unless pause is already approved by the
-  workflow
+- perform the terminal status-only self-pause when the completion context flag
+  allows it or is absent and default terminal safety pause applies
+- ask whether to pause the automation only when the pause flag is explicitly
+  disabled or pause tooling/readback is unavailable
 - preserve final verification evidence
 
 An active automation with a completed-state hard-stop guard is safer than one

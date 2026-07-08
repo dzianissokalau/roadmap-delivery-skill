@@ -55,8 +55,14 @@
     "pause_automation_on_completion": {
       "type": "boolean"
     },
+    "pause_automation_on_completion_reason": {
+      "type": "string"
+    },
     "pause_automation_on_stall": {
       "type": "boolean"
+    },
+    "pause_automation_on_stall_reason": {
+      "type": "string"
     },
     "never_auto": {
       "type": "array",

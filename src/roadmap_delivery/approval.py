@@ -184,15 +184,21 @@ def default_approval_policy(
     pause_on_stall: Optional[bool] = None,
 ) -> Dict[str, Any]:
     operations = approved_operations_for_mode(mode, custom_operations)
+    pause_flags = pause_flags_for_operations(
+        operations,
+        pause_on_completion=pause_on_completion,
+        pause_on_stall=pause_on_stall,
+    )
+    opt_out_reasons: Dict[str, str] = {}
+    for flag, enabled in pause_flags.items():
+        if enabled is False:
+            opt_out_reasons[f"{flag}_reason"] = "Operator explicitly disabled this terminal safety pause during setup."
     return {
         "schema_version": 1,
         "approval_mode": mode,
         "operations": operations,
-        **pause_flags_for_operations(
-            operations,
-            pause_on_completion=pause_on_completion,
-            pause_on_stall=pause_on_stall,
-        ),
+        **pause_flags,
+        **opt_out_reasons,
         "never_auto": list(NEVER_AUTO_OPERATIONS),
     }
 
@@ -346,6 +352,9 @@ def validate_approval_policy(policy: Any, path: Optional[Path] = None) -> List[D
     for flag in SAFETY_PAUSE_FLAGS:
         if flag in policy and not isinstance(policy.get(flag), bool):
             errors.append(_finding("invalid_safety_pause_flag", f"{flag} must be boolean when present.", path))
+        reason_key = f"{flag}_reason"
+        if reason_key in policy and not isinstance(policy.get(reason_key), str):
+            errors.append(_finding("invalid_safety_pause_reason", f"{reason_key} must be a string when present.", path))
 
     return errors
 
@@ -428,7 +437,7 @@ def read_approval_policy(repo_root: Path, state_file: Path, state: Dict[str, Any
     mode = str(policy["approval_mode"])
     operations = approved_operations_for_mode(mode, policy.get("operations") if isinstance(policy.get("operations"), dict) else None)
     pause_flags = pause_flags_for_operations(operations)
-    return {
+    report = {
         "path": str(path),
         "present": True,
         "fallback": None,
@@ -441,3 +450,8 @@ def read_approval_policy(repo_root: Path, state_file: Path, state: Dict[str, Any
         "operation_decisions": approval_decisions_for_operations(operations),
         "errors": [],
     }
+    for flag in SAFETY_PAUSE_FLAGS:
+        reason_key = f"{flag}_reason"
+        if isinstance(policy.get(reason_key), str):
+            report[reason_key] = policy[reason_key]
+    return report

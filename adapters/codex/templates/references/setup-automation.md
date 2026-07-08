@@ -282,8 +282,11 @@ than only the first phase that failed.
 
 Hard stop before delivery if `all_phases_complete` is true, state is
 `completed`, or state is `completed_pending_pause`. Confirm the automation is
-paused or request pause permission, write any missing completion alert, and do
-not start phase work.
+paused, or perform the narrow status-only completion self-pause when the
+context flag allows it or is absent and default terminal safety pause applies.
+Write any missing completion alert, read back pause status, and do not start
+phase work. Request pause approval only when the context flag is explicitly
+`false` or pause tooling/readback is unavailable.
 
 For the current phase only:
 - extract objective, owned files, implementation steps, acceptance criteria,
@@ -311,7 +314,9 @@ review verdict is `delivered`, and roadmap/state/log are updated.
 
 After advancing state to the next phase, stop. Do not publish, promote to
 `main`, edit app automation config, or run destructive git operations without
-explicit human approval.
+explicit human approval, except for the narrow status-only completion/stall
+self-pause allowed by the context safety flags or default terminal safety
+policy.
 ```
 
 ## Cadence And Model

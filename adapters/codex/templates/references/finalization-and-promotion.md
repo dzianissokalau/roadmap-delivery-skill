@@ -183,8 +183,10 @@ decision, pause handling must be addressed before the final response.
 - Read back the saved automation status.
 - If complete, write or confirm the `completed` alert file before optional
   external notification.
-- If complete and active, ask for approval to pause or use the `allowed` pause
-  flow. Do not continue delivery work while waiting.
+- If complete and active, use the default terminal safety pause or the
+  `allowed` pause flow before asking the operator. Ask only when the completion
+  pause flag is explicitly disabled or pause tooling/readback is unavailable.
+  Do not continue delivery work while waiting.
 - If blocked by product decision, credentials, verification environment, or max
   review iterations, recommend pause and record the reason.
 - If the operator declines or approval is unavailable, record that the

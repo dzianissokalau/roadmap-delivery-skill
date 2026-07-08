@@ -66,6 +66,8 @@ NEVER_AUTO_REASONS = {
 }
 
 APPROVAL_MODES = ("conservative", "delegated_local", "delegated_delivery", "custom")
+DEFAULT_PAUSE_ON_COMPLETION = True
+DEFAULT_PAUSE_ON_STALL = True
 REASONING_ORDER = ("minimal", "low", "medium", "high", "xhigh")
 ENV_VAR_RE = re.compile(
     r"\b(?:[A-Z][A-Z0-9]*_)*(?:API_KEY|TOKEN|SECRET|CREDENTIALS|CREDENTIALS_JSON|PASSWORD|ACCESS_KEY|PRIVATE_KEY|DATABASE_URL|DSN|SERVICE_ACCOUNT|ORG_ID|PROJECT_ID)\b"
@@ -294,6 +296,55 @@ def approval_decision_for_operation(operations: Dict[str, bool], operation: str)
     }
 
 
+def pause_flags_for_operations(operations: Dict[str, bool]) -> Dict[str, bool]:
+    pause_allowed = operations.get("pause_saved_automation") is True
+    return {
+        "pause_automation_on_completion": pause_allowed or DEFAULT_PAUSE_ON_COMPLETION,
+        "pause_automation_on_stall": pause_allowed or DEFAULT_PAUSE_ON_STALL,
+    }
+
+
+def approval_decision_for_pause_context(policy_report: Dict[str, Any], context: str) -> Dict[str, Any]:
+    normalized_context = str(context or "").strip().lower().replace("_", "-")
+    if normalized_context not in {"completion", "stall"}:
+        return {
+            "operation": "pause_saved_automation",
+            "context": context,
+            "decision": "forbidden",
+            "reason": "Unknown pause context cannot be classified safely.",
+            "source": "context",
+        }
+
+    operations = policy_report.get("operations") if isinstance(policy_report, dict) else {}
+    if not isinstance(operations, dict):
+        operations = {}
+    base_decision = approval_decision_for_operation(operations, "pause_saved_automation")
+    if base_decision["decision"] != "ask":
+        return {**base_decision, "context": normalized_context, "source": "operation"}
+
+    flag_name = f"pause_automation_on_{normalized_context}"
+    if policy_report.get(flag_name) is True:
+        return {
+            "operation": "pause_saved_automation",
+            "context": normalized_context,
+            "decision": "allowed",
+            "reason": f"Approval policy explicitly allows automation pause on {normalized_context}.",
+            "source": flag_name,
+        }
+    if flag_name not in policy_report:
+        return {
+            "operation": "pause_saved_automation",
+            "context": normalized_context,
+            "decision": "allowed",
+            "reason": (
+                f"Default terminal safety policy allows automation pause on {normalized_context}; "
+                f"set {flag_name}=false to disable it."
+            ),
+            "source": f"default_{flag_name}",
+        }
+    return {**base_decision, "context": normalized_context, "source": flag_name}
+
+
 def default_approval_policy() -> Dict[str, Any]:
     operations = approved_operations_for_mode("conservative")
     return {
@@ -304,6 +355,7 @@ def default_approval_policy() -> Dict[str, Any]:
         "approval_mode": "conservative",
         "approved_operations": approved_operation_names(operations),
         "operations": operations,
+        **pause_flags_for_operations(operations),
         "operation_decisions": {
             operation: approval_decision_for_operation(operations, operation)
             for operation in [*OPERATIONS, *FORBIDDEN_NAMED_OPERATIONS]
@@ -365,6 +417,7 @@ def read_approval_policy(repo_root: Path, state_file: Optional[Path], state: Dic
 
     custom_operations = {key: bool(value) for key, value in raw_operations.items() if key in OPERATIONS and isinstance(value, bool)}
     operations = approved_operations_for_mode(str(mode), custom_operations if mode == "custom" else None)
+    pause_flags = pause_flags_for_operations(operations)
     return {
         "path": str(policy_path),
         "present": True,
@@ -373,6 +426,10 @@ def read_approval_policy(repo_root: Path, state_file: Optional[Path], state: Dic
         "approval_mode": mode,
         "approved_operations": approved_operation_names(operations),
         "operations": operations,
+        "pause_automation_on_completion": bool(
+            policy.get("pause_automation_on_completion", pause_flags["pause_automation_on_completion"])
+        ),
+        "pause_automation_on_stall": bool(policy.get("pause_automation_on_stall", pause_flags["pause_automation_on_stall"])),
         "operation_decisions": {
             operation: approval_decision_for_operation(operations, operation)
             for operation in [*OPERATIONS, *FORBIDDEN_NAMED_OPERATIONS]
@@ -752,6 +809,39 @@ def add_approval_issue(
         )
 
 
+def add_pause_approval_issue(phase: Dict[str, Any], approval_policy: Dict[str, Any], context: str) -> None:
+    decision = approval_decision_for_pause_context(approval_policy, context)
+    append_approval(phase, {**decision, "context": f"{context} terminal runner pause"})
+    if decision["decision"] == "ask":
+        flag_name = f"pause_automation_on_{context}"
+        append_issue(
+            phase,
+            finding(
+                "approval_required",
+                "approval",
+                (
+                    f"pause_saved_automation is needed for {context} terminal runner pause, "
+                    f"but {flag_name} is explicitly disabled or policy does not pre-approve it."
+                ),
+                f"Set {flag_name}=true, remove the explicit false flag to use the default safety pause, or plan an operator stop.",
+                operation="pause_saved_automation",
+                decision=decision["decision"],
+            )
+        )
+    elif decision["decision"] == "forbidden":
+        append_issue(
+            phase,
+            finding(
+                "forbidden_operation",
+                "blocker",
+                f"pause_saved_automation is needed for {context} terminal runner pause, but policy classifies it as forbidden.",
+                "Split this into a human-run action or change the roadmap so automation does not perform it.",
+                operation="pause_saved_automation",
+                decision=decision["decision"],
+            )
+        )
+
+
 def analyze_phase(
     phase: Dict[str, Any],
     *,
@@ -828,7 +918,7 @@ def analyze_phase(
         add_approval_issue(result, approval_policy, operation, "phase text")
 
     if str(phase.get("key")) == "finalization":
-        add_approval_issue(result, approval_policy, "pause_saved_automation", "finalization terminal runner pause")
+        add_pause_approval_issue(result, approval_policy, "completion")
 
     if phase_model_policy:
         target = resolve_policy_target(phase_model_policy, str(phase.get("key")))

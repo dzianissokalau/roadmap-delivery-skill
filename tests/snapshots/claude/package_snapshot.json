@@ -1,4 +1,5 @@
 {
+  "schema_version": 1,
   "adapter": "claude",
   "files": [
     {
@@ -81,12 +82,12 @@
       "size": 2595
     },
     {
-      "core_sha256": "51fd0543b4d97b4be514d502cab1ae2815dd7ea696af5030fbfb6758ee4d4547",
-      "core_size": 6128,
+      "core_sha256": "efc49842770ca4619ff70e3b9d55325cb796f4e5a1aa1dbf6816069030602dbb",
+      "core_size": 6289,
       "core_source": "core/references/setup-automation.md",
       "path": "skills/roadmap-delivery-skill/references/setup-automation.md",
-      "sha256": "51fd0543b4d97b4be514d502cab1ae2815dd7ea696af5030fbfb6758ee4d4547",
-      "size": 6128
+      "sha256": "efc49842770ca4619ff70e3b9d55325cb796f4e5a1aa1dbf6816069030602dbb",
+      "size": 6289
     },
     {
       "core_sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
@@ -104,6 +105,5 @@
       "sha256": "eee8180c38aecb6da0d3e6130089fc1b8282fd92d08065d6152c705f078f07bb",
       "size": 5893
     }
-  ],
-  "schema_version": 1
+  ]
 }

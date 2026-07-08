@@ -988,6 +988,21 @@ def validate_approval_policy_state(
     if approval_policy is None:
         return report
 
+    policy_path_value = approval_policy.get("path")
+    policy_path = Path(policy_path_value) if isinstance(policy_path_value, str) and policy_path_value else state_file
+    for flag in ("pause_automation_on_completion", "pause_automation_on_stall"):
+        reason_key = f"{flag}_reason"
+        if approval_policy.get(flag) is False and not str(approval_policy.get(reason_key) or "").strip():
+            add(
+                warnings,
+                "safety_pause_disabled_without_reason",
+                (
+                    f"{flag} is false without an opt-out reason. This can indicate an old setup artifact "
+                    "that silently preserved the deprecated human-gated terminal pause behavior."
+                ),
+                policy_path,
+            )
+
     state_mode = state.get("approval_mode")
     effective_mode = approval_policy.get("approval_mode")
     fallback_reason = approval_policy.get("fallback_reason")

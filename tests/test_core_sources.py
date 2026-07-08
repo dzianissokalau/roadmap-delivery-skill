@@ -113,6 +113,32 @@ class CoreSourceTests(unittest.TestCase):
                 self.assertIn("approval_policy.json", artifact_list)
                 self.assertIn("retarget_saved_automation", text)
 
+    def test_completion_pause_is_not_prompted_as_permission_by_default(self):
+        references = {
+            "core-prompt": CORE_ROOT / "templates" / "automation_prompt.md",
+            "core-setup": CORE_ROOT / "references" / "setup-automation.md",
+            "codex-template-setup": REPO_ROOT
+            / "adapters"
+            / "codex"
+            / "templates"
+            / "references"
+            / "setup-automation.md",
+            "skill-setup": SKILL_REFERENCES / "setup-automation.md",
+            "skill-finalization": SKILL_REFERENCES / "finalization-and-promotion.md",
+            "skill-troubleshooting": SKILL_REFERENCES / "troubleshooting.md",
+        }
+
+        for name, path in references.items():
+            with self.subTest(reference=name):
+                text = path.read_text(encoding="utf-8")
+                self.assertNotIn("request pause permission", text)
+                self.assertNotIn("ask for approval to pause or use the `allowed` pause flow", text)
+
+        generated_setup = (SKILL_REFERENCES / "setup-automation.md").read_text(encoding="utf-8")
+        normalized_setup = " ".join(generated_setup.split())
+        self.assertIn("default terminal safety pause applies", generated_setup)
+        self.assertIn("narrow status-only completion/stall self-pause", normalized_setup)
+
 
 if __name__ == "__main__":
     unittest.main()

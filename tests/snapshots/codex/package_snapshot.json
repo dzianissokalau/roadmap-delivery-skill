@@ -1,4 +1,5 @@
 {
+  "schema_version": 1,
   "adapter": "codex",
   "files": [
     {
@@ -16,8 +17,8 @@
       "core_size": 3368,
       "core_source": "core/references/finalization-and-promotion.md",
       "path": "references/finalization-and-promotion.md",
-      "sha256": "4d42ab6d366bf3fde51ffd399e5a352a343f583568d62302079870192a10f47d",
-      "size": 8680
+      "sha256": "7346287f67e6e1130bdb70c3773d93d9a661ca60b300e48b5cc18e4670504de0",
+      "size": 8824
     },
     {
       "core_sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
@@ -60,12 +61,12 @@
       "size": 5619
     },
     {
-      "core_sha256": "51fd0543b4d97b4be514d502cab1ae2815dd7ea696af5030fbfb6758ee4d4547",
-      "core_size": 6128,
+      "core_sha256": "efc49842770ca4619ff70e3b9d55325cb796f4e5a1aa1dbf6816069030602dbb",
+      "core_size": 6289,
       "core_source": "core/references/setup-automation.md",
       "path": "references/setup-automation.md",
-      "sha256": "0f796fb07b2cd8bc259bf1a1cf603c40db296348ce48835e7e2a4096c4e8b56d",
-      "size": 19909
+      "sha256": "00958afe3e1a3a06e980fc1d5c5c61b89822ffcd11e9c6b9d9ed5701fa31c60b",
+      "size": 20296
     },
     {
       "core_sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
@@ -80,8 +81,8 @@
       "core_size": 5893,
       "core_source": "core/references/troubleshooting.md",
       "path": "references/troubleshooting.md",
-      "sha256": "bd0f7cdc9a3bbf809796bee67aebf7671676cbb651be53dccf1348e193c9bebb",
-      "size": 18572
+      "sha256": "246628bc126481c9dd848f6e12c298e3d9e209d0ad0a70e0c1ce6430700c72a7",
+      "size": 18757
     },
     {
       "mode": "0644",
@@ -104,8 +105,8 @@
     {
       "mode": "0755",
       "path": "scripts/plan_phase_prerequisites.py",
-      "sha256": "54e9fb85d35f3af249c17c08046ec6900dfa47caa5bb4f14529d05f31bcd66ff",
-      "size": 44913
+      "sha256": "56ce464532d064c884c6b8cbbd61a535032085cb0b1f8af928f54eb0db549878",
+      "size": 48969
     },
     {
       "mode": "0755",
@@ -119,6 +120,5 @@
       "sha256": "fa3a3f665b0195a6c5633f99e3077752a3760be3d8268f49cf6bad3d902c154a",
       "size": 881
     }
-  ],
-  "schema_version": 1
+  ]
 }

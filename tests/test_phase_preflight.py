@@ -290,9 +290,15 @@ class PhasePreflightTests(unittest.TestCase):
             any(approval["operation"] == "use_credentials" and approval["decision"] == "ask" for approval in phase2["approvals"]),
             phase2["approvals"],
         )
-        self.assertTrue(
-            any(approval["operation"] == "pause_saved_automation" for approval in finalization["approvals"]),
-            finalization["approvals"],
+        pause_approvals = [
+            approval for approval in finalization["approvals"] if approval["operation"] == "pause_saved_automation"
+        ]
+        self.assertEqual(len(pause_approvals), 1)
+        self.assertEqual(pause_approvals[0]["decision"], "allowed")
+        self.assertEqual(pause_approvals[0]["source"], "pause_automation_on_completion")
+        self.assertNotIn(
+            ("approval_required", "pause_saved_automation"),
+            {(issue["code"], issue.get("operation")) for issue in finalization["issues"]},
         )
         self.assertTrue(report["caveats"])
 
