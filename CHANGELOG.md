@@ -2,6 +2,65 @@
 
 All notable local framework release changes are recorded here.
 
+## 0.3.0 - 2026-10-14
+
+Source version for runtime reliability and portable installation. Tagged release
+and registry publication remain separate from source installation and review.
+
+### Added
+
+- Bundled stdlib runtime, schemas, version metadata and integrity manifests for
+  Codex/Claude directory installs, extracted releases and offline CLI installs.
+- Shared ordered control decisions, verifier-backed unique-run accounting,
+  resumable alert/pause closeout and exact scoped saved-prompt migration.
+- Extracted-release multi-project scenarios, six historical regression probes
+  and crash recovery with persistent offline scheduler doubles.
+
+### Fixed
+
+- Log/timestamp/review churn cannot reset consecutive stalls. The second unique
+  no-progress outcome triggers the default pause and preserves the blocker.
+- Explicit completion/stall opt-outs override broad approval modes. Activation
+  requires matching identity, model floor and prompt guards before phase work.
+- TOML status updates preserve inline comments and unrelated settings without
+  duplicate keys; scheduler acknowledgements alone do not prove a pause.
+- Adaptive targets and persisted proposals obey model allowlists, reasoning
+  floors/caps and evidence bindings on every resolution path.
+- Final review fixes: completed scope cannot reopen through interrupted-run
+  accounting; unreadable review evidence cannot prevent an authorized safety pause;
+  recurring blockers receive distinct verifier-bound repair identities.
+- Adaptive decisions retain source-run evidence and trusted model metadata
+  throughout destination-phase verification. Missing run identity is not flawless.
+- Policy-only migrations share retry/rollback guards, all migrations bind the
+  real policy path, and no-effect verification requires fresh readback.
+- Installed versions ignore ancestor project VERSION files; scaffold follow-up
+  commands use the actual interpreter and installed entrypoint. Claude hooks no
+  longer borrow checkout runtimes or use an ambiguous default Python executable.
+- Independent re-review corrections reject quoted/contradictory verdicts, bind
+  late-discovered blocker occurrences, recover damaged alerts, and require a
+  bound host outcome before retrying an external pause request.
+- Verified migration history survives failed rechecks and superseded authority
+  cannot undo newer transactions. Adaptive retarget retries keep the same bound
+  decision; configured targets must satisfy known host capabilities.
+- CLI inspection forwards fresh capabilities. Partially damaged Claude bundles
+  fail closed, generated runtimes are tracked, and CI provisions offline build
+  prerequisites explicitly.
+
+### Compatibility Notes
+
+- Python support changes from the prior 3.9+ declaration to `>=3.12,<3.13`.
+  Cooperative POSIX locks are required; Windows and other Python versions are
+  untested. CLI builds additionally need local setuptools>=68 and wheel.
+- Claude hooks require `python3.12` on the host PATH and Claude Code v2.1.295+
+  for fail-closed launch/error handling on PreToolUse and UserPromptSubmit.
+- Replace the complete skill/plugin package; a global install does not upgrade
+  saved prompts. Prompt template 3, policy 2 and semantic evidence 1 are recorded
+  separately from JSON artifact schema version 1.
+- Legacy counters/history are retained. Unknown prompts, custom edits or missing
+  authority need a scoped operator decision. Live scheduler/agent evaluation,
+  publication, promotion and global synchronization are not implied by offline
+  acceptance; binary help checks have a separate evidence category.
+
 ## 0.2.0 - 2026-06-05
 
 Second local framework release candidate focused on user-ready setup,

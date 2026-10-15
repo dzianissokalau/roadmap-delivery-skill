@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import tomllib
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 
@@ -53,10 +54,13 @@ SCHEMA_PATHS = (
     "schemas",
 )
 RELEASE_VERIFICATION_COMMANDS = (
+    "python3 -m unittest discover -s tests -v",
     "python3 scripts/build_adapters.py --check",
+    "python3 scripts/build_codex_package.py --check",
     "python3 scripts/build_release.py --check --json",
     "python3 scripts/check_release_privacy.py --repo-root .",
     "python3 -m unittest tests.test_install_smoke -v",
+    "git diff --check",
 )
 
 
@@ -115,6 +119,13 @@ def validate_release_inputs(repo_root: Path, version: str) -> None:
     missing = [path for path in SOURCE_PATHS if not (repo_root / path).exists()]
     if missing:
         raise ReleaseBuildError(f"Release inputs are missing: {', '.join(missing)}")
+
+    try:
+        metadata = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise ReleaseBuildError(f"Cannot read package metadata: {exc}") from exc
+    if metadata.get("project", {}).get("version") != version:
+        raise ReleaseBuildError("pyproject.toml project.version must match VERSION")
 
     release_notes = repo_root / release_notes_path(version)
     if not release_notes.is_file():
@@ -320,6 +331,8 @@ def validate_codex_artifact(path: Path, version: str) -> Dict[str, Any]:
         f"{prefix}/SKILL.md",
         f"{prefix}/references/phase-loop.md",
         f"{prefix}/scripts/validate_delivery_artifacts.py",
+        f"{prefix}/runtime/roadmap_delivery/_resources/runtime-manifest.json",
+        f"{prefix}/runtime/roadmap_delivery/_resources/schemas/delivery_state.schema.json",
     }
     with tarfile.open(path, "r:gz") as archive:
         names = set(archive.getnames())
@@ -351,6 +364,7 @@ def validate_claude_artifact(path: Path, version: str) -> Dict[str, Any]:
         f"{prefix}/agents/reviewer.md",
         f"{prefix}/hooks/hooks.json",
         f"{prefix}/hooks/roadmap_delivery_safety.py",
+        f"{prefix}/skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/runtime-manifest.json",
     }
     with tarfile.open(path, "r:gz") as archive:
         names = set(archive.getnames())
@@ -611,10 +625,15 @@ def build_once(repo_root: Path, output_dir: Path, *, include_paths: bool) -> Dic
         "packages": release_package_metadata(version, primary_artifacts),
         "verification_commands": list(RELEASE_VERIFICATION_COMMANDS),
         "compatibility": {
+            "locking": "cooperative_posix_directory_locks",
+            "live_host_versions": "untested_by_offline_release_checks",
             "codex_skill_path": CODEX_SKILL_ROOT,
             "claude_plugin_path": CLAUDE_PLUGIN_ROOT,
             "generic_markdown_pack": "documentation-only adapter preparation pack",
             "helper_scripts_remain_wrappers": True,
+            "runtime_dependencies": "Python 3.12 standard library only",
+            "requires_python": ">=3.12,<3.13",
+            "bundled_resources": "Hash-bound canonical schemas and runtime manifest",
             "legacy_state_compatibility": "warning-backed where validators allow it",
             "supported_host_packages": ["codex", "claude"],
         },

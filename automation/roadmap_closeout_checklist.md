@@ -20,3 +20,10 @@ otherwise complete.
 - Record backlog follow-ups in the roadmap or a replacement roadmap instead of
   leaving them only in review notes.
 
+
+- Confirm distinct final deep-review prompt/artifact or explicit human waiver,
+  final verification and delivered review before claiming completion.
+- Resolve terminal pause before ordinary phase/model/migration gates. Write the
+  local alert; use supported status-only host updates and preserve other settings.
+- Confirm PAUSED readback and record the receipt, or record a concrete
+  disabled/not-applicable/pending outcome. Do not repeat existing pause approval.

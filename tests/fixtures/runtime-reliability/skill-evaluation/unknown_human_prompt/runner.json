@@ -1,0 +1,21 @@
+{
+  "config": {
+    "id": "evaluation",
+    "status": "ACTIVE",
+    "model": "fixture-model",
+    "reasoning_effort": "xhigh",
+    "prompt": "Deliver one fixture phase per run. Keep my custom integration check and contact preference intact.",
+    "rrule": "FREQ=HOURLY",
+    "cwds": [
+      "$SANDBOX/project"
+    ],
+    "target": {
+      "type": "project",
+      "project_id": "fixture-project"
+    },
+    "execution_environment": "local"
+  },
+  "revision": "fixture-revision-1",
+  "source": "isolated evaluation host double",
+  "scheduler_authoritative": true
+}

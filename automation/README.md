@@ -54,9 +54,15 @@ in the project root or `../roadmaps/`.
 | `../roadmaps/delivered_release_install_and_distribution_trust_roadmap.md` | Completed | Complete | `release-install-and-distribution-trust` hourly, PAUSED | `release-install-and-distribution-trust/delivery_state.json` |
 | `../roadmaps/in_progress_host_validation_and_github_action_companion_roadmap.md` | In Progress | Phase 1 | `host-validation-and-github-action-companion` hourly, ACTIVE | `host-validation-and-github-action-companion/delivery_state.json` |
 
-## Planned Roadmaps
+## New Delivery Automation
 
-No additional phased roadmaps are currently planned without automation.
+| Roadmap | Current phase | Handoff | Saved automation |
+|---|---|---|---|
+| [Runtime Reliability And Portable Installation](../roadmaps/delivered_runtime_reliability_and_portable_installation_roadmap.md) | finalization | [Guide](runtime-reliability-and-portable-installation/automation_guide.md) | Hourly; saved PAUSED; authoritative readback pending |
+
+The roadmap has an active model policy and verified saved-runner settings.
+See its setup readiness report for reviewed preflight findings. Creating and
+activating the runner does not itself deliver a phase.
 
 ## Release Trust Roadmap Notes
 

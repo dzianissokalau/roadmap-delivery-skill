@@ -23,7 +23,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+
+      - name: Install offline test build dependencies
+        run: python3 -m pip install 'setuptools>=68' wheel
 
       - name: Install package
         run: python3 -m pip install -e .
@@ -44,6 +47,12 @@ jobs:
 
       - name: Run unit tests
         run: python3 -m unittest discover -s tests -v
+
+      - name: Run mandatory offline behavioral acceptance
+        env:
+          PIP_NO_INDEX: '1'
+          PYTHONNOUSERSITE: '1'
+        run: python3 -m unittest tests.test_runtime_scenarios tests.test_portable_install tests.test_terminal_closeout tests.test_runtime_migrations tests.test_host_smoke -v
 
       - name: Compile Python sources
         env:

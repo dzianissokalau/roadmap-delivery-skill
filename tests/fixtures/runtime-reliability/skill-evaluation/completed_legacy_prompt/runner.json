@@ -1,0 +1,21 @@
+{
+  "config": {
+    "id": "evaluation",
+    "status": "ACTIVE",
+    "model": "fixture-model",
+    "reasoning_effort": "xhigh",
+    "prompt": "Run the next safe phase-gated delivery step for `roadmaps/in_progress_evaluation.md`.\n\nRead these files before acting:\n- `automation/evaluation/automation_guide.md`\n- `automation/codex_phase_gated_delivery_automation_template.md`\n- `automation/evaluation/delivery_state.json`\n- `automation/evaluation/delivery_log.md`\n- `automation/evaluation/review_fix_state.json`\n- `automation/evaluation/phase_model_policy.json`\n- `automation/evaluation/approval_policy.json` when present\n\nOperate on exactly one current phase at a time. Reconcile roadmap, state, log,\nreview files, phase model policy, approval policy, branch, worktree status, and\nsaved runner configuration before editing.\n\nValidate approval policy before relying on pre-approved operations. If the\npolicy is missing, use conservative legacy behavior. If the policy is invalid,\nrecord the blocker and stop before delivery work.\n\nIf state is blocked, enter Blocked Remediation Mode before normal delivery.\nHard stop before delivery if all phases are complete, status is completed, or\nstatus is completed_pending_pause. For completed or stalled states, pause the\nsaved runner only when `pause_saved_automation` is allowed, a context-specific\npause flag allows it, or explicit human approval is present; always record\npause readback evidence.\n\nFor the current phase only, extract objective, owned files, implementation\nsteps, acceptance criteria, required verification, non-goals, and stop\nconditions. Create or reuse the correct phase branch when implementation work\nis required. Verify saved runner model and reasoning against policy before\ndelivery. Make only phase-scoped changes, run required verification, update\nstate/log, write a fresh review, and advance only after the review verdict is\ndelivered.\n\nDo not push or edit runner configuration unless a valid approval policy\nexplicitly allows the operation and readback evidence matches. Do not merge,\npromote, delete branches, install global packages, or run destructive commands\nwithout explicit human approval; approval modes never cover never-auto\noperations.\nAfter advancing state to the next phase, stop.",
+    "rrule": "FREQ=HOURLY",
+    "cwds": [
+      "$SANDBOX/project"
+    ],
+    "target": {
+      "type": "project",
+      "project_id": "fixture-project"
+    },
+    "execution_environment": "local"
+  },
+  "revision": "fixture-revision-1",
+  "source": "isolated evaluation host double",
+  "scheduler_authoritative": true
+}

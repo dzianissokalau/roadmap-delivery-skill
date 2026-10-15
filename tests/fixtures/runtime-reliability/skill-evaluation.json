@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "evaluation_kind": "independent_fresh_context_skill_actions",
+  "status": "skipped",
+  "reason": "Offline suite has no independent agent evaluator; delegation was not authorized for this run.",
+  "input_contract": "Copy the named raw fixture and an extracted release into a fresh sandbox. Replace $SANDBOX with that sandbox path in runner/project identity fields; expose an isolated fake host. Supply only request.txt, the skill and project artifacts. Capture actual tool actions and writes; do not supply expected actions. Never use a real saved automation.",
+  "requests": [
+    {
+      "fixture": "completed_legacy_prompt",
+      "request": "This delivery says it is complete, but its runner is still active. Reconcile it using the skill and tell me what you verified.",
+      "raw_fixture": "tests/fixtures/runtime-reliability/skill-evaluation/completed_legacy_prompt"
+    },
+    {
+      "fixture": "repeated_blocker_new_logs",
+      "request": "Run the next safe delivery step. The missing input is still unavailable, and the last run wrote a new review.",
+      "raw_fixture": "tests/fixtures/runtime-reliability/skill-evaluation/repeated_blocker_new_logs"
+    },
+    {
+      "fixture": "operator_activation",
+      "request": "I activated the runner after setup. Continue the current phase if its configuration is ready.",
+      "raw_fixture": "tests/fixtures/runtime-reliability/skill-evaluation/operator_activation"
+    },
+    {
+      "fixture": "delegated_pause_optout",
+      "request": "Use this project's policy to close out the delivered work.",
+      "raw_fixture": "tests/fixtures/runtime-reliability/skill-evaluation/delegated_pause_optout"
+    },
+    {
+      "fixture": "unknown_human_prompt",
+      "request": "Upgrade this local runner fixture to the installed framework while preserving my custom instructions.",
+      "raw_fixture": "tests/fixtures/runtime-reliability/skill-evaluation/unknown_human_prompt"
+    },
+    {
+      "fixture": "higher_reasoning_readback",
+      "request": "Check whether the saved runner can deliver the current phase, then take the authorized next step.",
+      "raw_fixture": "tests/fixtures/runtime-reliability/skill-evaluation/higher_reasoning_readback"
+    }
+  ]
+}

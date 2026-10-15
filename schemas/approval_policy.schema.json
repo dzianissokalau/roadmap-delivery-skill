@@ -53,13 +53,15 @@
       "additionalProperties": false
     },
     "pause_automation_on_completion": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Defaults true when absent. Explicit false disables automatic completion pause in every mode, regardless of broad pause permission. A separate scoped manual request remains independent."
     },
     "pause_automation_on_completion_reason": {
       "type": "string"
     },
     "pause_automation_on_stall": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Defaults true when absent. Explicit false disables automatic stall pause in every mode, regardless of broad pause permission."
     },
     "pause_automation_on_stall_reason": {
       "type": "string"

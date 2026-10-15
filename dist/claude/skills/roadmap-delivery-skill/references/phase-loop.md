@@ -24,6 +24,13 @@ satisfy `xhigh`. A model mismatch, missing readback, or configured reasoning
 below the required floor is a stop-before-delivery condition unless the operator
 already approved the runner configuration repair.
 
+## Runtime Decision Order
+
+Use the shared control plan: terminal completion/stall handling first,
+intentional activation next, blocked remediation, then normal prerequisites and
+phase review/advancement. `model-policy-and-stall-control.md` defines effective
+pause/progress/target authority; host adapters execute effects and record receipts.
+
 ## Approval Policy Gate
 
 Before asking the operator or acting automatically, read and validate
@@ -38,7 +45,7 @@ behavior. Resolve each named operation to `allowed`, `ask`, or `forbidden`:
   must not run automatically in any approval mode.
 
 Use the gate for phase-owned edits, state/log/review writes, branch creation,
-local commits, automation retargets, automation pause, branch push, installed
+local commits, automation retargets, broad automation edits, branch push, installed
 skill sync, publication, promotion, credential use, and destructive git.
 
 ## Blocked Remediation Gate

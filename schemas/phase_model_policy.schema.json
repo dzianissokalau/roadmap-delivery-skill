@@ -149,17 +149,24 @@
         }
       },
       "additionalProperties": true
+    },
+    "policy_version": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "$defs": {
     "reasoning_effort": {
       "type": "string",
       "enum": [
+        "none",
         "minimal",
         "low",
         "medium",
         "high",
-        "xhigh"
+        "xhigh",
+        "max",
+        "ultra"
       ]
     },
     "run_quality": {

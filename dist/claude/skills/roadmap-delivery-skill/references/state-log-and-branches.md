@@ -23,7 +23,7 @@ State must record:
 - blocker and blocker repair evidence
 - manual activation evidence when setup PAUSED is reconciled to ACTIVE
 - required and configured model/reasoning values
-- run/stall counters and progress signature
+- run/stall counters, active run and semantic progress evidence
 - operator alert evidence
 - updated timestamp
 
@@ -70,17 +70,19 @@ The latest review verdict must agree with state before phase advancement.
 Implementation phases use a dedicated phase branch. The branch prefix is a
 workflow setting supplied by the host adapter or project convention.
 
-Dirty worktree entries are acceptable only when they are unrelated to current
-phase-owned files and do not make verification unreliable. Never clean, stash,
+Preserve prior delivered and intentional planning changes, including uncommitted
+phase-owned work. Investigate unexplained edits that affect verification. Never clean, stash,
 restore, or rewrite unrelated work without operator approval.
 
 ## Progress And Stall Tracking
 
-Progress signatures should include current phase, status, last delivered phase,
-review iteration count, latest verification, latest review, git head, delivery
-log hash/size, and blocker reason. If the signature changes, reset the stall
-counter. If it repeats, increment the stall counter. When the configured
-threshold is reached, keep or set blocked state and write an operator alert.
+Use the shared semantic journal described in `model-policy-and-stall-control.md`.
+Allocate one stable run ID before work; recover unfinished attempts and record
+exactly one outcome per unique run. Only newly verified accepted work, satisfied
+criteria or original-cause repair can reset `stalled_run_count`. Timestamps,
+review filenames, log edits, repeated tests, commits and raw signatures cannot.
+The first no-progress attempt counts one; the second reaches the default two-run
+threshold. Preserve the actionable blocker and reconcile the terminal pause.
 
 ## Host Adapter Boundary
 

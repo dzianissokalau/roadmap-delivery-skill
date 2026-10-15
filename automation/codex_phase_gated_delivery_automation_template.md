@@ -35,7 +35,7 @@ core/prompts/
 Codex skill reference files under `skill/roadmap-delivery-skill/references/`
 must either have a matching canonical source in `core/references/` or an
 explicit adapter-only reason covered by tests. The Codex package remains the
-installable snapshot until adapter generation is introduced by a later phase.
+installable output of the adapter builders; edit canonical sources and regenerate.
 
 ## Project Defaults
 
@@ -46,7 +46,7 @@ STATE_FILE=automation/<roadmap_slug>/delivery_state.json
 DELIVERY_LOG=automation/<roadmap_slug>/delivery_log.md
 REVIEW_DIR=automation/<roadmap_slug>/reviews
 MAX_REVIEW_ITERATIONS=3
-MAX_STALLED_RUNS=3
+MAX_STALLED_RUNS=2
 CADENCE=manual until the roadmap is review-clean
 ```
 
@@ -105,7 +105,7 @@ Suggested state:
   "last_blocker_repair": null,
   "run_count": 0,
   "stalled_run_count": 0,
-  "max_stalled_runs": 3,
+  "max_stalled_runs": 2,
   "last_progress_signature": null,
   "last_progress_at": null,
   "updated_at": null
@@ -179,6 +179,9 @@ Work only on Phase PHASE_N. Do not start the next phase.
 Before editing:
 - Read DELIVERY_STATE and resolve the current roadmap path from its `roadmap`
   field.
+- Handle completed/completed_pending_pause and the two-run stall threshold
+  before ordinary phase/model gates; do not start another phase during terminal
+  closeout. Resolve context pause defaults/explicit false through shared runtime.
 - Extract the phase scope.
 - Extract acceptance criteria.
 - Identify non-goals.
@@ -206,7 +209,7 @@ Blocked Remediation Mode:
 - if setup expected PAUSED but saved automation now reads ACTIVE, accept that
   as operator/manual activation when it is the only drift and model/reasoning,
   prompt path, cwd, hard-stop guard, and blocked-remediation guard all match;
-  then record `last_activation` and `last_blocker_repair`, update durable
+  then record `last_activation` and any verified repair, preserve stall counters, update durable
   status surfaces to ACTIVE, clear `blocked_reason` after validation, and
   resume the current phase
 - rerun reconciliation and validation after repair
@@ -292,3 +295,10 @@ Read the current roadmap path from `STATE_FILE`; the `roadmap` field in
 saved automation prompt retarget mandatory for a `not_started_` to
 `in_progress_` or `in_progress_` to `delivered_` rename when the prompt still
 points at the stable state and guide files.
+
+Use `scripts/roadmap_delivery.py plan-control` to inspect the next decision.
+Allocate one stable run ID and record a verifier-backed semantic outcome; raw
+hashes, logs, review paths, timestamps and repeated tests cannot reset stalls.
+Default status-only completion/stall pause requires supported tooling, preserved
+settings and PAUSED readback; explicit false context flags override broad pause
+permission. Publication and promotion remain separate human decisions.

@@ -1,0 +1,5 @@
+# Raw delivery evidence contains local host identities, paths and receipts.
+# Preserve it locally; publish only the sanitized review summary.
+*
+!.gitignore
+!publication_review.md

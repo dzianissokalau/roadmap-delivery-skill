@@ -15,6 +15,7 @@ from .reports import inspect as inspect_state
 from .reports import (
     build_evidence_benchmark,
     build_github_action_report,
+    build_control_plan,
     print_benchmark_text,
     print_github_action_text,
     resolve_action_report_file,
@@ -101,6 +102,7 @@ def run_inspect(args: argparse.Namespace) -> int:
         repo_root=args.repo_root,
         roadmap_slug=args.roadmap_slug,
         automation_id=args.automation_id,
+        capabilities_file=args.capabilities_file,
     )
     try:
         report = _with_cli_fields(inspect_state(namespace), "inspect")
@@ -153,7 +155,8 @@ def run_inspect(args: argparse.Namespace) -> int:
 def run_validate(args: argparse.Namespace) -> int:
     _require_slug_or_automation(args.parser, args)
     repo_root = _repo_root(args.repo_root)
-    report = validate(repo_root, args.roadmap_slug, args.automation_id)
+    metadata = load_json_object(Path(args.capabilities_file)) if args.capabilities_file else None
+    report = validate(repo_root, args.roadmap_slug, args.automation_id, host_capabilities=metadata)
     attach_approval_policy_report(report, repo_root)
     report = _with_cli_fields(report, "validate")
     if args.json:
@@ -167,6 +170,65 @@ def run_validate(args: argparse.Namespace) -> int:
     if args.strict and _strict_failed(report, allowed):
         return 1
     return 0
+
+
+def run_plan_control(args: argparse.Namespace) -> int:
+    _require_slug_or_automation(args.parser, args)
+    try:
+        evidence = load_json_object(Path(args.evidence_file)) if args.evidence_file else None
+        runner = load_json_object(Path(args.runner_snapshot)) if args.runner_snapshot else None
+        report = build_control_plan(
+            _repo_root(args.repo_root), args.roadmap_slug, args.automation_id,
+            evidence=evidence, runner=runner, event=args.event,
+            host_capabilities=load_json_object(Path(args.capabilities_file)) if args.capabilities_file else None,
+        )
+    except (RuntimeError, ValueError, OSError) as exc:
+        report = {"result": "invalid_input", "exit_code": 2, "reason_code": "plan_input_unreadable", "errors": [{"code": "plan_input_unreadable", "message": str(exc)}]}
+    report.update(cli_schema_version=CLI_SCHEMA_VERSION, command="plan-control")
+    if args.json:
+        _print_json(report)
+    else:
+        _print_key_values(report, ("command", "stage", "action", "result", "reason_code", "authority", "proposed_state_changes", "required_effects"))
+    return int(report["exit_code"])
+
+
+def run_terminal_closeout(args: argparse.Namespace) -> int:
+    from .automation import resume_terminal_closeout
+    from .alerts import find_state_file
+    root = _repo_root(args.repo_root)
+    try:
+        state_file = root / args.state_file if args.state_file else find_state_file(root, args.roadmap_slug)
+        observed = load_json_object(Path(args.runner_snapshot)) if args.runner_snapshot else None
+        outcome = load_json_object(Path(args.external_outcome)) if args.external_outcome else None
+        report = resume_terminal_closeout(root, state_file, observed=observed, external_outcome=outcome)
+    except (RuntimeError, ValueError, OSError) as exc:
+        report = {"exit_code": 2, "result": "invalid_input", "reason": str(exc), "extract_phase": False}
+    report.update(cli_schema_version=CLI_SCHEMA_VERSION, command="terminal-closeout")
+    if args.json:
+        _print_json(report)
+    else:
+        _print_key_values(report, ("command", "status", "required_action", "action_request", "receipt"))
+    return int(report["exit_code"])
+
+
+def run_plan_migration(args: argparse.Namespace) -> int:
+    from .migrations import plan_migration
+    try:
+        policy = load_json_object(Path(args.policy_file)) if args.policy_file else None
+        report = plan_migration(load_json_object(Path(args.runner_snapshot)),
+                                load_json_object(Path(args.expected_file)), args.roadmap_slug,
+                                policy, roadmap=args.roadmap_path, policy_path=args.policy_file,
+                                supersedes_rollback=args.supersedes_rollback)
+        code = 2 if report["status"] == "needs-decision" else 0
+    except (RuntimeError, ValueError, OSError) as exc:
+        report = {"status": "needs-decision", "errors": [{"code": "migration_input_invalid", "message": str(exc)}]}
+        code = 2
+    report.update(cli_schema_version=CLI_SCHEMA_VERSION, command="plan-migration", read_only=True)
+    if args.json:
+        _print_json(report)
+    else:
+        _print_key_values(report, ("command", "status", "plan_id", "effects", "diffs", "required_action", "errors"))
+    return code
 
 
 def attach_approval_policy_report(report: Dict[str, Any], repo_root: Path) -> None:
@@ -400,6 +462,7 @@ def add_common_flags(parser: argparse.ArgumentParser, *, require_repo_root: bool
 
 
 def add_state_flags(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--capabilities-file", help="Trusted adapter/operator model metadata JSON.")
     parser.add_argument("--roadmap-slug", help="Roadmap slug, accepting hyphen or underscore form.")
     parser.add_argument("--automation-id", help="Codex automation id under ~/.codex/automations.")
 
@@ -474,6 +537,40 @@ def build_parser() -> argparse.ArgumentParser:
     add_state_flags(validate_parser)
     add_strict_flags(validate_parser)
     validate_parser.set_defaults(func=run_validate, parser=validate_parser)
+
+    control_parser = subparsers.add_parser("plan-control", help="Inspect a pure runtime decision; execute no effects.")
+    add_common_flags(control_parser)
+    add_state_flags(control_parser)
+    control_parser.add_argument("--event", default="start_run", choices=("start_run", "operator_resume", "phase_review", "advance_phase", "record_outcome", "recover_run"))
+    control_parser.add_argument("--evidence-file", help="Validated evidence JSON object.")
+    control_parser.add_argument("--runner-snapshot", help="Observed runner/identity/capability JSON; file config alone supplies no host capability.")
+    control_parser.set_defaults(func=run_plan_control, parser=control_parser)
+
+    terminal_parser = subparsers.add_parser("terminal-closeout", help="Resume terminal alert/receipt; emit host tool action, never edit live config.")
+    add_common_flags(terminal_parser)
+    terminal_state = terminal_parser.add_mutually_exclusive_group(required=True)
+    terminal_state.add_argument("--roadmap-slug")
+    terminal_state.add_argument("--state-file")
+    terminal_parser.add_argument("--runner-snapshot", help="Authoritative full runner config/revision/source JSON, supplied by host adapter.")
+    terminal_parser.add_argument("--external-outcome", help="Host action outcome JSON with exact request_id, attempt, status and source.")
+    terminal_parser.set_defaults(func=run_terminal_closeout, parser=terminal_parser)
+
+    migration_parser = subparsers.add_parser("plan-migration", help="Read-only exact saved-prompt and policy upgrade plan; no host effects.")
+    migration_parser.add_argument("--roadmap-slug", required=True)
+    migration_parser.add_argument("--roadmap-path", help="Concrete legacy literal roadmap path used by an old template.")
+    migration_parser.add_argument("--runner-snapshot", required=True)
+    migration_parser.add_argument("--expected-file", required=True, help="Trusted expected runner id/cwd/project/execution scope JSON.")
+    migration_parser.add_argument("--policy-file", help="Existing approval policy; missing or malformed requires a decision.")
+    migration_parser.add_argument("--supersedes-rollback", help="Verified rollback receipt digest for a newly authorized reapplication plan.")
+    migration_parser.add_argument("--json", action="store_true")
+    migration_parser.set_defaults(func=run_plan_migration, parser=migration_parser)
+
+    for name, help_text in (
+        ("phase-preflight", "Inspect prerequisites using the shared planner."),
+        ("plan-retarget", "Plan a constrained next-run target without host effects."),
+        ("progress", "Start, recover or record one verifier-backed unique run."),
+    ):
+        subparsers.add_parser(name, help=help_text, add_help=False)
 
     action_parser = subparsers.add_parser("github-action", help="Run the GitHub Action companion report.")
     add_common_flags(action_parser)
@@ -590,6 +687,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # Delegate argument parsing too; helper and CLI flags cannot drift.
+    if argv and argv[0] in {"phase-preflight", "plan-retarget", "progress"}:
+        from .reports import preflight_main, retarget_main
+        from .progress import main as progress_main
+        routes = {"phase-preflight": preflight_main, "plan-retarget": retarget_main,
+                  "progress": progress_main}
+        return routes[argv[0]](argv[1:])
     parser = build_parser()
     args = parser.parse_args(argv)
     return int(args.func(args))

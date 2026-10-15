@@ -112,8 +112,9 @@ class LibraryUnitTests(unittest.TestCase):
 
             result = build_run_result(repo_root, state_file, state, timestamp="2026-05-25T00:00:00Z")
 
-        self.assertTrue(result["progress_detected"])
-        self.assertEqual(result["run_count"], 1)
+        self.assertFalse(result["progress_detected"])
+        self.assertTrue(result["outcome_pending"])
+        self.assertEqual(result["run_count"], 0)
 
     def test_resolve_repo_path_preserves_absolute_paths(self):
         repo_root = Path("/repo")

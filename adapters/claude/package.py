@@ -84,6 +84,14 @@ plugin synchronization still requires explicit human approval.
 """
 
 
+def claude_helper(path: Path) -> str:
+    """Bind host context before importing shared code; explicit directories win."""
+    context = ('import os\n'
+               'os.environ.setdefault("AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR", '
+               'str(Path.home() / ".claude" / "roadmap-delivery" / "automations"))\n\n')
+    return path.read_text(encoding="utf-8").replace("# Load the packaged runtime first.", context + "# Load the packaged runtime first.", 1)
+
+
 def adapter_metadata(repo_root: Path) -> AdapterMetadata:
     reference_files = [
         FileSpec(
@@ -115,5 +123,7 @@ def adapter_metadata(repo_root: Path) -> AdapterMetadata:
                 mode=0o755,
             ),
             *reference_files,
+            *[FileSpec(output=f"{SKILL_ROOT}/scripts/{path.name}", literal=claude_helper(path), mode=0o755)
+              for path in sorted((repo_root / "adapters/codex/templates/scripts").glob("*.py"))],
         ],
     )

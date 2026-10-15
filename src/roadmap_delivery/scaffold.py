@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+import shlex
+import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
@@ -14,8 +16,10 @@ from .approval import (
     parse_operation_assignments,
     validate_approval_policy,
 )
+from .control import decide_control
 from .paths import slug_forms
 from .policy import ALLOWED_REASONING_EFFORTS
+from .migrations import version_record, render_prompt
 
 
 DEFAULT_MODEL = "gpt-5.5"
@@ -164,13 +168,23 @@ def _title_from_slug(slug: str) -> str:
 
 
 def validation_commands(repo_root: Path, roadmap_slug: str, automation_id: str) -> List[str]:
+    package = Path(__file__).resolve().parent
+    helper = package.parent.parent / "scripts/roadmap_delivery.py"
+    if package.parent.name == "src":
+        helper = package.parent.parent / "adapters/codex/templates/scripts/roadmap_delivery.py"
+    if helper.is_file() and package.parent.name in {"runtime", "src"}:
+        command = shlex.join([sys.executable, "-I", "-S", str(helper)])
+    else:
+        command = shlex.join([sys.executable, "-m", "roadmap_delivery.cli"])
     base = [
-        "python3 -m roadmap_delivery.cli validate",
-        f"--repo-root {json.dumps(str(repo_root))}",
-        f"--roadmap-slug {json.dumps(roadmap_slug)}",
-        f"--automation-id {json.dumps(automation_id)}",
+        command + " validate",
+        f"--repo-root {shlex.quote(str(repo_root))}",
+        f"--roadmap-slug {shlex.quote(roadmap_slug)}",
+        f"--automation-id {shlex.quote(automation_id)}",
         "--strict",
         "--allow-warning missing_automation_config",
+        "--allow-warning automation_model_unknown",
+        "--allow-warning automation_reasoning_unknown",
         "--allow-warning current_branch_name_mismatch",
         "--allow-warning empty_review_dir",
         "--allow-warning worktree_dirty",
@@ -179,10 +193,10 @@ def validation_commands(repo_root: Path, roadmap_slug: str, automation_id: str) 
         "--json",
     ]
     inspect = [
-        "python3 -m roadmap_delivery.cli inspect",
-        f"--repo-root {json.dumps(str(repo_root))}",
-        f"--roadmap-slug {json.dumps(roadmap_slug)}",
-        f"--automation-id {json.dumps(automation_id)}",
+        command + " inspect",
+        f"--repo-root {shlex.quote(str(repo_root))}",
+        f"--roadmap-slug {shlex.quote(roadmap_slug)}",
+        f"--automation-id {shlex.quote(automation_id)}",
         "--json",
     ]
     return [" ".join(base), " ".join(inspect)]
@@ -301,6 +315,8 @@ def build_scaffold_plan(options: ScaffoldOptions, *, command: str = "scaffold") 
         },
         "preview": {
             "automation": {
+                "prompt": render_prompt(slug_dir),
+                "runtime_contract": version_record("local_generated_plan", runner_verified=False),
                 "id": automation_id,
                 "directory": str(automation_dir),
                 "files": automation_artifacts,
@@ -325,6 +341,15 @@ def build_scaffold_plan(options: ScaffoldOptions, *, command: str = "scaffold") 
         "errors": errors,
         "warnings": warnings,
     }
+    report["control_plan"] = decide_control(
+        {"status": "not_started", "required_model": options.initial_model,
+         "required_reasoning_effort": options.reasoning_effort,
+         "max_stalled_runs": options.max_stalled_runs},
+        approval_policy, runner={"kind": "scheduled", "expected": {
+            "id": automation_id, "cwd": str(repo_root),
+            "execution_environment": options.execution_environment},
+            "observed": {}, "capabilities": {}},
+    )
     report["status"] = status_from_findings(report)
     return report
 
@@ -421,6 +446,7 @@ def _delivery_state(report: Dict[str, Any], timestamp: str) -> Dict[str, Any]:
     approval_path = f"automation/{report['roadmap_slug_dir']}/approval_policy.json"
     return {
         "schema_version": 1,
+        "runtime_contract": version_record("local_generated", runner_verified=False),
         "roadmap": report["roadmap_path_relative"],
         "roadmap_slug": report["roadmap_slug"],
         "current_phase": report["initial_phase"],
@@ -447,10 +473,10 @@ def _delivery_state(report: Dict[str, Any], timestamp: str) -> Dict[str, Any]:
         },
         "required_model": report["model_policy"]["default_model"],
         "required_reasoning_effort": report["model_policy"]["default_reasoning_effort"],
-        "configured_automation_model": report["model_policy"]["default_model"],
-        "configured_automation_reasoning_effort": report["model_policy"]["default_reasoning_effort"],
+        "configured_automation_model": None,
+        "configured_automation_reasoning_effort": None,
         "configured_automation_status": "PLANNED",
-        "configured_execution_environment": report["execution_environment"],
+        "configured_execution_environment": None,
         "automation": {
             "id": report["automation_id"],
             "kind": "manual",

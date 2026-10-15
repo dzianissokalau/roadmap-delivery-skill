@@ -38,15 +38,19 @@ state-first: point it at stable automation artifacts, require it to read
 depend on the lifecycle-prefixed roadmap filename.
 
 If a lifecycle rename changes the roadmap filename, repair repository-local
-references in the roadmap, state, delivery log, review state, automation guide,
-reviews, and run bookkeeping before delivery continues. A saved runner prompt
+current references in the roadmap, state, review state and automation guide
+before delivery continues. Append a lifecycle receipt to the delivery log;
+preserve historical log/review/run paths as provenance. A saved runner prompt
 retarget is not required when the prompt is state-first and still references
 the stable state/guide files.
+
+Before recording a generic mismatch blocker, check manual activation.
+Do not stop just because the saved runner is ACTIVE after the operator starts it.
 
 If the operator manually activates a runner that setup originally recorded as
 paused, the next run must reconcile the durable artifacts instead of treating
 ACTIVE as a permanent setup failure. Accept ACTIVE only when readback proves the
-model/reasoning, prompt, cwd, and safety guards still match, then update
+identity, project/cwd, exact model, reasoning floor, prompt and safety guards match, then update
 guide/log/state to ACTIVE and record the activation. This reconciliation must
 happen before the generic "surfaces disagree, stop" rule, so an intentional
 activation does not waste a run by first creating a blocker.
@@ -86,6 +90,15 @@ external decisions, and approval-policy operations in durable
 `phase_prerequisites.json` and `phase_preflight.md` evidence. Do not activate
 scheduled delivery until any known human actions are either completed,
 explicitly approved, or intentionally accepted as future blockers.
+
+## Shared Setup Plan
+
+Scaffold/wizard output is a proposal, not runner readback. Its `control_plan`
+reports the missing runner evidence using the same controller as delivery.
+Configured fields stay null until observed. Use a two-run stall threshold by
+default; manual activation alone cannot reset it. The narrow status-only
+completion/stall self-pause follows `model-policy-and-stall-control.md`; broad
+retarget permission is separate.
 
 ## Prompt Requirements
 

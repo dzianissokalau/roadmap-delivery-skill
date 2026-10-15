@@ -1,0 +1,408 @@
+{
+  "schema_version": 1,
+  "ordered_stages": [
+    "terminal_reconciliation",
+    "intentional_activation",
+    "blocked_remediation",
+    "phase_prerequisites",
+    "delivery_review",
+    "next_phase_or_finalization"
+  ],
+  "scenarios": [
+    {
+      "id": "terminal-before-model",
+      "input": {
+        "status": "completed",
+        "model_matches": false,
+        "context_flag": true,
+        "host_supported": true
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "pause_status_only",
+      "expected_result": {
+        "extract_phase": false,
+        "readback_required": true
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "terminal-before-activation",
+      "input": {
+        "all_phases_complete": true,
+        "setup_status": "PAUSED",
+        "runner_status": "ACTIVE"
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "reconcile_completion",
+      "expected_result": {
+        "reopen_scope": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "completion-opt-out",
+      "input": {
+        "status": "completed",
+        "context_flag": false,
+        "broad_pause_permission": true
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "record_disabled",
+      "expected_result": {
+        "pause_effect": false,
+        "status": "completed_pending_pause"
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "terminal-unsupported",
+      "input": {
+        "status": "completed_pending_pause",
+        "context_flag": true,
+        "host_supported": false
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "record_unsupported",
+      "expected_result": {
+        "paused": false,
+        "next_action": "manual_pause"
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "terminal-unconfirmed",
+      "input": {
+        "status": "completed_pending_pause",
+        "request_accepted": true,
+        "readback_status": "ACTIVE"
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "record_pending",
+      "expected_result": {
+        "paused": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "terminal-already-paused",
+      "input": {
+        "status": "completed_pending_pause",
+        "readback_status": "PAUSED",
+        "final_gates_passed": true
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "record_receipt",
+      "expected_result": {
+        "update_required": false,
+        "status": "completed"
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "terminal-invalid-policy",
+      "input": {
+        "status": "completed",
+        "policy_valid": false,
+        "separate_human_authority": false
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "record_policy_blocker",
+      "expected_result": {
+        "pause_effect": false,
+        "extract_phase": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "terminal-missing-evidence",
+      "input": {
+        "all_phases_complete": true,
+        "final_review_present": false,
+        "context_flag": true
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "reconcile_completion",
+      "expected_result": {
+        "extract_phase": false,
+        "pause_allowed": true,
+        "completion_claim": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "terminal-manual",
+      "input": {
+        "status": "completed_pending_pause",
+        "runner_kind": "manual",
+        "final_gates_passed": true
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "record_not_applicable",
+      "expected_result": {
+        "status": "completed",
+        "pause_effect": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "intentional-activation",
+      "input": {
+        "setup_status": "PAUSED",
+        "runner_status": "ACTIVE",
+        "identity_and_guards_match": true,
+        "operator_activation_evidence": true
+      },
+      "expected_stage": "intentional_activation",
+      "expected_action": "reconcile_activation",
+      "expected_result": {
+        "continue_to_blocked_or_prerequisites": true,
+        "progress": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "activation-mismatch",
+      "input": {
+        "setup_status": "PAUSED",
+        "runner_status": "ACTIVE",
+        "identity_and_guards_match": false
+      },
+      "expected_stage": "intentional_activation",
+      "expected_action": "record_mismatch",
+      "expected_result": {
+        "continue": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "blocked-local-repair",
+      "input": {
+        "status": "blocked",
+        "stalled_run_count": 1,
+        "max_stalled_runs": 2,
+        "blocker_class": "local-repairable",
+        "repair_verified": true
+      },
+      "expected_stage": "blocked_remediation",
+      "expected_action": "clear_verified_cause",
+      "expected_result": {
+        "reset_once": true,
+        "progress": true
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "blocked-human",
+      "input": {
+        "status": "blocked",
+        "stalled_run_count": 0,
+        "blocker_class": "external-decision"
+      },
+      "expected_stage": "blocked_remediation",
+      "expected_action": "record_required_action",
+      "expected_result": {
+        "clear_original_blocker": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "first-no-progress",
+      "input": {
+        "run_id": "first",
+        "initial_run_count": 0,
+        "initial_stalled_run_count": 0,
+        "accepted_progress": [],
+        "status": "blocked",
+        "blocked_reason": "Missing fixture input",
+        "max_stalled_runs": 2
+      },
+      "expected_stage": "blocked_remediation",
+      "expected_action": "record_outcome",
+      "expected_result": {
+        "run_count": 1,
+        "stalled_run_count": 1,
+        "pause_required": false
+      },
+      "event": "record_outcome"
+    },
+    {
+      "id": "second-no-progress",
+      "input": {
+        "run_id": "second",
+        "initial_run_count": 1,
+        "initial_stalled_run_count": 1,
+        "accepted_progress": [],
+        "max_stalled_runs": 2,
+        "status": "blocked",
+        "blocked_reason": "Missing fixture input"
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "alert_and_pause",
+      "expected_result": {
+        "run_count": 2,
+        "stalled_run_count": 2,
+        "preserve_original_blocker": true
+      },
+      "event": "record_outcome"
+    },
+    {
+      "id": "duplicate-outcome",
+      "input": {
+        "run_id": "second",
+        "outcome_already_recorded": true,
+        "run_count": 2,
+        "stalled_run_count": 2,
+        "pause_receipt_confirmed": true
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "return_recorded_outcome",
+      "expected_result": {
+        "run_count": 2,
+        "stalled_run_count": 2,
+        "additional_effects": 0
+      },
+      "event": "recover_run"
+    },
+    {
+      "id": "restart-interrupted",
+      "input": {
+        "unfinished_run_id": "first",
+        "abandoned": true,
+        "accepted_progress": [],
+        "initial_run_count": 0,
+        "status": "blocked",
+        "blocked_reason": "Missing fixture input",
+        "initial_stalled_run_count": 0,
+        "max_stalled_runs": 2
+      },
+      "expected_stage": "blocked_remediation",
+      "expected_action": "close_interrupted_once",
+      "expected_result": {
+        "run_count": 1,
+        "stalled_run_count": 1,
+        "same_run_id": true
+      },
+      "event": "recover_run"
+    },
+    {
+      "id": "resume-no-repair",
+      "input": {
+        "stalled_run_count": 2,
+        "max_stalled_runs": 2,
+        "runner_status": "ACTIVE",
+        "operator_resume": true,
+        "repair_verified": false,
+        "fresh_budget_authorized": false
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "alert_and_pause",
+      "expected_result": {
+        "progress": false,
+        "reset_count": false
+      },
+      "event": "operator_resume"
+    },
+    {
+      "id": "resume-explicit-budget",
+      "input": {
+        "operator_resume": true,
+        "fresh_budget_authorized": true,
+        "run_count": 2,
+        "stalled_run_count": 2,
+        "max_stalled_runs": 2,
+        "identity_and_guards_match": true
+      },
+      "expected_stage": "terminal_reconciliation",
+      "expected_action": "archive_epoch_and_activate",
+      "expected_result": {
+        "run_count": 2,
+        "stalled_run_count": 0,
+        "progress": false
+      },
+      "event": "operator_resume"
+    },
+    {
+      "id": "phase-model-mismatch",
+      "input": {
+        "nonterminal": true,
+        "model_matches": false,
+        "reasoning_satisfied": true
+      },
+      "expected_stage": "phase_prerequisites",
+      "expected_action": "block_phase_work",
+      "expected_result": {
+        "edit_owned_files": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "invalid-policy",
+      "input": {
+        "nonterminal": true,
+        "policy_valid": false
+      },
+      "expected_stage": "phase_prerequisites",
+      "expected_action": "block_phase_work",
+      "expected_result": {
+        "execute_with_reporting_fallback": false
+      },
+      "event": "start_run"
+    },
+    {
+      "id": "one-phase-review",
+      "input": {
+        "phase": "0",
+        "prerequisites_passed": true,
+        "review_verdict": "needs-fix",
+        "iteration": 1
+      },
+      "expected_stage": "delivery_review",
+      "expected_action": "fix_current_phase",
+      "expected_result": {
+        "advance": false,
+        "max_iterations": 3
+      },
+      "event": "phase_review"
+    },
+    {
+      "id": "advance-next",
+      "input": {
+        "review_verdict": "delivered",
+        "acceptance_passed": true,
+        "verification_passed": true,
+        "next_numbered_phase": "1"
+      },
+      "expected_stage": "next_phase_or_finalization",
+      "expected_action": "plan_next_and_stop",
+      "expected_result": {
+        "next_phase": "1",
+        "deliver_next_in_same_run": false
+      },
+      "event": "advance_phase"
+    },
+    {
+      "id": "last-numbered-phase",
+      "input": {
+        "review_verdict": "delivered",
+        "acceptance_passed": true,
+        "verification_passed": true,
+        "next_numbered_phase": null
+      },
+      "expected_stage": "next_phase_or_finalization",
+      "expected_action": "prepare_finalization",
+      "expected_result": {
+        "all_phases_complete": false,
+        "separate_deep_review_prompt_required": true
+      },
+      "event": "advance_phase"
+    }
+  ],
+  "events": [
+    "start_run",
+    "record_outcome",
+    "recover_run",
+    "operator_resume",
+    "phase_review",
+    "advance_phase"
+  ]
+}

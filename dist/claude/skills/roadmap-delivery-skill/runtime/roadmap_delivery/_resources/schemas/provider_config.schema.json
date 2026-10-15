@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roadmap-delivery.local/schemas/provider_config.schema.json",
+  "title": "Roadmap Delivery Provider Role Config",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "roles",
+    "policies"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "roles": {
+      "type": "object",
+      "required": [
+        "executor",
+        "reviewer",
+        "inspector",
+        "finalizer",
+        "repairer"
+      ],
+      "properties": {
+        "executor": {
+          "$ref": "#/$defs/role_config"
+        },
+        "reviewer": {
+          "$ref": "#/$defs/role_config"
+        },
+        "inspector": {
+          "$ref": "#/$defs/role_config"
+        },
+        "finalizer": {
+          "$ref": "#/$defs/role_config"
+        },
+        "repairer": {
+          "$ref": "#/$defs/role_config"
+        }
+      },
+      "additionalProperties": false
+    },
+    "policies": {
+      "type": "object",
+      "required": [
+        "high_reasoning",
+        "low_cost"
+      ],
+      "properties": {
+        "high_reasoning": {
+          "$ref": "#/$defs/policy_profile"
+        },
+        "low_cost": {
+          "$ref": "#/$defs/policy_profile"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "reasoning_effort": {
+      "type": "string",
+      "enum": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ]
+    },
+    "phase_model_policy_mapping": {
+      "type": "object",
+      "required": [
+        "model_field",
+        "reasoning_effort_field"
+      ],
+      "properties": {
+        "model_field": {
+          "const": "model"
+        },
+        "reasoning_effort_field": {
+          "const": "reasoning_effort"
+        }
+      },
+      "additionalProperties": false
+    },
+    "config_fields": {
+      "type": "object",
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reasoning_effort": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "provider_mapping": {
+      "type": "object",
+      "required": [
+        "provider",
+        "model",
+        "supports_reasoning_effort",
+        "config_fields"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supports_reasoning_effort": {
+          "type": "boolean"
+        },
+        "reasoning_effort": {
+          "$ref": "#/$defs/reasoning_effort"
+        },
+        "config_fields": {
+          "$ref": "#/$defs/config_fields"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "role_config": {
+      "type": "object",
+      "required": [
+        "purpose",
+        "policy",
+        "phase_model_policy",
+        "providers"
+      ],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy": {
+          "type": "string",
+          "enum": [
+            "high_reasoning",
+            "low_cost"
+          ]
+        },
+        "phase_model_policy": {
+          "$ref": "#/$defs/phase_model_policy_mapping"
+        },
+        "providers": {
+          "type": "object",
+          "required": [
+            "codex",
+            "claude"
+          ],
+          "properties": {
+            "codex": {
+              "$ref": "#/$defs/provider_mapping"
+            },
+            "claude": {
+              "$ref": "#/$defs/provider_mapping"
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/provider_mapping"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy_profile": {
+      "type": "object",
+      "required": [
+        "description",
+        "roles"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

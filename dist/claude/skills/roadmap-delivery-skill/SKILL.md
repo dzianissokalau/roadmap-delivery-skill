@@ -4,113 +4,86 @@ description: Use when Claude Code needs to set up, inspect, deliver, review, rem
 
 # Roadmap Delivery Skill
 
-Use this skill for file-backed, phase-gated roadmap delivery workflows. Keep
-work anchored to the roadmap, delivery state, delivery log, review files, git
-branch and commit history, verification output, and runner configuration.
+Use the roadmap, state, append-only log, reviews, verification and runner
+readback as the evidence for a file-backed delivery workflow.
 
-## First Move
+## Ordered Workflow
 
-1. Identify the exact roadmap path or automation id before acting.
-2. Read the roadmap, delivery state, delivery log, review files, phase model
-   policy when present, saved runner configuration, branch, and worktree status.
-3. Reconcile lifecycle rename drift, stale roadmap paths, branch names, and
-   completed or blocked hard-stop states before editing.
-4. If state is `blocked`, route through blocked-run remediation before
-   attempting normal phase delivery.
-5. Stop and report mismatches when roadmap, state, log, reviews, verification,
-   runner config, branch, or worktree evidence disagree in a way that cannot be
-   repaired locally.
+1. Read `delivery_state.json` first; its roadmap path is authoritative. Read the
+   adjacent guide, policies, log and latest reviews, then runner and git status.
+2. Handle the completion hard stop and two-run stall threshold before ordinary
+   phase/model gates. Do not extract or start another phase during closeout.
+3. Reconcile intentional manual activation before a generic disagreement stop.
+   Matching identity, cwd/project, model/floor and prompt guards permit local
+   guide/state reconciliation; record `last_activation`. Activation alone is
+   neither progress nor a fresh stall budget. Authorized lifecycle filename
+   repair needs no saved prompt retarget when the prompt resolves state.
+4. When state is `blocked`, try blocked-run remediation before retrying normal
+   delivery. Clear the original cause only after verified repair.
+5. Validate approval and phase model policy using actual runner readback. Use
+   the shared runtime decision, then implement the current phase on its branch.
+6. Run required verification before claiming delivery.
+   Require a fresh review verdict before phase advancement. Fix scoped findings within three iterations;
+   record a same-context limitation when independent review is unavailable.
+7. Record one semantic outcome per unique run, resolve the next-run target,
+   advance only after `delivered`, then stop. The last numbered phase leads to
+   separate finalization and a distinct final deep-review prompt or human waiver.
 
-## Route The Task
+## Routes
 
-- Setup new automation: read `references/setup-automation.md`.
-- Deliver one current phase: read `references/phase-loop.md`.
-- Handle review findings: read `references/review-and-fix.md`.
-- Inspect status, branches, state, or logs: read
-  `references/state-log-and-branches.md`.
-- Finalize, promote, or close out delivered work: read
-  `references/finalization-and-promotion.md`.
-- Repair bad state, stale paths, blocked runs, or lifecycle drift: read
-  `references/troubleshooting.md`.
-- Diagnose or repair network-disabled blockers before stopping on them: read
-  `references/network-blocker-remediation.md`.
-- Use phase model policy, stalled-run handling, or model-aware automation: read
-  `references/model-policy-and-stall-control.md`.
-- Preflight future phases, prerequisites, mitigations, or approvals: read
-  `references/phase-preflight.md`.
-
-## Package Readiness
-
-This generated Claude plugin skill is a local package component, not a
-marketplace submission. Treat the package as ready for human distribution
-review only when adapter checks prove the plugin manifest, README, packaged
-skill, reviewer agent, safety hooks, canonical references, host capability
-metadata, install documentation, compatibility limits, privacy limits, and
-explicit submission blockers are present. Installed plugin synchronization,
-publication, package registry upload, marketplace submission, credential use,
-branch pushes, and repository setting changes remain human-approved
-operations. Host capability metadata is required readiness evidence for
-supported adapters.
-
-## Hard Rules
-
-- Work exactly one roadmap phase at a time.
-- When state is `blocked`, try blocked-run remediation before retrying normal
-  phase advancement.
-- Run required verification before claiming delivery.
-- Require a fresh review verdict before phase advancement.
-- Preserve unrelated worktree changes; never revert user work without explicit
-  instruction.
-- Do not broadly stage files or hide unrelated diffs inside phase work.
-- Do not force-push.
-- Do not promote, merge, push, publish, install global packages, use
-  credentials, or change runner configuration without explicit human approval,
-  except for the narrow status-only completion/stall self-pause described
-  below.
+- Setup: `references/setup-automation.md`.
+- Deliver exactly one roadmap phase: `references/phase-loop.md`.
+- Review or fix: `references/review-and-fix.md`.
+- Inspect state/branches: `references/state-log-and-branches.md`.
+- Blocked repair/lifecycle drift: `references/troubleshooting.md`.
+- Network blocker: `references/network-blocker-remediation.md`.
+- Policy, progress and terminal pause: `references/model-policy-and-stall-control.md`.
+- Future phase preflight: `references/phase-preflight.md`.
+- Finalization/promotion: `references/finalization-and-promotion.md`.
 
 ## Policy Gates
 
-- Read `approval_policy.json` when present. Missing policy means conservative
-  legacy behavior: phase-owned edits, state/log/review writes, branch creation,
-  and verification can proceed, while commits, pushes, runner retargets,
-  publication, promotion, credentials, destructive git, and installed plugin
-  sync still require approval or remain forbidden. Completion and repeated-stall
-  status-only self-pause is allowed by default unless
-  `pause_automation_on_completion` or `pause_automation_on_stall` is explicitly
-  `false`.
-- Treat `phase_model_policy.json` and `adaptive_model_policy` as next-run
-  controls. A non-flawless run may update durable state and propose an
-  approved runner retarget, but it does not change the active model inside the
-  current session.
-- Completion and stall self-pause use `pause_saved_automation`, the
-  context-specific pause flags, or default terminal safety policy plus trusted
-  runner readback. If a pause is explicitly disabled, or pause tooling/readback
-  is unavailable, write the local alert and keep the state in the appropriate
-  blocked or `completed_pending_pause` form.
+- Work exactly one roadmap phase at a time. Preserve uncommitted user work;
+  stage explicit phase-owned paths only. Never force-push.
+- Read `approval_policy.json`; shared decisions return `allowed`, `ask` or
+  `forbidden`. Missing policy uses conservative defaults; invalid policy cannot
+  grant authority. Honor existing scoped operator authorization.
+- Default completion/stall status-only self-pause is allowed unless the matching
+  `pause_automation_on_completion` or `pause_automation_on_stall` flag is explicitly
+  false. These opt-outs override broad pause permission in every mode. Broad
+  saved-runner restrictions do not revoke this narrow terminal exception.
+- Write the local alert, preserve every other runner setting, use supported host
+  tooling and require PAUSED readback before claiming pause. Unavailable capability
+  or readback leaves a concrete blocked/`completed_pending_pause` outcome.
+- Exact model and at least the reasoning floor are required before phase work.
+  `adaptive_model_policy` changes only the next run; it cannot switch this session.
+- Timestamps, logs, review paths, repeated tests and bookkeeping commits cannot
+  reset stalls. Use verifier-backed accepted work, new criteria or repaired causes.
+- Publication, promotion, credentials, global synchronization, destructive git
+  and unrelated runner edits require their own explicit human approval or remain
+  forbidden. Phase acceptance does not imply permission for them.
+
+## Package Readiness
+
+This is a local skill package, not a marketplace submission.
+The package is ready for human distribution review when adapter checks prove
+entrypoint, references, helpers, runtime closure, host capability metadata,
+install documentation, compatibility limits, privacy limits and submission blockers.
+Distribution, global sync and publication remain human-approved operations.
 
 ## Claude Tool Permission Notes
 
-- Use read-only tools first to inspect roadmap, state, log, review, policy,
-  branch, and generated package evidence before editing.
-- Run shell commands only for local repository inspection, required validation,
-  and the current phase's required verification.
-- Do not request credentials, publish, modify runner configuration, install
-  global packages, or run destructive git commands unless the operator has
-  explicitly approved that exact action.
-- Use the `roadmap-delivery-reviewer` agent for the review gate when available.
-  The reviewer is read-only and cannot replace implementation verification.
-- If no independent reviewer agent is available, same-context review is allowed
-  only when that limitation is recorded explicitly and the evidence satisfies
-  the current phase gate.
+Do not promote, merge, push, publish, use credentials or synchronize global
+plugins without scoped operator approval. The default terminal status-only pause
+exception above applies when a trusted host supports it. A missing host surface
+requires a local alert and an explicit pending outcome, not another permission
+question for an already-authorized action.
+
+Use the `roadmap-delivery-reviewer` agent for the review gate when available and
+authorized. It is read-only; same-context review must record its limitation.
 
 ## Claude Host Notes
 
-- This plugin is a generated Claude Code package. It relies on repository-local
-  roadmap artifacts and host runner readback supplied by the operator.
-- Treat recurring automation as a host-runner concern; the repository state,
-  logs, reviews, and alerts remain authoritative.
-- Do not assume Claude Code exposes a status-only recurring automation pause
-  API. Use local alerts and `completed_pending_pause` evidence unless a trusted
-  runner pause surface reads back the paused status.
-- Host capability differences must be recorded as compatibility notes or
-  residual risks instead of hidden in prompts.
+Treat recurring automation as a host-runner concern. Use packaged
+`scripts/roadmap_delivery.py` and repository-local evidence; never infer that
+Claude Code provides model/reasoning control or a recurring status-only pause API.

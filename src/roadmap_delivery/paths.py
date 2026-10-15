@@ -120,8 +120,54 @@ def is_lifecycle_roadmap_sibling(candidate: Path, current: Path) -> bool:
 
 
 def package_repo_root(start: Optional[Path] = None) -> Optional[Path]:
-    path = (start or Path(__file__)).resolve()
-    for parent in [path.parent, *path.parents]:
-        if (parent / "schemas").is_dir() and (parent / "skill").is_dir():
-            return parent
+    """Recognize the development layout only; never search arbitrary ancestors."""
+    package = (start or Path(__file__)).resolve().parent
+    root = package.parent.parent
+    if package.parent.name == "src" and (root / "pyproject.toml").is_file() and (root / "adapters").is_dir():
+        return root
     return None
+
+
+def runtime_resource_root() -> Path:
+    """Resolve and verify installed resources; missing/mixed bundles fail closed."""
+    import hashlib
+    import json
+    import sys
+    from . import __version__
+
+    development = package_repo_root()
+    if development is not None:
+        return development
+    if sys.version_info[:2] != (3, 12):
+        raise ValueError("Portable roadmap-delivery requires Python 3.12; select a Python 3.12 interpreter.")
+    package = Path(__file__).resolve().parent
+    resources = package / "_resources"
+    try:
+        manifest = json.loads((resources / "runtime-manifest.json").read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict):
+            raise ValueError("Invalid runtime/resource manifest; reinstall the complete package.")
+        if manifest.get("schema_version") != 1 or manifest.get("version") != __version__:
+            raise ValueError("Mixed runtime/resource versions; reinstall the complete package.")
+        expected = manifest["files"]
+        required = {"_resources/VERSION", "__init__.py", "paths.py"}
+        required.update("_resources/schemas/" + name for name in (
+            "delivery_state.schema.json", "phase_model_policy.schema.json",
+            "review_artifact.schema.json", "automation_run_log.schema.json"))
+        if not isinstance(expected, dict) or not required.issubset(expected):
+            raise ValueError("Incomplete runtime/resource manifest; reinstall the complete package.")
+        for name, digest in expected.items():
+            relative = Path(name)
+            if relative.is_absolute() or ".." in relative.parts:
+                raise ValueError("Unsafe runtime manifest path.")
+            target = package / relative
+            if target.is_symlink() or hashlib.sha256(target.read_bytes()).hexdigest() != digest:
+                raise ValueError("Mixed or damaged runtime/resources: " + name + "; reinstall the complete package.")
+    except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        raise ValueError("Incomplete runtime/resources; reinstall the complete package: " + str(exc)) from exc
+    return resources
+
+
+# Every installed command imports paths, including the separate CLI and planners.
+# Check before any command can mutate a target project or host fixture.
+if package_repo_root() is None:
+    runtime_resource_root()

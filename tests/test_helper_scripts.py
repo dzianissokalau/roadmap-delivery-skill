@@ -207,7 +207,9 @@ class DeliveryFixture:
             "status": state_status,
             "review_iterations": 1,
             "max_review_iterations": 3,
+            "last_verification": {"phase": current_phase, "status": "passed"},
             "last_review": {
+                "phase": current_phase,
                 "file": f"{review_prefix}/{self.slug}-phase-1-review-iteration-1.md",
                 "verdict": review_verdict,
             },
@@ -426,6 +428,11 @@ class HelperScriptTests(unittest.TestCase):
         return self.run_json(INSPECT_SCRIPT, fixture)
 
     def run_progress(self, fixture, *extra_args, allowed_returncodes=(0,)):
+        if "--record-run" in extra_args:
+            stamp = extra_args[extra_args.index("--timestamp") + 1] if "--timestamp" in extra_args else "fixture-run"
+            run_id = "fixture-" + stamp
+            self.run_progress(fixture, "--start-run", "--run-id", run_id, "--owned-file", "progress-work.py")
+            extra_args = (*extra_args, "--run-id", run_id)
         proc = subprocess.run(
             [
                 "python3",
@@ -498,6 +505,25 @@ class HelperScriptTests(unittest.TestCase):
         state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
         return progress["progress_signature"]
 
+    def progress_evidence_file(self, fixture):
+        from tests.test_progress_semantics import digest
+        root = fixture.repo_root
+        artifact = root / "progress-work.py"; artifact.write_text("new accepted implementation\n")
+        check = root / "progress-check.txt"; check.write_text("required check passed\n")
+        review = root / "progress-review.md"; review.write_text("Verdict: delivered\nhelper-criterion accepted\n")
+        phase = json.loads((fixture.state_dir / "delivery_state.json").read_text())["current_phase"]
+        item = {"schema_version": 1, "kind": "accepted_phase_work", "phase": phase,
+                "criterion_id": "helper-criterion", "increment_id": "increment-1",
+                "previous": {"status": "unmet"},
+                "current": {"status": "accepted", "artifact": artifact.name, "artifact_sha256": digest(artifact)}}
+        verifier = root / "progress-verifier.json"
+        verifier.write_text(json.dumps({"schema_version": 1, "result": "verified", "evidence": [item],
+                                      "check": {"path": check.name, "sha256": digest(check), "result": "passed"},
+                                      "review": {"path": review.name, "sha256": digest(review)}}))
+        evidence = root / "progress-evidence.json"
+        evidence.write_text(json.dumps([{**item, "verifier": {"path": verifier.name, "sha256": digest(verifier)}}]))
+        return str(evidence)
+
     def warning_codes(self, report):
         return {item["code"] for item in report.get("warnings", [])}
 
@@ -507,7 +533,7 @@ class HelperScriptTests(unittest.TestCase):
     def info_codes(self, report):
         return {item["code"] for item in report.get("info", [])}
 
-    def test_progress_signature_first_run_records_state_and_log(self):
+    def test_first_no_progress_run_records_state_and_journal(self):
         with tempfile.TemporaryDirectory() as tmp:
             fixture = DeliveryFixture(tmp, write_model_policy=True)
             state_path = fixture.state_dir / "delivery_state.json"
@@ -524,15 +550,15 @@ class HelperScriptTests(unittest.TestCase):
             progress = self.run_progress(fixture, "--record-run", "--timestamp", "2026-05-21T12:00:00Z")
             state = json.loads(state_path.read_text(encoding="utf-8"))
             run_log = (fixture.state_dir / "automation_run_log.jsonl").read_text(encoding="utf-8").splitlines()
-            log_entry = json.loads(run_log[0])
+            log_entry = json.loads(run_log[-1])
 
-            self.assertTrue(progress["progress_detected"])
+            self.assertFalse(progress["progress_detected"])
             self.assertEqual(progress["run_count"], 1)
-            self.assertEqual(progress["stalled_run_count"], 0)
-            self.assertEqual(state["last_progress_signature"], progress["progress_signature"])
-            self.assertEqual(state["last_progress_at"], "2026-05-21T12:00:00Z")
-            self.assertEqual(len(run_log), 1)
-            self.assertTrue(log_entry["progress_detected"])
+            self.assertEqual(progress["stalled_run_count"], 1)
+            self.assertIsNone(state["last_progress_signature"])
+            self.assertIsNone(state["last_progress_at"])
+            self.assertEqual(len(run_log), 2)
+            self.assertFalse(log_entry["result"]["progress_detected"])
             self.assertEqual(log_entry["run_quality"], "flawless")
             self.assertEqual(log_entry["adaptive_action"]["action"], "none")
 
@@ -542,11 +568,12 @@ class HelperScriptTests(unittest.TestCase):
                 tmp,
                 write_model_policy=True,
                 state_run_count=4,
+                policy_max_stalled_runs=3,
                 state_stalled_run_count=2,
                 state_last_progress_signature="sha256:previous",
             )
 
-            progress = self.run_progress(fixture, "--record-run", "--timestamp", "2026-05-21T12:01:00Z")
+            progress = self.run_progress(fixture, "--record-run", "--timestamp", "2026-05-21T12:01:00Z", "--evidence-file", self.progress_evidence_file(fixture))
             state = json.loads((fixture.state_dir / "delivery_state.json").read_text(encoding="utf-8"))
 
             self.assertTrue(progress["progress_detected"])
@@ -579,7 +606,7 @@ class HelperScriptTests(unittest.TestCase):
             self.assertTrue(progress["threshold_reached"])
             self.assertEqual(progress["stalled_run_count"], 2)
             self.assertEqual(state["status"], "blocked")
-            self.assertIn("Stalled after 2 consecutive runs", state["blocked_reason"])
+            self.assertEqual(state["stall_metadata"]["consecutive_runs"], 2)
 
     def test_custom_policy_stall_threshold_is_used(self):
         with tempfile.TemporaryDirectory() as tmp:

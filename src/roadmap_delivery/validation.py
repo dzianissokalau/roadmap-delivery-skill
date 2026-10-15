@@ -10,13 +10,15 @@ import re
 import sys
 from typing import Any, Dict, List, Optional, Tuple
 
-from .adaptive import adaptive_target_from_state, validate_adaptive_model_policy
+from .adaptive import persisted_adaptive_target, retained_host_capabilities, validate_adaptive_model_policy
+from .policy import configured_host_support, resolve_model_target, resolve_phase_target
 from .approval import approval_decision_for_pause_context, read_approval_policy
 from .git import run_git
 from .paths import (
     extract_roadmap_references,
     is_lifecycle_roadmap_sibling,
     package_repo_root,
+    runtime_resource_root,
     path_for_report,
     resolve_repo_path,
     slug_forms,
@@ -39,7 +41,7 @@ from .policy import (
 )
 from .progress import ProgressSignatureError, build_run_result
 from .state import JsonObjectError, load_json_object
-from .toml import parse_minimal_toml
+from .toml import TomlError, parse_minimal_toml
 
 
 DEFAULT_AUTOMATIONS_DIR = Path.home() / ".codex" / "automations"
@@ -125,11 +127,8 @@ def add(items: List[Finding], code: str, message: str, path: Optional[Path] = No
 
 
 def schema_dirs(repo_root: Path) -> List[Path]:
-    candidates = [repo_root / "schemas"]
-    local_root = package_repo_root()
-    if local_root is not None:
-        candidates.append(local_root / "schemas")
-    return unique_paths(candidates)
+    resources = runtime_resource_root()
+    return [resources / "schemas"]
 
 
 def load_schema(
@@ -156,7 +155,7 @@ def load_schema(
             add(errors, f"invalid_{schema_name}_schema_shape", "Schema file root is not a JSON object.", path)
             return None, path
         return schema, path
-    add(warnings, f"missing_{schema_name}_schema", f"Schema file {filename!r} was not found; using built-in compatibility checks.")
+    add(errors, f"missing_{schema_name}_schema", f"Required schema {filename!r} is missing; reinstall or regenerate the complete runtime resources.")
     return None, None
 
 
@@ -214,6 +213,21 @@ def validate_json_schema(value: Any, schema: Dict[str, Any], *, root_schema: Opt
     schema = resolve_schema_ref(schema, root_schema)
     messages: List[str] = []
 
+    # Accounting schemas distinguish legacy entries from journal events and
+    # require outcome evidence only for completed events.
+    excluded = schema.get("not")
+    if isinstance(excluded, dict) and not validate_json_schema(value, excluded, root_schema=root_schema, path=path):
+        messages.append(f"{path}: value matches an excluded schema")
+    for condition in schema.get("allOf", []):
+        if isinstance(condition, dict):
+            messages.extend(validate_json_schema(value, condition, root_schema=root_schema, path=path))
+    conditional = schema.get("if")
+    if isinstance(conditional, dict):
+        branch = "then" if not validate_json_schema(value, conditional, root_schema=root_schema, path=path) else "else"
+        selected = schema.get(branch)
+        if isinstance(selected, dict):
+            messages.extend(validate_json_schema(value, selected, root_schema=root_schema, path=path))
+
     alternatives = schema.get("oneOf") or schema.get("anyOf")
     if isinstance(alternatives, list):
         alt_errors = [
@@ -221,8 +235,9 @@ def validate_json_schema(value: Any, schema: Dict[str, Any], *, root_schema: Opt
             for alt in alternatives
             if isinstance(alt, dict)
         ]
-        if not any(not errors for errors in alt_errors):
-            messages.append(f"{path}: value does not match any allowed schema")
+        matches = sum(not errors for errors in alt_errors)
+        if matches == 0 or ("oneOf" in schema and matches != 1):
+            messages.append(f"{path}: value does not match exactly one allowed schema" if "oneOf" in schema else f"{path}: value does not match any allowed schema")
         return messages
 
     if "const" in schema and value != schema["const"]:
@@ -261,6 +276,8 @@ def validate_json_schema(value: Any, schema: Dict[str, Any], *, root_schema: Opt
                 messages.append(f"{path}: unexpected property {key!r}")
 
     if isinstance(value, list):
+        if schema.get("uniqueItems") is True and len({json.dumps(item, sort_keys=True) for item in value}) != len(value):
+            messages.append(f"{path}: array items must be unique")
         min_items = schema.get("minItems")
         if isinstance(min_items, int) and len(value) < min_items:
             messages.append(f"{path}: expected at least {min_items} items")
@@ -608,6 +625,7 @@ def validate_model_policy(
     errors: List[Finding],
     warnings: List[Finding],
     policy_schema: Optional[Dict[str, Any]] = None,
+    host_capabilities: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     result: Dict[str, Any] = {
         "policy_path": str(policy_path),
@@ -691,18 +709,28 @@ def validate_model_policy(
     phase_policy = phases.get(phase_key, {}) if phase_key else {}
     if not isinstance(phase_policy, dict):
         phase_policy = {}
-    required_model = phase_policy.get("model") or default_model
-    required_reasoning = phase_policy.get("reasoning_effort") or default_reasoning
+    base_target = resolve_phase_target(policy, phase_key)
+    required_model = base_target["model"]
+    required_reasoning = base_target["reasoning_effort"]
     selection_source = f"phases.{phase_key}" if phase_key and phase_key in phases else "defaults"
     selection_reason = f"Current phase target resolved from {selection_source}."
     result["base_required_model"] = required_model
     result["base_required_reasoning_effort"] = required_reasoning
-    state_target = adaptive_target_from_state(state, state.get("current_phase"))
-    if state_target:
-        required_model = state_target.get("model") or required_model
-        required_reasoning = state_target.get("reasoning_effort") or required_reasoning
+    if host_capabilities is None:
+        host_capabilities = retained_host_capabilities(state)
+    state_target = persisted_adaptive_target(state, state.get("current_phase"), policy, host_capabilities=host_capabilities)
+    resolution = resolve_model_target(policy, base_target=base_target, host_capabilities=host_capabilities)
+    if state_target["status"] in {"resolved", "invalid_policy"}:
+        resolution = state_target
         selection_source = str(state_target.get("source") or "state.last_adaptive_action")
-        selection_reason = str(state_target.get("reason") or "Adaptive target recorded in delivery state.")
+        selection_reason = str(state_target.get("reason") or "Bound adaptive target checked against current policy.")
+    result["target_resolution"] = resolution
+    result["persisted_target_status"] = state_target["status"]
+    for item in resolution["errors"]:
+        add(errors, item["code"], item["message"], policy_path)
+    if resolution["target"]:
+        required_model = resolution["target"]["model"]
+        required_reasoning = resolution["target"]["reasoning_effort"]
     result["required_model"] = required_model
     result["required_reasoning_effort"] = required_reasoning
     result["selection_source"] = selection_source
@@ -710,16 +738,26 @@ def validate_model_policy(
 
     configured_model = automation_data.get("model") or state.get("configured_automation_model")
     configured_reasoning = automation_data.get("reasoning_effort") or state.get("configured_automation_reasoning_effort")
+    support = configured_host_support(configured_model, configured_reasoning, host_capabilities)
+    result["configured_host_support"] = support["status"]
+    for item in support["errors"]:
+        add(errors, item["code"], item["message"], policy_path)
     result["configured_model"] = configured_model
     result["configured_reasoning_effort"] = configured_reasoning
     if configured_model and not result["configured_model_source"]:
         result["configured_model_source"] = "delivery_state"
     if configured_reasoning and not result["configured_reasoning_source"]:
         result["configured_reasoning_source"] = "delivery_state"
+    contract = state.get("runtime_contract") or {}
+    setup_plan = (not automation_data and state.get("configured_automation_status") == "PLANNED"
+                  and isinstance(contract, dict) and isinstance(contract.get("provenance"), dict)
+                  and contract["provenance"].get("source") == "local_generated"
+                  and contract["provenance"].get("runner_verified") is False)
+    unknown_findings = warnings if setup_plan else errors
     if required_model and not configured_model:
         result["model_unknown"] = True
         add(
-            errors,
+            unknown_findings,
             "automation_model_unknown",
             f"Required model {required_model!r} is defined but no configured automation or runner model was found.",
             policy_path,
@@ -727,7 +765,7 @@ def validate_model_policy(
     if required_reasoning and not configured_reasoning:
         result["reasoning_unknown"] = True
         add(
-            errors,
+            unknown_findings,
             "automation_reasoning_unknown",
             f"Required reasoning {required_reasoning!r} is defined but no configured automation or runner reasoning effort was found.",
             policy_path,
@@ -794,7 +832,7 @@ def validate_progress_tracking(
         add(
             warnings,
             "stalled_threshold_pending",
-            "Next recorded no-progress run would reach the stalled threshold and should block before further delivery.",
+            "Recorded semantic no-progress count has reached the threshold; terminal closeout precedes phase work.",
             state_file,
         )
 
@@ -910,8 +948,8 @@ def validate_completion_flow(
     result: Dict[str, Any] = {
         "complete": complete,
         "completion_alert_present": False,
-        "completion_pause_required": complete and str(automation_status).upper() == "ACTIVE",
-        "automation_should_be_paused": complete and str(automation_status).upper() != "PAUSED",
+        "completion_pause_required": complete and completion_pause_decision.get("decision") == "allowed" and str(automation_status).upper() == "ACTIVE",
+        "automation_should_be_paused": complete and completion_pause_decision.get("decision") == "allowed" and str(automation_status).upper() != "PAUSED",
         "completion_pause_decision": completion_pause_decision,
         "last_automation_pause": last_pause,
     }
@@ -969,6 +1007,38 @@ def validate_completion_flow(
         result["completion_alert_present"] = True
     if last_alert.get("notification_status") == "failed" and not last_alert.get("notification_failure"):
         add(warnings, "completion_notification_failure_missing_reason", "Completed alert notification failed without a recorded failure reason.")
+    return result
+
+
+def validate_terminal_closeout(state: Dict[str, Any], automation_status: Optional[str],
+                                errors: List[Finding]) -> Dict[str, Any]:
+    """A parsed config is observational data, never a scheduler receipt."""
+    closeout = state.get("terminal_closeout")
+    result = {"present": closeout is not None, "scheduler_pause_confirmed": False,
+              "required_action": None}
+    if closeout is None:
+        return result
+    if not isinstance(closeout, dict):
+        add(errors, "invalid_terminal_closeout", "Terminal closeout must be an object.")
+        return result
+    result.update(status=closeout.get("status"), required_action=closeout.get("required_action"))
+    receipt = closeout.get("receipt")
+    if closeout.get("status") in {"paused", "already_paused"}:
+        verified = (isinstance(receipt, dict) and receipt.get("paused") is True
+                    and receipt.get("readback_status") == "PAUSED"
+                    and receipt.get("scheduler_authoritative") is True
+                    and bool(receipt.get("source")) and bool(receipt.get("observed_revision"))
+                    and receipt.get("runner_id") == closeout.get("runner_id")
+                    and receipt.get("request_id") == closeout.get("intent_id")
+                    and bool(receipt.get("settings_sha256")))
+        if not verified:
+            add(errors, "terminal_receipt_unproven", "Successful terminal outcome lacks an authoritative identity-bound PAUSED receipt.")
+        elif automation_status == "ACTIVE":
+            add(errors, "terminal_runner_reactivated", "Runner reads ACTIVE after a confirmed terminal pause; reconcile without phase delivery.")
+        else:
+            result["scheduler_pause_confirmed"] = True
+    elif receipt:
+        add(errors, "terminal_receipt_status_mismatch", "Non-success terminal status retains a current success receipt.")
     return result
 
 
@@ -1196,7 +1266,8 @@ def validate_lifecycle_filename(roadmap_path: Optional[Path], header: Dict[str, 
         add(errors, "roadmap_lifecycle_filename_mismatch", "Active roadmap status uses a delivered_ filename.", roadmap_path)
 
 
-def validate(repo_root: Path, roadmap_slug: Optional[str], automation_id: Optional[str]) -> Dict[str, Any]:
+def validate(repo_root: Path, roadmap_slug: Optional[str], automation_id: Optional[str], *,
+             host_capabilities: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     errors: List[Finding] = []
     warnings: List[Finding] = []
     info: List[Finding] = []
@@ -1228,7 +1299,7 @@ def validate(repo_root: Path, roadmap_slug: Optional[str], automation_id: Option
         if automation_toml.exists():
             try:
                 automation_data = parse_minimal_toml(automation_toml)
-            except OSError as exc:
+            except (OSError, TomlError) as exc:
                 add(errors, "automation_config_unreadable", f"Cannot read automation config: {exc}", automation_toml)
                 automation_data = {}
             automation_status = str(automation_data.get("status") or "")
@@ -1346,10 +1417,11 @@ def validate(repo_root: Path, roadmap_slug: Optional[str], automation_id: Option
     policy_path = state_dir / "phase_model_policy.json" if state_dir else None
     model_policy: Dict[str, Any] = {}
     if policy_path is not None:
-        model_policy = validate_model_policy(policy_path, state, automation_data, errors, warnings, schemas.get("phase_model_policy"))
+        model_policy = validate_model_policy(policy_path, state, automation_data, errors, warnings, schemas.get("phase_model_policy"), host_capabilities)
     progress_tracking = validate_progress_tracking(repo_root, state_file, state, errors, warnings) if state_file else None
     run_log_schema_report = validate_run_log_schema(state_file, schemas.get("automation_run_log"), errors) if state_file else None
     operator_alert = validate_operator_alert(repo_root, state_dir, state, errors, warnings) if state_dir else None
+    terminal_closeout = validate_terminal_closeout(state, automation_status, errors)
     completion_flow = validate_completion_flow(repo_root, state, complete, operator_alert, automation_status, approval_policy, errors, warnings)
     final_deep_review = validate_final_deep_review_gate(repo_root, state_dir, state, complete, errors, warnings)
     deep_review_prompt = Path(str(final_deep_review["prompt"])) if final_deep_review.get("prompt") else None
@@ -1361,6 +1433,14 @@ def validate(repo_root: Path, roadmap_slug: Optional[str], automation_id: Option
         hard_stop_guard=hard_stop_guard,
         complete=complete,
     )
+    from .reports import control_plan_for_readback
+    control_state = dict(state)
+    if complete:
+        control_state["all_phases_complete"] = True
+    for key in ("required_model", "required_reasoning_effort"):
+        if model_policy.get(key):
+            control_state[key] = model_policy[key]
+    control_plan = control_plan_for_readback(control_state, approval_policy, automation_data, repo_root, automation_id, host_capabilities=host_capabilities)
     if activation_reconciliation.get("available"):
         add(
             info,
@@ -1403,6 +1483,7 @@ def validate(repo_root: Path, roadmap_slug: Optional[str], automation_id: Option
         "blocked_remediation_guard": blocked_remediation_guard,
         "state_resolved_roadmap_prompt": state_resolved_roadmap_prompt,
         "activation_reconciliation": activation_reconciliation,
+        "control_plan": control_plan,
         "approval_policy": approval_policy,
         "approval_policy_state": approval_policy_state,
         "model_policy": model_policy or None,
@@ -1415,6 +1496,7 @@ def validate(repo_root: Path, roadmap_slug: Optional[str], automation_id: Option
         "progress_tracking": progress_tracking,
         "operator_alert": operator_alert,
         "completion_flow": completion_flow,
+        "terminal_closeout": terminal_closeout,
         "final_deep_review": final_deep_review,
         "repo_root": str(repo_root),
         "roadmap_slug": roadmap_slug or state.get("roadmap_slug"),
@@ -1476,6 +1558,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--repo-root", required=True, help="Repository root to validate.")
     parser.add_argument("--roadmap-slug", help="Roadmap slug, accepting hyphen or underscore form.")
     parser.add_argument("--automation-id", help="Codex automation id under ~/.codex/automations.")
+    parser.add_argument("--capabilities-file", help="Trusted adapter/operator model metadata JSON.")
     parser.add_argument("--strict", action="store_true", help="Return non-zero when warnings are present.")
     parser.add_argument(
         "--allow-warning",
@@ -1490,7 +1573,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not args.roadmap_slug and not args.automation_id:
         parser.error("at least one of --roadmap-slug or --automation-id is required")
 
-    report = validate(Path(args.repo_root), args.roadmap_slug, args.automation_id)
+    try:
+        metadata = json.loads(Path(args.capabilities_file).read_text(encoding="utf-8")) if args.capabilities_file else None
+        report = validate(Path(args.repo_root), args.roadmap_slug, args.automation_id, host_capabilities=metadata)
+    except (ValueError, OSError) as exc:
+        parser.error(str(exc))
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:

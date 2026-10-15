@@ -67,12 +67,12 @@ Minimum structure:
 }
 ```
 
-Allowed reasoning effort values are `minimal`, `low`, `medium`, `high`, and
-`xhigh`.
+Known reasoning effort values are `none`, `minimal`, `low`, `medium`, `high`,
+`xhigh`, `max`, and `ultra`. Host support is a separate explicit capability.
 
 Treat reasoning effort as an ordered minimum floor:
 
-`minimal < low < medium < high < xhigh`
+`none < minimal < low < medium < high < xhigh < max < ultra`
 
 A runner configured with higher reasoning than the phase requires satisfies the
 phase. For example, `xhigh` satisfies a phase that requires `high`. Do not
@@ -100,13 +100,41 @@ Adaptive policy changes only the next run. It never claims to switch the active
 model inside an already-running session. Non-flawless local delivery outcomes
 may escalate to the configured `escalation` target. Human-gated blockers skip
 model escalation and keep asking for the missing human action. A flawless streak
-may de-escalate only when `deescalate_after_flawless_runs` and explicit floor
-targets are configured.
+may de-escalate after `deescalate_after_flawless_runs`; the resolved phase
+reasoning is always a minimum, combined with both explicit floor spelling fields.
+A proposal below that floor is raised to it. A floor above the cap, unknown
+value, or model outside the allowlist is an invalid policy with no usable target.
 
-Caps are mandatory when adaptive policy is enabled. `allowed_models`,
-`max_reasoning_effort`, and optional provider or cost-class caps prevent
-unbounded model, provider, or cost changes without requiring the workflow to
-infer provider-specific pricing.
+Caps are mandatory when adaptive policy is enabled. Supplied caps also apply
+when adaptation is disabled. Defaults, overrides, no-change paths, escalation,
+de-escalation and bound persisted targets use the same shared resolver. A higher
+configured reasoning value already satisfying the target is preserved; the
+planner does not require a cost-only downgrade.
+
+Provider and cost-class limits require explicit trusted metadata from the
+adapter/operator. Retarget, validation, inspection, preflight and control planning accept `--capabilities-file`
+with `trusted: true`, a non-empty `source`, and `models` mapping model identifiers
+to `reasoning_efforts`, `provider`, `cost_class` and optional integer `rank`.
+This is an operator attestation, not authentication. Self-declared target
+provider/cost fields and guessed model pricing are never evidence. Requested
+limits without metadata return unresolved/invalid-policy, not enforced. A model
+floor requires explicit ranks; names alone do not establish relative strength.
+Absent host metadata reports `host_support: unknown` without changing the active
+model. Explicit host support selects a supported reasoning value within the
+floor/cap or reports unsupported.
+
+Optional `policy_version` is an operator label; a canonical fingerprint binds
+all policy values even if that label is unchanged. Persisted decisions bind
+source phase/run, target phase and a retained snapshot of verification/review/blocker evidence.
+The decision also retains the explicitly supplied capability metadata; supplying
+fresh metadata overrides that snapshot and detects changes. Destination-phase
+verification or review does not invalidate its source decision. Missing or mixed
+run identities cannot establish a flawless run or justify de-escalation. Old
+unbound targets, changed policy/evidence and wrong run/phase are ignored; bound
+targets still pass current constraints. Cached `last_run_quality` cannot replace current evidence. Flawless streaks
+continue only from a preceding bound decision on the same policy; unbound
+counters are reset for adaptive selection. Inspection, validation, prerequisite
+planning and retargeting all resolve effective targets through the shared runtime.
 
 ## Provider Role Config
 
@@ -170,28 +198,94 @@ set blocked state, write an alert, and do not start the next phase.
 
 ## Progress And Stall Control
 
-Use durable progress signatures from state, latest review, verification, git
-head, delivery log hash/size, and blocker reason. Reset stalled count when the
-signature changes. Increment it when the signature repeats. At threshold, keep
-or set blocked state, resolve the `pause_saved_automation` decision for the
-stall context, write an operator alert, and either pause the runner with
-readback evidence or record the required human pause action.
+Use versioned semantic evidence and a stable unique `run_id`. Start the attempt
+before phase work, capturing phase/runner identity, owned files, initial evidence
+and counters. Reuse its ID for retries, review fixes and interrupted recovery.
+Read-only inspection does not allocate an attempt or project a fictitious failure.
+
+Count only verifier-backed accepted work, a newly satisfied named criterion, or
+a check proving the original blocker resolved. Evidence version 1 includes phase,
+kind, stable criterion/blocker and increment IDs, previous/current semantic states,
+artifact SHA-256 and a verifier JSON path/hash. The verifier records the exact
+transition and a passed check path/hash; accepted work also requires a delivered,
+criterion-specific review path/hash and a phase-owned artifact. Local attestation
+integrity is checked; its author identity is a trusted check/reviewer boundary.
+
+The shared runtime derives event keys from semantic scope. Supplied evidence IDs,
+new proof paths, timestamps, delivery log hashes, review verdicts/filenames, changed
+failure wording, git commits and repeated passing checks cannot earn progress.
+Deduplicate accepted increments and artifact revisions across runs. A previously
+satisfied criterion cannot reset counters through another passing check.
+For blocker repairs, copy the recorded `blocker_occurrence_id` from the active
+attempt (or `progress_accounting.blocker_context.occurrence_id` after it closes)
+into `previous.blocker_occurrence_id` in verifier-attested evidence. Retries of
+that occurrence are deduplicated; a later recurrence has a new recorded identity
+and requires new evidence. Old repair receipts cannot clear a new occurrence.
+
+The first unique completed or interrupted attempt without new evidence increments
+both lifetime runs and consecutive failures; the second reaches default threshold
+2, with no grace run. Thresholds 1 and 3 have the same exact boundary rule. Multiple
+new evidence items in one outcome reset the consecutive counter once. A duplicate
+outcome changes neither counter nor the outcome timestamp. Verified original-cause
+repair clears that cause; failure wording and pause results never replace it.
+
+Record starts/outcomes under a local writer lock, with revision conflict detection.
+Append/fsync the version 2 journal before atomic state replacement. On interruption,
+replay its recorded proposal and finish the same ID once; do not allocate a new ID
+until the unfinished attempt closes. Corrupt/conflicting history stops recording.
+Completion markers take precedence over recovery too: do not account another
+outcome or replay an older accounting proposal over completed scope. Reconcile
+any pending journal explicitly while retaining the terminal hard stop.
+Legacy hashes remain diagnostic and migration preserves known run/stall counts,
+seeds already consumed bootstrap events and explicitly records uncertain history.
+Migration alone never resets counters or counts as progress.
+
+Use the installed CLI or packaged `scripts/roadmap_delivery.py` helper:
+
+```bash
+roadmap-delivery progress \
+  --repo-root /path/to/repo --roadmap-slug example --start-run \
+  --run-id stable-attempt-id --owned-file src/example.py --json
+roadmap-delivery progress \
+  --repo-root /path/to/repo --roadmap-slug example --record-run \
+  --run-id stable-attempt-id --evidence-file accepted-evidence.json --json
+```
+
+Omit `--evidence-file` for no progress. Use `--recover-run` with the same ID to
+close an interrupted attempt, retaining any verified evidence. `--expected-revision`
+rejects conflicting writers. A terminal-only invocation does not start another
+attempt. At threshold, keep/set blocked state and retain the actionable
+`blocked_reason`; store the trigger in `stall_metadata`. Accounting returns a
+terminal plan and never edits a saved runner. The host closeout adapter writes the
+local alert and resolves the context-authorized status-only pause, confirms PAUSED
+through readback, or records a specific pending/disabled/unavailable outcome. No
+phase may begin before terminal reconciliation. ACTIVE resume alone is neither
+progress nor a fresh attempt budget. After an external repair at threshold,
+`--resolve-blocker --evidence-file repair-evidence.json` consumes its verified
+original-cause transition once, without allocating an attempt or incrementing
+lifetime runs. A duplicate repair receipt cannot reset a later failed run.
 
 ## Self-Pause Policy
 
-`approval_policy.json` may include `pause_automation_on_completion` and
-`pause_automation_on_stall` as context-specific safety approvals. Delegated
-modes can allow the same behavior through `pause_saved_automation`; conservative
-mode can keep ordinary runner edits ask-first while explicitly allowing one
-safety pause context. If a context-specific pause flag is absent, the default
-terminal safety policy allows the completion or stall pause; set the flag to
-`false` only when the operator explicitly wants the scheduler to keep running
-after that terminal condition. A pause attempt is delivered only after trusted
-runner readback reports `PAUSED`.
+The shared approval resolver is the authority for completion/stall pause:
+missing context flags default true; explicit `pause_automation_on_completion`
+or `pause_automation_on_stall: false` disables automatic pausing even when broad
+`pause_saved_automation` permission is true in a delegated mode. A later explicit
+operator request to pause is separate scoped authority. Missing policy uses these
+conservative defaults; malformed policy cannot grant execution authority.
 
-If a pause is explicitly disabled, record a pause-needed blocker or
-completed-pending-pause state with a local alert. If pause readback fails, do
-not claim the runner is paused.
+Terminal closeout precedes ordinary phase/model/migration gates. A broad saved
+runner restriction alone does not revoke the narrow status-only safety pause.
+Write the local alert before effects, bind runner identity, preserve all other
+settings, execute through supported host tooling and require authoritative
+PAUSED readback. Attempted/applied updates alone are not verified receipts.
+
+If the context pause is disabled, record `disabled` and preserve that choice.
+If capability or readback is unavailable, record the precise pending action.
+Completion remains `completed_pending_pause` when an applicable pause cannot be
+verified; manual unscheduled runs record `not_applicable`. Final verification,
+delivered review and a distinct final deep-review prompt/artifact or explicit
+human waiver remain necessary before claiming completion.
 
 ## Alerts
 

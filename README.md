@@ -5,6 +5,13 @@ roadmap-driven coding work. The repository now separates the canonical workflow
 core from host-specific packaging, with supported Codex and Claude packages plus
 a generic markdown pack for future adapter planning.
 
+The current `0.3.0` source version requires Python 3.12 (`>=3.12,<3.13`) and a
+POSIX filesystem with cooperating directory locks. It bundles its runtime and
+schemas for use outside this checkout. Start with the extracted-package path
+in `docs/quickstart.md`, or install the committed package from GitHub below.
+See `docs/release-notes-0.3.0.md` for upgrade and verification limits. A source
+installation does not imply a published release tag or registry package.
+
 GitHub repository: `git@github.com:dzianissokalau/roadmap-delivery-skill.git`
 
 [![CI](https://github.com/dzianissokalau/roadmap-delivery-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/dzianissokalau/roadmap-delivery-skill/actions/workflows/ci.yml)
@@ -27,7 +34,7 @@ Key docs:
 - Onboarding wizard contract: `docs/onboarding-wizard.md`
 - Privacy and release sanitization: `docs/privacy-and-sanitization.md`
 - Release process: `docs/release-process.md`
-- Release notes: `docs/release-notes-0.2.0.md`
+- Release notes: `docs/release-notes-0.3.0.md`
 - Security policy: `SECURITY.md`
 - Trademark and licensing: `docs/trademark-and-licensing.md`
 - Who this is for: `docs/who-this-is-for.md`
@@ -211,6 +218,7 @@ Codex package.
 
 | Status | Roadmap | Public summary |
 |---|---|---|
+| Delivered; pause confirmation pending | [Runtime Reliability And Portable Installation](roadmaps/delivered_runtime_reliability_and_portable_installation_roadmap.md) | Ten phases covering shared control decisions, semantic stalls, terminal pause, portable installation, adaptive constraints, migration, behavioral acceptance and release evidence. [Independent re-review](automation/runtime-reliability-and-portable-installation/publication_review.md) passed after fixes. Saved runner configuration is PAUSED; authoritative scheduler confirmation remains a separate operational limitation. Raw host evidence stays local. |
 | Delivered | `roadmaps/delivered_autonomous-roadmap-delivery-skill-phased-roadmap.md` | Original Codex roadmap and repository skill snapshot. |
 | Delivered | `roadmaps/delivered_phase_model_policy_and_stall_control_roadmap.md` | Model-aware automation retargeting, stalled-run handling, and local operator alerts. |
 | Delivered | `roadmaps/delivered_framework_core_and_release_readiness_roadmap.md` | Framework hardening for the canonical core, schemas, shared library, CLI, generated Codex adapter, CI, privacy, release, and closeout. |
@@ -443,20 +451,20 @@ Local equivalent for the release-check artifact build:
 ```bash
 python3 scripts/build_release.py --check
 python3 scripts/build_release.py --output-dir dist --json
-(cd dist && shasum -a 256 -c roadmap-delivery-0.2.0-checksums.sha256)
+(cd dist && shasum -a 256 -c roadmap-delivery-0.3.0-checksums.sha256)
 python3 scripts/check_release_privacy.py --repo-root . \
-  --bundle dist/roadmap-delivery-0.2.0-source.tar.gz \
-  --bundle dist/roadmap-delivery-codex-skill-0.2.0.tar.gz \
-  --bundle dist/roadmap-delivery-claude-plugin-0.2.0.tar.gz \
-  --bundle dist/roadmap-delivery-schemas-0.2.0.tar.gz \
-  --bundle dist/roadmap-delivery-cli-0.2.0.tar.gz \
-  --bundle dist/roadmap-delivery-generic-markdown-pack-0.2.0.tar.gz
+  --bundle dist/roadmap-delivery-0.3.0-source.tar.gz \
+  --bundle dist/roadmap-delivery-codex-skill-0.3.0.tar.gz \
+  --bundle dist/roadmap-delivery-claude-plugin-0.3.0.tar.gz \
+  --bundle dist/roadmap-delivery-schemas-0.3.0.tar.gz \
+  --bundle dist/roadmap-delivery-cli-0.3.0.tar.gz \
+  --bundle dist/roadmap-delivery-generic-markdown-pack-0.3.0.tar.gz
 ```
 
 Release links:
 
 - Changelog: `CHANGELOG.md`
-- Release notes: `docs/release-notes-0.2.0.md`
+- Release notes: `docs/release-notes-0.3.0.md`
 - Release check workflow:
   `https://github.com/dzianissokalau/roadmap-delivery-skill/actions/workflows/release-check.yml`
 

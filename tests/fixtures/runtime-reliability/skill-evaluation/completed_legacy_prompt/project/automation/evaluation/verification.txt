@@ -1,0 +1,1 @@
+Offline fixture verification passed

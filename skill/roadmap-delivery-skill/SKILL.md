@@ -5,79 +5,75 @@ description: Use when Codex needs to set up roadmap delivery automation, inspect
 
 # Roadmap Delivery Skill
 
-Use this skill for file-backed, phase-gated roadmap delivery workflows. Keep work anchored to the roadmap, `delivery_state.json`, `delivery_log.md`, review files, git branch and commit history, verification output, and `automation.toml`.
+Use the roadmap, state, append-only log, reviews, verification and runner
+readback as the evidence for a file-backed delivery workflow.
 
-## First Move
+## Ordered Workflow
 
-1. Identify the exact roadmap path or automation id before acting.
-2. Read the roadmap, delivery state, delivery log, review files, phase model policy when present, automation config, and `git status`.
-3. Reconcile lifecycle rename drift, stale roadmap paths, branch names, and completed or blocked hard-stop states.
-4. If state is `blocked`, route through blocked-run remediation before attempting normal phase delivery.
-5. Stop and report the mismatch only when roadmap, state, log, review files, verification output, automation config, branch, or worktree evidence disagree and the blocker is not safely repairable in the current run.
+1. Read `delivery_state.json` first; its roadmap path is authoritative. Read the
+   adjacent guide, policies, log and latest reviews, then runner and git status.
+2. Handle the completion hard stop and two-run stall threshold before ordinary
+   phase/model gates. Do not extract or start another phase during closeout.
+3. Reconcile intentional manual activation before a generic disagreement stop.
+   Matching identity, cwd/project, model/floor and prompt guards permit local
+   guide/state reconciliation; record `last_activation`. Activation alone is
+   neither progress nor a fresh stall budget. Authorized lifecycle filename
+   repair needs no saved prompt retarget when the prompt resolves state.
+4. When state is `blocked`, try blocked-run remediation before retrying normal
+   delivery. Clear the original cause only after verified repair.
+5. Validate approval and phase model policy using actual runner readback. Use
+   the shared runtime decision, then implement the current phase on its branch.
+6. Run required verification before claiming delivery.
+   Require a fresh review verdict before phase advancement. Fix scoped findings within three iterations;
+   record a same-context limitation when independent review is unavailable.
+7. Record one semantic outcome per unique run, resolve the next-run target,
+   advance only after `delivered`, then stop. The last numbered phase leads to
+   separate finalization and a distinct final deep-review prompt or human waiver.
 
-## Route The Task
+## Routes
 
-- Setup new automation: read `references/setup-automation.md`.
-- Deliver one current phase: read `references/phase-loop.md`.
-- Handle review findings: read `references/review-and-fix.md`.
-- Inspect status, branches, state, or logs: read `references/state-log-and-branches.md`. Once Phase 4 exists, use `scripts/inspect_delivery_state.py` for status questions.
-- Finalize, promote, or close out delivered work: read `references/finalization-and-promotion.md`.
-- Repair bad state, stale paths, blocked runs, or lifecycle drift: read `references/troubleshooting.md`.
-- Diagnose or repair network-disabled blockers before stopping on them: read `references/network-blocker-remediation.md`.
-- Use phase model policy, stalled-run handling, or model-aware automation: read `references/model-policy-and-stall-control.md`.
-- Preflight future phases, prerequisites, mitigations, or approvals: read `references/phase-preflight.md`.
-
-## Package Readiness
-
-This generated Codex package is a local skill package, not a marketplace
-submission. Treat the package as ready for human distribution review only when
-adapter checks prove the `SKILL.md`, router agent, canonical references, helper
-scripts, host capability metadata, install documentation, compatibility limits,
-privacy limits, and explicit submission blockers are present. Installed skill
-synchronization, publication, package registry upload, marketplace submission,
-credential use, branch pushes, and repository setting changes remain
-human-approved operations. Host capability metadata is required readiness
-evidence for supported adapters.
-
-## Hard Rules
-
-- Work exactly one roadmap phase at a time.
-- When state is `blocked`, try blocked-run remediation before retrying normal phase advancement.
-- Run required verification before claiming delivery.
-- Require a fresh review verdict before phase advancement.
-- Preserve unrelated worktree changes; never revert user work without explicit instruction.
-- Do not broadly stage files or hide unrelated diffs inside phase work.
-- Do not force-push.
-- Do not promote to `main`, merge, push, or change Codex app automation config without explicit human approval, except for the narrow status-only completion/stall self-pause described below.
+- Setup: `references/setup-automation.md`.
+- Deliver exactly one roadmap phase: `references/phase-loop.md`.
+- Review or fix: `references/review-and-fix.md`.
+- Inspect state/branches: `references/state-log-and-branches.md`.
+- Blocked repair/lifecycle drift: `references/troubleshooting.md`.
+- Network blocker: `references/network-blocker-remediation.md`.
+- Policy, progress and terminal pause: `references/model-policy-and-stall-control.md`.
+- Future phase preflight: `references/phase-preflight.md`.
+- Finalization/promotion: `references/finalization-and-promotion.md`.
 
 ## Policy Gates
 
-- Read `approval_policy.json` when present. Missing policy means conservative
-  legacy behavior: phase-owned edits, state/log/review writes, branch creation,
-  and verification can proceed, while commits, pushes, saved automation
-  retargets, publication, promotion, credentials, destructive git, and
-  installed skill sync still require approval or remain forbidden. Completion
-  and repeated-stall status-only self-pause is allowed by default unless
-  `pause_automation_on_completion` or `pause_automation_on_stall` is explicitly
-  `false`.
-- Treat `phase_model_policy.json` and `adaptive_model_policy` as next-run
-  controls. A non-flawless run may update durable state and propose or perform
-  an approved saved automation retarget, but it does not change the active
-  model inside the current session.
-- A paused setup that reads back as ACTIVE after the operator starts the
-  automation is a normal activation transition, not a blocker, when cwd,
-  model/reasoning, state-first prompt, hard-stop guard, and
-  blocked-remediation guard all match. Reconcile guide/log/state to ACTIVE,
-  record `last_activation`, and continue before applying the generic
-  disagreement stop rule.
-- Completion and repeated-stall self-pause are default safety behaviors for
-  generated policies through `pause_automation_on_completion` and
-  `pause_automation_on_stall`. This is a narrow terminal status-only pause
-  exception; `pause_saved_automation` still gates broad saved-runner edits in
-  conservative mode. If a roadmap explicitly disables a context pause, or
-  pause tooling/readback is unavailable, write the local alert and keep the
-  state in the appropriate blocked or `completed_pending_pause` form.
+- Work exactly one roadmap phase at a time. Preserve uncommitted user work;
+  stage explicit phase-owned paths only. Never force-push.
+- Read `approval_policy.json`; shared decisions return `allowed`, `ask` or
+  `forbidden`. Missing policy uses conservative defaults; invalid policy cannot
+  grant authority. Honor existing scoped operator authorization.
+- Default completion/stall status-only self-pause is allowed unless the matching
+  `pause_automation_on_completion` or `pause_automation_on_stall` flag is explicitly
+  false. These opt-outs override broad pause permission in every mode. Broad
+  saved-runner restrictions do not revoke this narrow terminal exception.
+- Write the local alert, preserve every other runner setting, use supported host
+  tooling and require PAUSED readback before claiming pause. Unavailable capability
+  or readback leaves a concrete blocked/`completed_pending_pause` outcome.
+- Exact model and at least the reasoning floor are required before phase work.
+  `adaptive_model_policy` changes only the next run; it cannot switch this session.
+- Timestamps, logs, review paths, repeated tests and bookkeeping commits cannot
+  reset stalls. Use verifier-backed accepted work, new criteria or repaired causes.
+- Publication, promotion, credentials, global synchronization, destructive git
+  and unrelated runner edits require their own explicit human approval or remain
+  forbidden. Phase acceptance does not imply permission for them.
 
-## Stop Conditions
+## Package Readiness
 
-Stop and report clearly when required files are missing, state surfaces disagree, verification cannot run, review/fix iterations reach their limit, credentials or approval are needed, the phase scope is ambiguous, destructive git operations would be required, or the requested work expands beyond the current roadmap phase.
+This is a local skill package, not a marketplace submission.
+The package is ready for human distribution review when adapter checks prove
+entrypoint, references, helpers, runtime closure, host capability metadata,
+install documentation, compatibility limits, privacy limits and submission blockers.
+Distribution, global sync and publication remain human-approved operations.
+
+## Codex Host
+
+Use `scripts/roadmap_delivery.py` for the packaged CLI and compatibility helpers
+for existing invocations. Read-only files supply observed configuration, not host
+capabilities. Saved updates require supported app tooling and readback receipts.

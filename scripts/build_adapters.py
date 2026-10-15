@@ -25,6 +25,7 @@ from roadmap_delivery.rendering import (  # noqa: E402
     compare_output,
     render_package,
     write_output,
+    portable_runtime_files,
 )
 
 
@@ -228,6 +229,10 @@ def run_adapter(
         metadata = load_adapter_metadata(repo_root, adapter)
         output_dir = adapter_output_dir(repo_root, adapter, metadata, output_root)
         package = render_package(repo_root, metadata, output_dir=output_dir)
+        if adapter in ("codex", "claude"):
+            prefix = "runtime" if adapter == "codex" else "skills/roadmap-delivery-skill/runtime"
+            package = RenderedPackage(package.metadata, package.output_dir,
+                                      [*package.files, *portable_runtime_files(repo_root, prefix)], package.capability_content)
         if write:
             write_output(package.output_dir, package.files)
             wrote = True
@@ -270,6 +275,13 @@ def build_report(
     write: bool,
     output_root: Optional[Path],
 ) -> Dict[str, Any]:
+    resource_files = [item for item in portable_runtime_files(repo_root, "src")
+                      if "/_resources/" in item.output]
+    if write:
+        write_output(repo_root, resource_files)
+    resource_diffs = compare_output(repo_root / "src/roadmap_delivery/_resources", [
+        type(item)(output=item.output.split("/_resources/", 1)[1], content=item.content, mode=item.mode)
+        for item in resource_files]) if check else []
     reports = [
         run_adapter(
             repo_root=repo_root,
@@ -282,7 +294,8 @@ def build_report(
     ]
     return {
         "schema_version": 1,
-        "status": aggregate_status(reports),
+        "status": "drift" if resource_diffs else aggregate_status(reports),
+        "cli_resource_diffs": resource_diffs,
         "repo_root": str(repo_root),
         "adapters": list(adapters),
         "check": check,

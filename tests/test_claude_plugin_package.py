@@ -214,6 +214,11 @@ class ClaudePluginPackageTests(unittest.TestCase):
         )
 
         for path in self.generated_text_files():
+            # Shared executable code intentionally understands multiple hosts.
+            # User-facing Claude instructions must retain the host distinction.
+            relative = path.relative_to(DIST_ROOT).as_posix()
+            if "/runtime/" in relative or "/scripts/" in relative:
+                continue
             text = path.read_text(encoding="utf-8")
             for pattern in forbidden:
                 with self.subTest(path=path.relative_to(DIST_ROOT).as_posix(), pattern=pattern):

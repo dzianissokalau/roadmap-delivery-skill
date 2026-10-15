@@ -135,13 +135,20 @@ def render_package(repo_root: Path, manifest: Dict[str, Any]) -> Tuple[List[Rend
             )
         )
 
+    source = repo_root / "src"
+    if str(source) not in sys.path:
+        sys.path.insert(0, str(source))
+    from roadmap_delivery.rendering import portable_runtime_files
+    rendered.extend(RenderedFile(output=item.output, template="<shared-runtime>", content=item.content, mode=item.mode)
+                    for item in portable_runtime_files(repo_root))
     return rendered, output_dir
 
 
 def iter_files(root: Path) -> Iterable[Path]:
     if not root.exists():
         return []
-    return sorted(path for path in root.rglob("*") if path.is_file())
+    return sorted(path for path in root.rglob("*") if path.is_file()
+                  and "__pycache__" not in path.parts and path.suffix not in (".pyc", ".pyo"))
 
 
 def file_mode(path: Path) -> int:

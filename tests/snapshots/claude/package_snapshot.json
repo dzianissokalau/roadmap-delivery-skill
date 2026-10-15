@@ -4,7 +4,7 @@
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
-      "sha256": "81670601100341929b3c74579bc24f4741d006916996f106d1aba6d752348422",
+      "sha256": "052ea6918b036a3da36883167dbb2d88339ae005d29c86b66bf6bd13bccf5ba8",
       "size": 356
     },
     {
@@ -14,8 +14,8 @@
     },
     {
       "path": "skills/roadmap-delivery-skill/SKILL.md",
-      "sha256": "d44ebbbdf3f2f7297bbe4bfde2aa3786994b39b15e75be463d7e6e5e2a3dd9b3",
-      "size": 6023
+      "sha256": "997a8f348bc9f3bcf653b1276a4e52020ba0216e7766b4d959e0204d214b1842",
+      "size": 5160
     },
     {
       "path": "agents/reviewer.md",
@@ -24,86 +24,296 @@
     },
     {
       "path": "hooks/hooks.json",
-      "sha256": "34a29f5fef722aab496f1edcb814965940ae1cdd0ade3b8101fe9c35508bd7a8",
-      "size": 1442
+      "sha256": "647dd6f5e817505980aa2f6dbc26cd3b4a22a60d9d13e34d6adbe274a639d903",
+      "size": 1519
     },
     {
-      "mode": "0755",
       "path": "hooks/roadmap_delivery_safety.py",
-      "sha256": "5c9304e9629b1079a11b9f79dd3d6b5301b5776f815870694b5f85aa30674ad1",
-      "size": 8143
+      "sha256": "4fa0547d915453b8d0da49f119d8e7314d15de2a71d71ee6abf441b6ddb8d0df",
+      "size": 11080,
+      "mode": "0755"
     },
     {
-      "core_sha256": "bb307b836e27c67a4c129b1b108a4157413b25c91751657cd7807660055404f5",
-      "core_size": 3368,
-      "core_source": "core/references/finalization-and-promotion.md",
       "path": "skills/roadmap-delivery-skill/references/finalization-and-promotion.md",
-      "sha256": "bb307b836e27c67a4c129b1b108a4157413b25c91751657cd7807660055404f5",
-      "size": 3368
+      "sha256": "0f54092c6258b9cf721d2d460feab4ab189cba5dac97929bebd0ebcf47b76969",
+      "size": 4443,
+      "core_source": "core/references/finalization-and-promotion.md",
+      "core_sha256": "0f54092c6258b9cf721d2d460feab4ab189cba5dac97929bebd0ebcf47b76969",
+      "core_size": 4443
     },
     {
-      "core_sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
-      "core_size": 8066,
-      "core_source": "core/references/model-policy-and-stall-control.md",
       "path": "skills/roadmap-delivery-skill/references/model-policy-and-stall-control.md",
-      "sha256": "8bed0a0170c5572df121fe1d1569b1de13f189588c4c2ef24f5d28d5102ba8f7",
-      "size": 8066
+      "sha256": "ca04db5cf876e5369a77c933f9c6e3e6c2902770eb7b2a69114ac1e807498701",
+      "size": 14775,
+      "core_source": "core/references/model-policy-and-stall-control.md",
+      "core_sha256": "ca04db5cf876e5369a77c933f9c6e3e6c2902770eb7b2a69114ac1e807498701",
+      "core_size": 14775
     },
     {
-      "core_sha256": "8ae65315fed0d404d88d5733205ef62e75b762385867fff1f61b4bebe058d330",
-      "core_size": 3919,
-      "core_source": "core/references/network-blocker-remediation.md",
       "path": "skills/roadmap-delivery-skill/references/network-blocker-remediation.md",
       "sha256": "8ae65315fed0d404d88d5733205ef62e75b762385867fff1f61b4bebe058d330",
-      "size": 3919
+      "size": 3919,
+      "core_source": "core/references/network-blocker-remediation.md",
+      "core_sha256": "8ae65315fed0d404d88d5733205ef62e75b762385867fff1f61b4bebe058d330",
+      "core_size": 3919
     },
     {
-      "core_sha256": "71f10738a9ddcb0c9dba398328184727d52d80ac0c5ca9b64307660e6df3a16c",
-      "core_size": 2511,
-      "core_source": "core/references/phase-preflight.md",
       "path": "skills/roadmap-delivery-skill/references/phase-preflight.md",
-      "sha256": "567f9016318240e6eb6da0b19774ea8adf48246d4155fbde6a1ae5c4bf1b82b1",
-      "size": 3236
+      "sha256": "1c31ce203a7d9bfb59fea421deaf178ded8b981ec894d030eebd316cdbf216fb",
+      "size": 3064,
+      "core_source": "core/references/phase-preflight.md",
+      "core_sha256": "71f10738a9ddcb0c9dba398328184727d52d80ac0c5ca9b64307660e6df3a16c",
+      "core_size": 2511
     },
     {
-      "core_sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
-      "core_size": 6149,
-      "core_source": "core/references/phase-loop.md",
       "path": "skills/roadmap-delivery-skill/references/phase-loop.md",
-      "sha256": "7622d09f52215e0a6552e8921e2717ca198d28ee9ec0037693f712129d101289",
-      "size": 6149
+      "sha256": "66d940412c75f87159e02cd4241a5ba3e7e4a974bd7854395ceddfd525b76396",
+      "size": 6498,
+      "core_source": "core/references/phase-loop.md",
+      "core_sha256": "66d940412c75f87159e02cd4241a5ba3e7e4a974bd7854395ceddfd525b76396",
+      "core_size": 6498
     },
     {
-      "core_sha256": "2b4e45837764e55495bf3707fb398ddf0e3a3cc1c8ce15ff442c6a2623ae9ae7",
-      "core_size": 2595,
-      "core_source": "core/references/review-and-fix.md",
       "path": "skills/roadmap-delivery-skill/references/review-and-fix.md",
       "sha256": "2b4e45837764e55495bf3707fb398ddf0e3a3cc1c8ce15ff442c6a2623ae9ae7",
-      "size": 2595
+      "size": 2595,
+      "core_source": "core/references/review-and-fix.md",
+      "core_sha256": "2b4e45837764e55495bf3707fb398ddf0e3a3cc1c8ce15ff442c6a2623ae9ae7",
+      "core_size": 2595
     },
     {
-      "core_sha256": "efc49842770ca4619ff70e3b9d55325cb796f4e5a1aa1dbf6816069030602dbb",
-      "core_size": 6289,
-      "core_source": "core/references/setup-automation.md",
       "path": "skills/roadmap-delivery-skill/references/setup-automation.md",
-      "sha256": "efc49842770ca4619ff70e3b9d55325cb796f4e5a1aa1dbf6816069030602dbb",
-      "size": 6289
+      "sha256": "c7edc322573eb4ee8bc4926621e98bd247388beac26b00e7ceb61d501fb16583",
+      "size": 6975,
+      "core_source": "core/references/setup-automation.md",
+      "core_sha256": "c7edc322573eb4ee8bc4926621e98bd247388beac26b00e7ceb61d501fb16583",
+      "core_size": 6975
     },
     {
-      "core_sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
-      "core_size": 3187,
-      "core_source": "core/references/state-log-and-branches.md",
       "path": "skills/roadmap-delivery-skill/references/state-log-and-branches.md",
-      "sha256": "600e5a2f1e53c9269ca51af3258bc6083cf9ad63d93a130ad9f7592142738001",
-      "size": 3187
+      "sha256": "8e493eb7bbcf4bd1dda7327130221601d8eb4297299d723817a3f2f73818998e",
+      "size": 3396,
+      "core_source": "core/references/state-log-and-branches.md",
+      "core_sha256": "8e493eb7bbcf4bd1dda7327130221601d8eb4297299d723817a3f2f73818998e",
+      "core_size": 3396
     },
     {
-      "core_sha256": "eee8180c38aecb6da0d3e6130089fc1b8282fd92d08065d6152c705f078f07bb",
-      "core_size": 5893,
-      "core_source": "core/references/troubleshooting.md",
       "path": "skills/roadmap-delivery-skill/references/troubleshooting.md",
-      "sha256": "eee8180c38aecb6da0d3e6130089fc1b8282fd92d08065d6152c705f078f07bb",
-      "size": 5893
+      "sha256": "280e37d031b71a0f97eba0a94f11dca74117202e4c3cafbf6f11400c27382108",
+      "size": 6148,
+      "core_source": "core/references/troubleshooting.md",
+      "core_sha256": "280e37d031b71a0f97eba0a94f11dca74117202e4c3cafbf6f11400c27382108",
+      "core_size": 6148
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/scripts/compute_progress_signature.py",
+      "sha256": "77780d927021ebba0c6dea6bf274814dc0df6e2a882232c2d4549bd54d3f992f",
+      "size": 1872,
+      "mode": "0755"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/scripts/inspect_delivery_state.py",
+      "sha256": "0a5b16ad2699199b47f88478a352e17024da330aa7974b519cece2f7441fb7a6",
+      "size": 1870,
+      "mode": "0755"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/scripts/plan_automation_retarget.py",
+      "sha256": "38840809883e39959828eb1baa4bb935f999c2491f80bc488b4a93091737f271",
+      "size": 1769,
+      "mode": "0755"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/scripts/plan_phase_prerequisites.py",
+      "sha256": "ae28d0e9f4c36960e2443bd39b49886ce88039c0aa01fff0d6f712de3328ed50",
+      "size": 1775,
+      "mode": "0755"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/scripts/roadmap_delivery.py",
+      "sha256": "a85c11393610c2dbb68dd2edcfedd20be93aaa2eca69c5b610f9dd8ca35f4c49",
+      "size": 1424,
+      "mode": "0755"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/scripts/validate_delivery_artifacts.py",
+      "sha256": "57396b6d610670b8b1ceb4aa99d846baed1e0f918061ec9df353fee338990352",
+      "size": 1876,
+      "mode": "0755"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/scripts/write_operator_alert.py",
+      "sha256": "054c27a7a37d5649aa76c69146ddbb025605b7af299a0da7ea15228fff3bea62",
+      "size": 1868,
+      "mode": "0755"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/VERSION",
+      "sha256": "d915cc95d6ca8f47ae297713ed46d4e5c5d99ddd29fc3c61e263bdf305f2b5b0",
+      "size": 6,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/__init__.py",
+      "sha256": "9b4cc128d0c54412cc5f4c61b5fd091892a651595a48cf5e76f038e655e01e0c",
+      "size": 965,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/VERSION",
+      "sha256": "d915cc95d6ca8f47ae297713ed46d4e5c5d99ddd29fc3c61e263bdf305f2b5b0",
+      "size": 6,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/runtime-manifest.json",
+      "sha256": "d717476d654eea9a2a7632b9a3043ff5d4310004d98ff7b7f650ad59626c47cd",
+      "size": 2606,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/schemas/approval_policy.schema.json",
+      "sha256": "7bb6f678ae474ab892d94a94ae795bc42d9bf91fd321e9bd08ddaa16b9414179",
+      "size": 2506,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/schemas/automation_run_log.schema.json",
+      "sha256": "87c45a1244c2e213abcdafd4e39dfe000d5464359830f3a11595ae3bb26cbb91",
+      "size": 9259,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/schemas/delivery_state.schema.json",
+      "sha256": "1b3bc80840d3ce2195d1a91041c43843327390d3ba51a831dd6388f8a0e88043",
+      "size": 12166,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/schemas/phase_model_policy.schema.json",
+      "sha256": "9767812938b8f48a3e14d8bf78c97327cc9c50f7cdfc9e916ebf3ef69673b0d6",
+      "size": 4759,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/schemas/provider_config.schema.json",
+      "sha256": "d01f34b1f15b56936efa14c52b1ed566ea452ceb9a2bdd018f9b78be0bc7b46f",
+      "size": 4514,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/schemas/review_artifact.schema.json",
+      "sha256": "c34f83998bca612af979614e9bbb2053dd40dd4af7e1d06261d19349c975326a",
+      "size": 1158,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/adaptive.py",
+      "sha256": "281ec7017d7c45a514822186774a43a2c853e2989306d78e083739f209cee952",
+      "size": 25738,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/alerts.py",
+      "sha256": "e77a0c896d6685f86e1bdeb06182deed83b1468ee0949c2f584ca28430eebb0e",
+      "size": 14172,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/approval.py",
+      "sha256": "cd10226883647731436c067c696e59ca6553e743472d3bb1793e50b2225f0000",
+      "size": 18325,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/automation.py",
+      "sha256": "e8fb0b9b02ab0522ad046b9cddcd5838dcb4cc3004608ee2d945fa089e417c02",
+      "size": 38616,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/cli.py",
+      "sha256": "aa07ebcdca63e39d914f5919aa931fb313b71a63b0924ef3df11dd227925a677",
+      "size": 30957,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/control.py",
+      "sha256": "22be7f899554944ddef0fbdf1905d918f4cb56e93c25b20a3718764869f18163",
+      "size": 23115,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/git.py",
+      "sha256": "7332cd26de215340c884ea8022f6c04a5df8b662436667b0eb422655521ece06",
+      "size": 405,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/migrations.py",
+      "sha256": "ab03b4100b56a151ac75ae050fb0acb6e2c173010976c2a6cae6865021126342",
+      "size": 40717,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/paths.py",
+      "sha256": "0fd722829cf34d1dcb25779d830c8656341a90a8c558adddfb4422843d6a8734",
+      "size": 6343,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/policy.py",
+      "sha256": "6e991aa25aa8eb236748fc2622ef657b2bb23982dc9834f251a9875edc5bb3f1",
+      "size": 15429,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/progress.py",
+      "sha256": "5c4db867797fe80a4dddba33555342808b23c30279b3f321c1f4e7f79cb8597a",
+      "size": 41471,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/rendering.py",
+      "sha256": "e9451097bb12f47539e2ab303927473c7d401a2172d4c4814cc5192503206a0e",
+      "size": 14380,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/reports.py",
+      "sha256": "4b992b4c47728be2f4a9b9825883df415c25952d1cc8a6dfeadf39ab67676a7d",
+      "size": 134345,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/scaffold.py",
+      "sha256": "e20b543cbe5b8203e57aa9b58c2d7a37a8a4a4a1655e0a900855443908602813",
+      "size": 24242,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/state.py",
+      "sha256": "62666c8b9f9acdef6c90c00e30ccaeaa58296040a733d0eb5de919071b58ee76",
+      "size": 2794,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/toml.py",
+      "sha256": "83942d7e6d655f1363793f30f124622f4b86c2adb32bccfb581b2e6fc6ee6abb",
+      "size": 2412,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/validation.py",
+      "sha256": "159f6a8e0fb61b82f023b6da085b77723eaee6e0bd88cbbee2fa1a101e2d3a1f",
+      "size": 71679,
+      "mode": "0644"
+    },
+    {
+      "path": "skills/roadmap-delivery-skill/runtime/roadmap_delivery/wizard.py",
+      "sha256": "69f50f2bc7ffcd1fb48ba3c7771785e5268c09d5f57ee6120e8eafddfc2b2de0",
+      "size": 8423,
+      "mode": "0644"
     }
   ]
 }

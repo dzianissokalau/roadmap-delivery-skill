@@ -1,7 +1,7 @@
 # Model Policy Gate Prompt Fragment
 
-Before phase-owned edits, read the phase model policy, resolve the current
-phase's required model and reasoning, and compare those values with configured
-runner readback. If required and configured values differ or cannot be proven,
-record the mismatch in state/log/review and stop before delivery unless the
-operator has already approved the exact runner configuration repair.
+Read phase model policy and actual configured runner readback before phase work.
+The shared runtime requires the exact required model and at least its reasoning
+floor. Higher reasoning is sufficient. Missing, different or insufficient
+readback stops ordinary delivery; authorized repairs apply to the next run.
+Terminal handling precedes this gate.

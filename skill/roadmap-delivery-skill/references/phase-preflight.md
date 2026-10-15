@@ -1,92 +1,59 @@
 # Phase Preflight Reference
 
-Use this reference to scan later roadmap phases for prerequisites before Codex
-automation reaches them.
+Use this reference to scan the whole roadmap for later prerequisites before a
+runner reaches those phases.
 
-## When To Run
+## Core Contract
 
-Run phase preflight during setup before activating an automation, after a
-permission-gated blocker, and before resuming a roadmap whose future phases
-changed. The scan is read-only. It must not deliver future phases or mutate
-saved automation configuration.
+Before activating scheduled delivery, and whenever a permission-gated blocker
+reveals a likely future class of blocker, perform a read-only phase preflight
+over every remaining phase and finalization. The preflight does not deliver
+future work. It only extracts prerequisites, approvals, mitigations, and
+operator actions so later phases can run without avoidable human interruption.
 
-Use the helper from the repository root when available:
+Check each future phase for:
 
-```bash
-python3 skill/roadmap-delivery-skill/scripts/plan_phase_prerequisites.py \
-  --repo-root <repo-root> \
-  --roadmap-slug <roadmap-slug> \
-  --automation-id <automation-id> \
-  --json
-```
+- required model and reasoning floors from phase model policy
+- credential or secret names that must be present in the runner environment
+- network or external API access
+- required local tools, package managers, services, fixtures, or datasets
+- filesystem locations outside normal phase-owned paths
+- branch, commit, push, publication, promotion, runner-retarget, pause, or
+  destructive operations that need approval-policy decisions
+- external product, policy, account, billing, or scope decisions
+- finalization prerequisites such as deep review, promotion evidence, and
+  terminal runner pause
 
-To save durable evidence for the operator and later runs:
+Classify each finding as ready, needs mitigation, needs approval, forbidden, or
+unknown. Write a durable operator-action list that names the phase, missing
+prerequisite, approval operation, current decision, and mitigation. If the
+preflight is static and cannot prove availability, say that explicitly instead
+of claiming certainty.
 
-```bash
-python3 skill/roadmap-delivery-skill/scripts/plan_phase_prerequisites.py \
-  --repo-root <repo-root> \
-  --roadmap-slug <roadmap-slug> \
-  --automation-id <automation-id> \
-  --output-json automation/<roadmap-slug>/phase_prerequisites.json \
-  --output-markdown automation/<roadmap-slug>/phase_preflight.md
-```
+For credentials, report only variable names and presence. Missing credentials
+are blockers. Present credentials still need explicit operator approval before
+use; do not treat a secret value's presence as approval.
 
-## Codex Checks
+Preflight evidence should be stored near the roadmap automation artifacts, for
+example as `phase_prerequisites.json` plus a human-readable
+`phase_preflight.md`. Later runs must read those files when present and update
+them when a newly discovered blocker changes the mitigation list.
 
-For each phase, inspect the phase body, `phase_model_policy.json`,
-`approval_policy.json`, saved automation readback, and current environment.
-Flag at least these categories:
-
-- model or reasoning floors that the saved automation readback does not
-  satisfy, including `high` readback when a later phase requires `xhigh`
-- missing environment variables such as `OPENAI_API_KEY`, without printing
-  secret values
-- network/API requirements when `CODEX_SANDBOX_NETWORK_DISABLED=1`
-- install/download/upload commands that need network access or approval
-- `commit`, `push`, saved automation retarget, pause, promotion, publication,
-  installed skill sync, repository security/billing changes, and destructive
-  git operations
-- credential-backed work that needs both present environment variables and
-  explicit operator approval before use
-- local tools that are not on `PATH`
-- external account, billing, product, policy, or scope decisions
-
-Use `approval_policy.json` to resolve every named operation to `allowed`,
-`ask`, or `forbidden`. Missing policy falls back to conservative behavior, so a
-later model retarget, local commit, push, or publication must be surfaced as a
-future operator action instead of discovered only at the phase gate.
-Credential use is not pre-approved by policy; report missing credentials as
-blockers and present credentials as explicit approval actions without printing
-secret values.
-
-## Mitigation Format
-
-Record each mitigation with enough detail for an operator to clear it before
-activation:
-
-- phase name or finalization
-- blocker category and evidence
-- required environment variable, tool, model/reasoning, network surface, or
-  approval operation
-- current readback or decision
-- exact mitigation, such as setting `OPENAI_API_KEY` in the automation runtime,
-  using a network-enabled runner, adding an offline fixture/dry-run acceptance
-  path, or pre-approving `retarget_saved_automation`
-
-For the common full extraction case, treat "OpenAI API", "full extraction
-runner", or similar phase text as requiring both `OPENAI_API_KEY` and network
-access unless the phase explicitly provides an offline fixture path. If the
-current runtime has `CODEX_SANDBOX_NETWORK_DISABLED=1`, record a blocker and
-recommend a network-enabled execution surface or an approved offline split.
-When the blocked phase becomes current, `references/network-blocker-remediation.md`
-must be consulted before preserving the blocker; direct terminal `curl` may
-still provide a verified public-source recovery path even when Python or
-browser network surfaces are unavailable.
+If static preflight reports a network blocker for a current phase, consult
+`network-blocker-remediation.md` before preserving that blocker. Another
+approved host network surface may still provide a verified public-source
+recovery path.
 
 ## Host Adapter Boundary
 
-Codex can inspect repository-local state, environment-variable presence, local
-tool availability, and saved automation files under `~/.codex/automations` or
-`AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR`. It must not print secret values, edit
-saved automation configuration, push branches, install global tools, or change
-credentials during preflight.
+The core defines the preflight categories and durable evidence shape. Host
+adapters provide concrete runner readback, environment inspection, network
+availability checks, helper commands, and the exact way approvals are requested
+or recorded.
+
+## Codex Execution
+
+Use `scripts/plan_phase_prerequisites.py` or the CLI `phase-preflight`. Raw text
+scans can mention mock credentials, excluded publication or optional live tests;
+record scoped dispositions in setup_readiness.md instead of treating those as
+real external prerequisites. Keep raw scanner evidence.

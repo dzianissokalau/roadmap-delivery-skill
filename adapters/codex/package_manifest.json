@@ -86,6 +86,11 @@
       "output": "scripts/write_operator_alert.py",
       "template": "scripts/write_operator_alert.py",
       "mode": "0644"
+    },
+    {
+      "output": "scripts/roadmap_delivery.py",
+      "template": "scripts/roadmap_delivery.py",
+      "mode": "0755"
     }
   ]
 }

@@ -216,19 +216,38 @@ def approval_decision_for_pause_context(policy_report: Dict[str, Any], context: 
             "source": "context",
         }
 
-    operations = policy_report.get("operations") if isinstance(policy_report, dict) else {}
-    if not isinstance(operations, dict):
-        operations = {}
-    base_decision = approval_decision_for_operation(operations, "pause_saved_automation")
-    if base_decision["decision"] != "ask":
-        return {
-            **base_decision,
-            "context": normalized_context,
-            "source": "operation",
-        }
-
     flag_name = f"pause_automation_on_{normalized_context}"
-    if policy_report.get(flag_name) is True:
+    if not isinstance(policy_report, dict) or policy_report.get("errors") or policy_report.get("execution_valid") is False:
+        return {
+            "operation": "pause_saved_automation", "context": normalized_context,
+            "decision": "forbidden", "reason_code": "invalid_policy",
+            "reason": "Invalid policy reporting fallback grants no execution authority.",
+            "source": "invalid_policy",
+        }
+    operations = policy_report.get("operations", {})
+    malformed = not isinstance(operations, dict) or any(
+        key not in OPERATIONS or not isinstance(value, bool)
+        for key, value in (operations.items() if isinstance(operations, dict) else [])
+    ) or any(flag in policy_report and not isinstance(policy_report[flag], bool) for flag in SAFETY_PAUSE_FLAGS)
+    if "schema_version" in policy_report:
+        malformed = malformed or bool(validate_approval_policy(policy_report))
+    if malformed:
+        return {
+            "operation": "pause_saved_automation", "context": normalized_context,
+            "decision": "forbidden", "reason_code": "invalid_policy",
+            "reason": "Malformed policy cannot authorize a pause.", "source": "invalid_policy",
+        }
+    if policy_report.get(flag_name) is False:
+        return {
+            "operation": "pause_saved_automation", "context": normalized_context,
+            "decision": "disabled", "reason_code": "context_pause_disabled",
+            "reason": f"Explicit {flag_name}=false disables this automatic pause.",
+            "source": flag_name,
+        }
+    default_source = f"default_{flag_name}"
+    flag_sources = policy_report.get("pause_flag_sources", {})
+    inherited_default = isinstance(flag_sources, dict) and flag_sources.get(flag_name) == default_source
+    if policy_report.get(flag_name) is True and not inherited_default:
         return {
             "operation": "pause_saved_automation",
             "context": normalized_context,
@@ -236,7 +255,7 @@ def approval_decision_for_pause_context(policy_report: Dict[str, Any], context: 
             "reason": f"Approval policy explicitly allows automation pause on {normalized_context}.",
             "source": flag_name,
         }
-    if flag_name not in policy_report:
+    if flag_name not in policy_report or inherited_default:
         return {
             "operation": "pause_saved_automation",
             "context": normalized_context,
@@ -247,11 +266,7 @@ def approval_decision_for_pause_context(policy_report: Dict[str, Any], context: 
             ),
             "source": f"default_{flag_name}",
         }
-    return {
-        **base_decision,
-        "context": normalized_context,
-        "source": flag_name,
-    }
+    raise AssertionError("Validated pause flag must be true, false, or absent")
 
 
 def parse_operation_assignments(values: Optional[Iterable[str]]) -> Tuple[Dict[str, bool], List[Dict[str, str]]]:
@@ -304,7 +319,7 @@ def validate_approval_policy(policy: Any, path: Optional[Path] = None) -> List[D
     if not isinstance(policy, dict):
         return [_finding("invalid_approval_policy_shape", "Approval policy root must be an object.", path)]
 
-    if policy.get("schema_version") != 1:
+    if type(policy.get("schema_version")) is not int or policy.get("schema_version") != 1:
         errors.append(_finding("invalid_approval_policy_schema_version", "Approval policy schema_version must be 1.", path))
 
     mode = policy.get("approval_mode")
@@ -359,99 +374,56 @@ def validate_approval_policy(policy: Any, path: Optional[Path] = None) -> List[D
     return errors
 
 
-def approval_policy_path(repo_root: Path, state_file: Path, state: Dict[str, Any]) -> Path:
+def approval_policy_path(repo_root: Path, state_file: Optional[Path], state: Dict[str, Any]) -> Optional[Path]:
     value = state.get("approval_policy_path")
     if isinstance(value, str) and value.strip():
         resolved = resolve_repo_path(repo_root, value)
         if resolved is not None:
             return resolved
-    return state_file.parent / "approval_policy.json"
+    return state_file.parent / "approval_policy.json" if state_file is not None else None
 
 
-def read_approval_policy(repo_root: Path, state_file: Path, state: Dict[str, Any]) -> Dict[str, Any]:
-    path = approval_policy_path(repo_root, state_file, state)
-    if not path.exists():
-        policy = default_approval_policy("conservative")
-        operations = policy["operations"]
-        return {
-            "path": str(path),
-            "present": False,
-            "fallback": "conservative",
-            "fallback_reason": "missing_policy",
-            "approval_mode": "conservative",
-            "approved_operations": approved_operation_names(operations),
-            "operations": operations,
-            "pause_automation_on_completion": policy["pause_automation_on_completion"],
-            "pause_automation_on_stall": policy["pause_automation_on_stall"],
-            "operation_decisions": approval_decisions_for_operations(operations),
-            "errors": [],
-        }
-
-    try:
-        policy = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        operations = approved_operations_for_mode("conservative")
-        return {
-            "path": str(path),
-            "present": True,
-            "fallback": "conservative",
-            "fallback_reason": "invalid_json",
-            "approval_mode": "conservative",
-            "approved_operations": approved_operation_names(operations),
-            "operations": operations,
-            **pause_flags_for_operations(operations),
-            "operation_decisions": approval_decisions_for_operations(operations),
-            "errors": [_finding("invalid_approval_policy_json", f"Approval policy is invalid JSON: {exc}", path)],
-        }
-    except OSError as exc:
-        operations = approved_operations_for_mode("conservative")
-        return {
-            "path": str(path),
-            "present": True,
-            "fallback": "conservative",
-            "fallback_reason": "unreadable",
-            "approval_mode": "conservative",
-            "approved_operations": approved_operation_names(operations),
-            "operations": operations,
-            **pause_flags_for_operations(operations),
-            "operation_decisions": approval_decisions_for_operations(operations),
-            "errors": [_finding("approval_policy_unreadable", f"Cannot read approval policy: {exc}", path)],
-        }
-
-    errors = validate_approval_policy(policy, path)
+def execution_policy_report(policy: Any = None, *, path: Optional[Path] = None) -> Dict[str, Any]:
+    """Normalize raw policy; an invalid fallback is diagnostic, never authority."""
+    missing = policy is None
+    errors = [] if missing else validate_approval_policy(policy, path)
+    effective = default_approval_policy() if missing or errors else policy
+    mode = effective["approval_mode"]
+    operations = approved_operations_for_mode(mode, effective.get("operations"))
+    decisions = approval_decisions_for_operations(operations)
     if errors:
-        operations = approved_operations_for_mode("conservative")
-        return {
-            "path": str(path),
-            "present": True,
-            "fallback": "conservative",
-            "fallback_reason": "invalid_policy",
-            "approval_mode": "conservative",
-            "approved_operations": approved_operation_names(operations),
-            "operations": operations,
-            **pause_flags_for_operations(operations),
-            "operation_decisions": approval_decisions_for_operations(operations),
-            "errors": errors,
-        }
-
-    mode = str(policy["approval_mode"])
-    operations = approved_operations_for_mode(mode, policy.get("operations") if isinstance(policy.get("operations"), dict) else None)
-    pause_flags = pause_flags_for_operations(operations)
+        decisions = {name: {"operation": name, "decision": "forbidden", "reason": "Invalid policy grants no execution authority."} for name in decisions}
     report = {
-        "path": str(path),
-        "present": True,
-        "fallback": None,
-        "fallback_reason": None,
-        "approval_mode": mode,
-        "approved_operations": approved_operation_names(operations),
-        "operations": operations,
-        "pause_automation_on_completion": bool(policy.get("pause_automation_on_completion", pause_flags["pause_automation_on_completion"])),
-        "pause_automation_on_stall": bool(policy.get("pause_automation_on_stall", pause_flags["pause_automation_on_stall"])),
-        "operation_decisions": approval_decisions_for_operations(operations),
-        "errors": [],
+        "path": str(path) if path else None, "present": not missing,
+        "fallback": "conservative" if missing or errors else None,
+        "fallback_reason": "missing_policy" if missing else ("invalid_policy" if errors else None),
+        "execution_valid": not errors, "approval_mode": mode,
+        "approved_operations": [] if errors else approved_operation_names(operations),
+        "operations": operations, "operation_decisions": decisions, "errors": errors,
+        "pause_flag_sources": {},
     }
     for flag in SAFETY_PAUSE_FLAGS:
-        reason_key = f"{flag}_reason"
-        if isinstance(policy.get(reason_key), str):
-            report[reason_key] = policy[reason_key]
+        report[flag] = effective.get(flag, True)
+        report["pause_flag_sources"][flag] = flag if not missing and not errors and flag in policy else f"default_{flag}"
+        if f"{flag}_reason" in effective:
+            report[f"{flag}_reason"] = effective[f"{flag}_reason"]
     return report
+
+
+def read_approval_policy(repo_root: Path, state_file: Optional[Path], state: Dict[str, Any]) -> Dict[str, Any]:
+    path = approval_policy_path(repo_root, state_file, state)
+    if path is None or not path.exists():
+        return execution_policy_report(path=path)
+    try:
+        policy = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, OSError) as exc:
+        report = execution_policy_report({}, path=path)
+        invalid_json = isinstance(exc, ValueError)
+        report["fallback_reason"] = "invalid_json" if invalid_json else "unreadable"
+        report["errors"] = [_finding(
+            "invalid_approval_policy_json" if invalid_json else "approval_policy_unreadable",
+            f"Cannot read approval policy: {exc}", path,
+        )]
+        return report
+    # JSON null is malformed, distinct from an absent policy file.
+    return execution_policy_report(policy if policy is not None else {}, path=path)

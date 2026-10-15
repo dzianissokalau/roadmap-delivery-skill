@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roadmap-delivery.local/schemas/review_artifact.schema.json",
+  "title": "Roadmap Delivery Review Artifact",
+  "type": "object",
+  "required": [
+    "reviewed_at",
+    "roadmap",
+    "phase",
+    "verdict"
+  ],
+  "properties": {
+    "reviewed_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "roadmap": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\.md$"
+    },
+    "phase": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reviewer_context": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "findings": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "missing_tests_or_checks": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "verification_evidence": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "delivered",
+        "needs-fix",
+        "blocked"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Sequence
+
+from .policy import REASONING_ORDER, policy_fingerprint, resolve_model_target, resolve_phase_target
 
 
 RUN_QUALITIES = (
@@ -32,7 +35,6 @@ DEFAULT_HUMAN_GATED_QUALITIES = (
 
 LOCAL_REPAIRABLE_BLOCKERS = {"local-repairable", "local_repairable", "automation-config", "automation_config"}
 HUMAN_GATED_BLOCKERS = {"permission-gated", "permission_gated", "external-decision", "external_decision", "destructive-risk", "destructive_risk"}
-REASONING_ORDER = ("minimal", "low", "medium", "high", "xhigh")
 
 
 def _normalized(value: Any) -> str:
@@ -86,7 +88,7 @@ def classify_run_quality(
         return "blocked_human_required"
     if verdict == "delivered":
         return "delivered_with_fixes" if _nonzero_int(fix_iterations) else "flawless"
-    return "blocked_human_required" if blocker else "flawless"
+    return "blocked_human_required"
 
 
 def classify_run_quality_from_state(
@@ -97,12 +99,12 @@ def classify_run_quality_from_state(
     blocker_class: Any = None,
     completion_closeout_failed: bool = False,
 ) -> str:
-    recorded = normalize_run_quality(state.get("last_run_quality"))
-    if recorded:
-        return recorded
-
-    verification = state.get("last_verification") if isinstance(state.get("last_verification"), dict) else {}
-    review = state.get("last_review") if isinstance(state.get("last_review"), dict) else {}
+    source_phase = state.get("current_phase")
+    active = state.get("active_run")
+    run_id = (active.get("run_id") if isinstance(active, dict) and active.get("phase") == source_phase
+              else state.get("last_completed_run_id"))
+    verification = _phase_evidence(state.get("last_verification"), source_phase, run_id)
+    review = _phase_evidence(state.get("last_review"), source_phase, run_id)
     if blocker_class is None:
         blocker_class = state.get("blocker_class") or state.get("last_blocker_class")
     if stalled is None:
@@ -111,7 +113,9 @@ def classify_run_quality_from_state(
         stalled = bool(max_stalled and stalled_count >= max_stalled)
     fix_iterations = 0
     if _normalized(review.get("verdict")) == "delivered":
-        fix_iterations = max(0, _nonzero_int(state.get("review_iterations")) - 1)
+        fix_iterations = max(0, _nonzero_int(review.get("iteration", state.get("review_iterations"))) - 1)
+        if _normalized(verification.get("status")) not in {"passed", "pass", "success"}:
+            review = {}
     return classify_run_quality(
         verification_status=verification.get("status"),
         review_verdict=review.get("verdict"),
@@ -186,6 +190,9 @@ def validate_adaptive_model_policy(policy: Dict[str, Any]) -> Dict[str, Any]:
         "deescalate_after_flawless_runs": adaptive.get("deescalate_after_flawless_runs", 0) if adaptive else 0,
         "errors": errors,
     }
+    raw = policy.get("adaptive_model_policy", policy.get("adaptive", {}))
+    if not isinstance(raw, dict):
+        errors.append({"code": "invalid_adaptive_policy", "message": "adaptive_model_policy must be an object."})
     if not adaptive:
         return report
 
@@ -214,7 +221,7 @@ def validate_adaptive_model_policy(policy: Dict[str, Any]) -> Dict[str, Any]:
         caps = {}
 
     allowed_models = caps.get("allowed_models")
-    if enabled:
+    if enabled or caps:
         if not isinstance(allowed_models, list) or not allowed_models or not all(isinstance(item, str) and item.strip() for item in allowed_models):
             errors.append({"code": "invalid_adaptive_caps", "message": "adaptive_model_policy.caps.allowed_models must be a non-empty string array."})
         max_reasoning = caps.get("max_reasoning_effort")
@@ -229,22 +236,26 @@ def validate_adaptive_model_policy(policy: Dict[str, Any]) -> Dict[str, Any]:
         if not isinstance(target, dict):
             continue
         model = target.get("model")
-        reasoning = target.get("reasoning_effort") or target.get("min_reasoning_effort")
+        reasoning = target.get("min_reasoning_effort", target.get("reasoning_effort"))
         if model is not None and (not isinstance(model, str) or not model.strip()):
             errors.append({"code": "invalid_adaptive_policy", "message": f"adaptive_model_policy.{field}.model must be a non-empty string."})
         if reasoning is not None and reasoning not in REASONING_ORDER:
             errors.append({"code": "invalid_adaptive_policy", "message": f"adaptive_model_policy.{field} reasoning must be a known effort."})
-        if enabled and model is not None and isinstance(allowed_models, list) and model not in allowed_models:
+        if caps and model is not None and isinstance(allowed_models, list) and model not in allowed_models:
             errors.append({"code": "adaptive_model_exceeds_caps", "message": f"adaptive_model_policy.{field}.model {model!r} is not allowed by caps.allowed_models."})
         max_reasoning = caps.get("max_reasoning_effort")
-        if enabled and reasoning is not None and _reasoning_index(reasoning) is not None and _reasoning_index(max_reasoning) is not None:
+        if caps and reasoning is not None and _reasoning_index(reasoning) is not None and _reasoning_index(max_reasoning) is not None:
             if _reasoning_index(reasoning) > _reasoning_index(max_reasoning):
                 errors.append({"code": "adaptive_reasoning_exceeds_caps", "message": f"adaptive_model_policy.{field} reasoning {reasoning!r} exceeds caps.max_reasoning_effort."})
 
+    floor = _target_object(adaptive.get("floors"))
+    for field in ("reasoning_effort", "min_reasoning_effort"):
+        if field in floor and floor[field] not in REASONING_ORDER:
+            errors.append({"code": "invalid_target_floor", "message": f"floors.{field} is unknown."})
     return report
 
 
-def resolve_adaptive_action(
+def _propose_adaptive_action(
     policy: Dict[str, Any],
     *,
     base_model: Any,
@@ -345,23 +356,186 @@ def resolve_adaptive_action(
     return result
 
 
-def adaptive_target_from_state(state: Dict[str, Any], current_phase: Any) -> Optional[Dict[str, Any]]:
+def _phase_evidence(value: Any, phase: Any, run_id: Any = None) -> Dict[str, Any]:
+    if (not isinstance(run_id, str) or not run_id.strip()
+            or not isinstance(value, dict) or value.get("phase") != phase
+            or value.get("run_id") != run_id):
+        return {}
+    return value
+
+
+def quality_evidence_fingerprint(state: Dict[str, Any], phase: Any) -> str:
+    active = state.get("active_run") or {}
+    run_id = active.get("run_id") if active.get("phase") == phase else state.get("last_completed_run_id")
+    return policy_fingerprint({
+        "phase": phase,
+        "verification": _phase_evidence(state.get("last_verification"), phase, run_id),
+        "review": _phase_evidence(state.get("last_review"), phase, run_id),
+        "blocker_class": state.get("blocker_class") or state.get("last_blocker_class"),
+        "blocked_reason": state.get("blocked_reason"),
+        "stalled_run_count": state.get("stalled_run_count", 0),
+        "max_stalled_runs": state.get("max_stalled_runs", 2),
+    })
+
+
+def adaptive_provenance(policy: Dict[str, Any], state: Dict[str, Any],
+                        source_phase: Any, target_phase: Any) -> Dict[str, Any]:
+    active = state.get("active_run")
+    run_id = (active.get("run_id") if isinstance(active, dict) and active.get("phase") == source_phase
+              else state.get("last_completed_run_id"))
+    source = {"current_phase": source_phase, "last_completed_run_id": run_id,
+              **{key: deepcopy(state.get(key)) for key in (
+                  "last_verification", "last_review", "blocker_class", "last_blocker_class",
+                  "blocked_reason", "stalled_run_count", "max_stalled_runs", "review_iterations")}}
+    return {"schema_version": 1, "source_phase": source_phase, "target_phase": target_phase,
+            "source_run_id": run_id, "policy_version": policy.get("policy_version", policy.get("schema_version")),
+            "policy_fingerprint": policy_fingerprint(policy),
+            "source_evidence": source,
+            "evidence_fingerprint": quality_evidence_fingerprint(source, source_phase)}
+
+
+def validated_flawless_streak(state: Dict[str, Any], policy: Dict[str, Any], phase: Any) -> int:
+    """Carry a streak only from a bound preceding decision for this phase."""
     action = state.get("last_adaptive_action")
     if not isinstance(action, dict):
-        return None
-    target_phase = action.get("target_phase")
-    if target_phase and str(target_phase) != str(current_phase):
-        return None
+        return 0
+    proof = action.get("provenance")
+    if (not isinstance(proof, dict) or proof.get("schema_version") != 1
+            or not proof.get("source_run_id") or not proof.get("source_phase")
+            or not proof.get("evidence_fingerprint")
+            or proof.get("policy_fingerprint") != policy_fingerprint(policy)
+            or proof.get("policy_version") != policy.get("policy_version", policy.get("schema_version"))
+            or proof.get("target_phase") != phase or action.get("target_phase") != phase
+            or action.get("run_quality") != "flawless"
+            or action.get("next_flawless_streak") != state.get("adaptive_flawless_streak")
+            or action.get("decision_fingerprint") != adaptive_decision_fingerprint(action)):
+        return 0
+    return _nonzero_int(state.get("adaptive_flawless_streak"))
+
+
+def adaptive_decision_fingerprint(action: Dict[str, Any]) -> str:
+    """Integrity binding, not authentication of local decision authors."""
+    return policy_fingerprint({k: action.get(k) for k in (
+        "action", "target", "run_quality", "provenance", "previous_flawless_streak",
+        "next_flawless_streak", "capabilities_fingerprint", "host_capabilities")})
+
+
+def retained_host_capabilities(state: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Reuse the explicit metadata bound to a decision, never infer model facts."""
+    action = state.get("last_adaptive_action")
+    if (isinstance(action, dict) and action.get("decision_fingerprint") == adaptive_decision_fingerprint(action)
+            and isinstance(action.get("host_capabilities"), dict)
+            and action.get("capabilities_fingerprint") == policy_fingerprint(action["host_capabilities"])):
+        return deepcopy(action["host_capabilities"])
+    return None
+
+
+def resolve_adaptive_action(
+    policy: Dict[str, Any], *, base_model: Any, base_reasoning_effort: Any,
+    run_quality: Any, flawless_streak: Any = 0,
+    host_capabilities: Optional[Dict[str, Any]] = None,
+    provenance: Optional[Dict[str, Any]] = None,
+    previous_action: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Propose adaptively, then enforce the same constraints on every path."""
+    capabilities_fingerprint = policy_fingerprint(host_capabilities) if host_capabilities is not None else None
+    if (isinstance(previous_action, dict) and isinstance(provenance, dict)
+            and isinstance(provenance.get("source_run_id"), str) and provenance["source_run_id"].strip()
+            and provenance.get("policy_fingerprint") == policy_fingerprint(policy)
+            and previous_action.get("provenance") == provenance
+            and previous_action.get("target_phase") == provenance.get("target_phase")
+            and previous_action.get("run_quality") == normalize_run_quality(run_quality)
+            and previous_action.get("capabilities_fingerprint") == capabilities_fingerprint
+            and previous_action.get("decision_fingerprint") == adaptive_decision_fingerprint(previous_action)):
+        # State may already contain this decision's output after an interrupted retarget.
+        flawless_streak = previous_action.get("previous_flawless_streak", 0)
+    result = _propose_adaptive_action(policy, base_model=base_model,
+        base_reasoning_effort=base_reasoning_effort, run_quality=run_quality,
+        flawless_streak=flawless_streak)
+    validation = validate_adaptive_model_policy(policy)
+    resolution = resolve_model_target(policy,
+        base_target={"model": base_model, "reasoning_effort": base_reasoning_effort},
+        proposal=result["target"], host_capabilities=host_capabilities)
+    result["errors"] = validation["errors"] + resolution["errors"]
+    if normalize_run_quality(run_quality) is None:
+        result["errors"].append({"code": "invalid_run_quality", "message": "Run quality is unknown."})
+    result["resolution"] = resolution
+    result["provenance"] = provenance
+    result["previous_flawless_streak"] = _nonzero_int(flawless_streak)
+    result["capabilities_fingerprint"] = capabilities_fingerprint
+    result["host_capabilities"] = deepcopy(host_capabilities)
+    if result["errors"]:
+        result.update(action="blocked_by_policy", target=None, target_changed=False,
+                      reason="Adaptive target cannot satisfy the current policy constraints.")
+    else:
+        result["target"] = resolution["target"]
+        result["target_changed"] = result["target"] != {"model": base_model, "reasoning_effort": base_reasoning_effort}
+        if result["action"] == "deescalate" and not result["target_changed"]:
+            result["action"] = "none_at_floor"
+        if resolution["adjustments"]:
+            result["reason"] += " Applied constraints: " + ", ".join(resolution["adjustments"]) + "."
+    result["decision_fingerprint"] = adaptive_decision_fingerprint(result)
+    return result
+
+
+def persisted_adaptive_target(state: Dict[str, Any], current_phase: Any,
+                              policy: Dict[str, Any], *,
+                              host_capabilities: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Only bound decisions can override the current phase's base requirement."""
+    action = state.get("last_adaptive_action")
+    result = {"status": "absent", "target": None, "errors": []}
+    if not isinstance(action, dict):
+        return result
+    adaptive = _policy_object(policy)
+    provenance = action.get("provenance")
+    if not adaptive.get("enabled"):
+        return {**result, "status": "ignored_disabled"}
+    if not isinstance(provenance, dict):
+        return {**result, "status": "ignored_unbound"}
+    if action.get("decision_fingerprint") != adaptive_decision_fingerprint(action):
+        return {**result, "status": "ignored_changed_decision"}
+    if host_capabilities is None:
+        host_capabilities = retained_host_capabilities(state)
+    capabilities_fingerprint = policy_fingerprint(host_capabilities) if host_capabilities is not None else None
+    if action.get("capabilities_fingerprint") != capabilities_fingerprint:
+        return {**result, "status": "ignored_changed_capabilities"}
+    source_phase = provenance.get("source_phase")
+    source_state = provenance.get("source_evidence")
+    if not isinstance(source_state, dict):
+        return {**result, "status": "ignored_unbound"}
+    expected = adaptive_provenance(policy, source_state, source_phase, current_phase)
+    if (not source_phase or not expected["source_run_id"] or provenance != expected
+            or action.get("target_phase") != current_phase):
+        return {**result, "status": "ignored_stale"}
+    # Source evidence, rather than the cached scalar, determines quality.
+    # New destination-phase evidence must not invalidate the source decision.
+    # Corrections to the same source run do invalidate its retained snapshot.
+    for field in ("last_review", "last_verification"):
+        live = state.get(field)
+        if (isinstance(live, dict) and live.get("phase") == source_phase
+                and live.get("run_id") == provenance["source_run_id"]
+                and live != source_state.get(field)):
+            return {**result, "status": "ignored_stale"}
+    quality = classify_run_quality_from_state(source_state)
+    if action.get("run_quality") != quality:
+        return {**result, "status": "ignored_stale_quality"}
     target = action.get("target")
     if not isinstance(target, dict):
+        return {**result, "status": "invalid_policy", "errors": [
+            {"code": "invalid_persisted_target", "message": "Bound adaptive target must be an object."}]}
+    base = resolve_phase_target(policy, current_phase)
+    resolution = resolve_model_target(policy, base_target=base, proposal=target,
+                                      host_capabilities=host_capabilities)
+    return {**resolution, "source": "state.last_adaptive_action",
+            "reason": action.get("reason") or "Bound adaptive decision validated against current policy."}
+
+
+def adaptive_target_from_state(state: Dict[str, Any], current_phase: Any,
+                               policy: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    # Legacy reporting callers without the current policy cannot confer authority.
+    if policy is None:
         return None
-    model = target.get("model")
-    reasoning = target.get("reasoning_effort")
-    if not model and not reasoning:
+    result = persisted_adaptive_target(state, current_phase, policy)
+    if result["status"] != "resolved":
         return None
-    return {
-        "model": model,
-        "reasoning_effort": reasoning,
-        "source": "state.last_adaptive_action",
-        "reason": action.get("reason") or action.get("status") or "Adaptive target recorded in delivery state.",
-    }
+    return {**result["target"], "source": result["source"], "reason": result["reason"]}

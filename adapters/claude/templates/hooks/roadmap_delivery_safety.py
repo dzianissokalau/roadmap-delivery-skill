@@ -4,10 +4,57 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
+
+
+# Load the same packaged runtime as helpers; source fallback is development-only.
+_hook_root = Path(__file__).resolve().parents[1]
+_runtime = _hook_root / "skills/roadmap-delivery-skill/runtime"
+if _runtime.is_dir():
+    _import_root = _runtime
+elif (_hook_root.name == "templates" and _hook_root.parent.name == "claude"
+      and _hook_root.parent.parent.name == "adapters"
+      and (_hook_root.parents[2] / "pyproject.toml").is_file()):
+    _import_root = _hook_root.parents[2] / "src"
+else:
+    print("Roadmap Delivery hook runtime unavailable; reinstall the complete plugin.", file=sys.stderr)
+    raise SystemExit(2)
+sys.path.insert(0, str(_import_root))
+os.environ.setdefault("AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR",
+                      str(Path.home() / ".claude/roadmap-delivery/automations"))
+try:
+    if sys.version_info[:2] != (3, 12):
+        raise ValueError("Safety hooks require Python 3.12 on Claude's PATH.")
+    _package_root = _import_root / "roadmap_delivery"
+    if not (_package_root / "__init__.py").is_file():
+        raise ValueError("The selected runtime package is incomplete.")
+    import roadmap_delivery as _runtime_package
+    if Path(getattr(_runtime_package, "__file__", None) or "").resolve() != _package_root / "__init__.py":
+        raise ValueError("Imported runtime package is outside the selected plugin runtime.")
+    from roadmap_delivery import paths as _runtime_paths
+    if Path(_runtime_paths.__file__).resolve() != _package_root / "paths.py":
+        raise ValueError("Imported resources are outside the selected plugin runtime.")
+    _runtime_paths.runtime_resource_root()
+    from roadmap_delivery.approval import read_approval_policy
+    from roadmap_delivery.reports import build_control_plan, control_plan_for_readback
+except (ImportError, ValueError, OSError) as exc:
+    print("Roadmap Delivery hook runtime unavailable; reinstall the complete plugin: " + str(exc), file=sys.stderr)
+    raise SystemExit(2) from exc
+
+
+def delivery_plan(cwd: Path, state: Dict[str, Any]) -> Dict[str, Any]:
+    root = cwd.resolve()
+    automation_id = (state.get("automation") or {}).get("id")
+    # File evidence supplies no host update capability. Use the shared loader.
+    if state.get("roadmap_slug"):
+        return build_control_plan(root, state["roadmap_slug"], automation_id)
+    state_path = Path(state["_state_path"])
+    return control_plan_for_readback(state, read_approval_policy(root, state_path, state),
+                                     {}, root, automation_id)
 
 
 PHASE_PROMPT_TERMS = (
@@ -156,28 +203,30 @@ def remind_prompt(payload: Dict[str, Any]) -> int:
     for state in states:
         if not prompt_targets_state(prompt_lower, state, states):
             continue
-        status = str(state.get("status") or "")
         slug = str(state.get("roadmap_slug") or "roadmap")
-        if state.get("all_phases_complete") is True or status in {"completed", "completed_pending_pause"}:
-            emit_json(
-                {
-                    "decision": "block",
-                    "reason": (
-                        f"Roadmap Delivery hard stop: {slug} is {status or 'complete'} "
-                        "or all phases are complete. Do not start phase work; confirm/pause automation instead."
-                    ),
-                    "hookSpecificOutput": {"hookEventName": "UserPromptSubmit"},
-                }
-            )
-            return 0
-        if status == "blocked":
-            blocked_reason = state.get("blocked_reason") or "not recorded"
+        try:
+            plan = delivery_plan(cwd, state)
+        except (ValueError, RuntimeError, OSError) as exc:
+            contexts.append(f"Roadmap Delivery evidence unavailable for {slug}: {exc}. Reconcile before phase work.")
+            continue
+        if plan["stage"] == "terminal_reconciliation":
+            # A prompt-level block would prevent the required alert/pause closeout.
             contexts.append(
-                "Blocked Remediation Mode applies before phase delivery for "
-                f"{slug}. Classify the blocker as local-repairable, automation-config, "
-                "permission-gated, external-decision, or destructive-risk before advancing. "
-                f"blocked_reason: {blocked_reason}"
+                f"Roadmap Delivery hard stop for {slug}: do not start phase work. "
+                "Allow terminal closeout; default status-only context authority and explicit opt-outs "
+                "use the shared runtime. Load trusted host readback/capability, write the alert "
+                f"and verify the receipt. control_plan: {json.dumps(plan, sort_keys=True)}"
             )
+        elif plan["stage"] == "blocked_remediation":
+            contexts.append(
+                f"Blocked Remediation Mode applies before phase delivery for {slug}. "
+                "Classify local-repairable, automation-config, permission-gated, "
+                "external-decision or destructive-risk; verify the original cause before clearing. "
+                f"blocked_reason: {state.get('blocked_reason') or 'not recorded'}. "
+                f"control_plan: {json.dumps(plan, sort_keys=True)}"
+            )
+        elif plan["stage"] == "intentional_activation":
+            contexts.append(f"Reconcile manual activation for {slug}: {json.dumps(plan, sort_keys=True)}")
 
     if any(term in prompt_lower for term in RELEASE_PROMPT_TERMS):
         contexts.append(

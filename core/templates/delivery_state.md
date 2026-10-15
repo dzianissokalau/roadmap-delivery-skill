@@ -5,6 +5,12 @@ Use this template for `automation/<roadmap-slug>/delivery_state.json`.
 ```json
 {
   "schema_version": 1,
+  "runtime_contract": {
+    "schema_version": 1,
+    "versions": {"framework": "0.1.0", "prompt_template": 3, "policy": 2, "progress_evidence": 1},
+    "provenance": {"source": "local_generated", "runner_verified": false}
+  },
+  "migration_history": [],
   "roadmap": "roadmaps/<roadmap-file>.md",
   "roadmap_slug": "<roadmap-slug>",
   "current_phase": "Phase N - Name",
@@ -61,10 +67,11 @@ Use this template for `automation/<roadmap-slug>/delivery_state.json`.
 Configured model and reasoning fields must come from runner readback, not from
 desired policy values.
 
-Wizard-generated starter state may temporarily record the selected local
-runner target so repository-local validation can run before saved automation
-creation. Replace those configured fields with saved runner readback before
-activating scheduled delivery.
+Wizard-generated starter state keeps configured model/reasoning null until
+actual runner readback. Selected values are requirements and setup proposals.
+Version provenance for local generation does not prove saved prompt migration.
+Keep migration receipts and prior history; never infer a host update from the
+installed skill version alone.
 
 Missing `approval_policy.json` keeps legacy conservative behavior. Invalid
 approval policies must fail validation before delivery relies on pre-approval.

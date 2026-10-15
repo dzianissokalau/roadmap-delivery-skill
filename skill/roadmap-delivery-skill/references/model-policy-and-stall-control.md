@@ -1,31 +1,25 @@
 # Model Policy And Stall Control Reference
 
-Use this reference when a roadmap automation has `phase_model_policy.json`,
-phase-specific model requirements, stalled-run thresholds, or completion/stall
+Use this reference when a roadmap automation has phase-specific model
+requirements, reasoning requirements, stalled-run thresholds, or operator
 alerts.
 
-## Model Control Boundary
+## Core Contract
 
-The skill cannot switch the model or reasoning effort of an already-running
-Codex session. Model and reasoning selection belong to the runner:
+Model and reasoning selection belong to the runner. The workflow may read
+policy, compare required and configured values, update durable state, write
+retarget plans, and request or perform approved runner updates. Prompt text
+alone does not prove the active model or reasoning effort.
 
-- Codex app automation config
-- CLI model/reasoning flags or profile
-- another explicit execution surface
+## Policy Shape
 
-The skill may read policy, compare required versus configured model, update
-state, write a retarget plan, and request or perform an approved automation
-update. It must not claim that prompt text alone changes the active model.
-
-## Policy File
-
-Recommended location:
+Policy lives with automation artifacts:
 
 ```text
 automation/<roadmap-slug>/phase_model_policy.json
 ```
 
-Recommended shape:
+Minimum structure:
 
 ```json
 {
@@ -36,17 +30,13 @@ Recommended shape:
     "fallback": "alert_file"
   },
   "defaults": {
-    "model": "gpt-5.5",
-    "reasoning_effort": "xhigh"
+    "model": "<default-model>",
+    "reasoning_effort": "<default-reasoning-effort>"
   },
   "phases": {
-    "1": {
-      "model": "gpt-5.5",
-      "reasoning_effort": "xhigh"
-    },
     "finalization": {
-      "model": "gpt-5.5",
-      "reasoning_effort": "xhigh"
+      "model": "<finalization-model>",
+      "reasoning_effort": "<finalization-reasoning-effort>"
     }
   },
   "adaptive_model_policy": {
@@ -64,42 +54,37 @@ Recommended shape:
     ],
     "deescalate_after_flawless_runs": 0,
     "escalation": {
-      "model": "gpt-5.5",
-      "reasoning_effort": "xhigh"
+      "model": "<stronger-approved-model>",
+      "reasoning_effort": "<stronger-approved-reasoning>"
     },
     "caps": {
-      "allowed_models": ["gpt-5.5"],
-      "max_reasoning_effort": "xhigh",
-      "allowed_providers": ["openai"],
-      "allowed_cost_classes": ["standard"]
+      "allowed_models": ["<approved-model>"],
+      "max_reasoning_effort": "<maximum-approved-reasoning>",
+      "allowed_providers": ["<provider>"],
+      "allowed_cost_classes": ["<cost-class>"]
     }
   }
 }
 ```
 
-Allowed `reasoning_effort` values:
-
-- `minimal`
-- `low`
-- `medium`
-- `high`
-- `xhigh`
+Known reasoning effort values are `none`, `minimal`, `low`, `medium`, `high`,
+`xhigh`, `max`, and `ultra`. Host support is a separate explicit capability.
 
 Treat reasoning effort as an ordered minimum floor:
 
-`minimal < low < medium < high < xhigh`
+`none < minimal < low < medium < high < xhigh < max < ultra`
 
-A saved automation configured with higher reasoning than the phase requires
-satisfies the phase. For example, `xhigh` satisfies a phase that requires
-`high`. Do not block delivery, write a retarget-failed alert, or request
+A runner configured with higher reasoning than the phase requires satisfies the
+phase. For example, `xhigh` satisfies a phase that requires `high`. Do not
+block delivery, write a retarget-failed alert, or request
 `retarget_saved_automation` merely to downgrade reasoning. Downward retargets
 are optional cost optimizations and must never be required before the next
-phase can start. A saved automation configured with lower reasoning than
-required still fails the model-policy gate.
+phase can start. A runner configured with lower reasoning than required still
+fails the model-policy gate.
 
 ## Adaptive Model Policy
 
-Classify run quality after verification and the review verdict:
+Run quality is classified after verification and review:
 
 - `flawless`
 - `delivered_with_fixes`
@@ -111,21 +96,51 @@ Classify run quality after verification and the review verdict:
 - `retarget_failed`
 - `completion_closeout_failed`
 
-Adaptive policy applies only to the next run. It never changes the model inside
-an already-running Codex session. Non-flawless local delivery outcomes may
-escalate to the configured `escalation` target. Human-gated blockers skip model
-escalation and keep asking for the missing human action. A flawless streak may
-de-escalate only when explicitly configured.
+Adaptive policy changes only the next run. It never claims to switch the active
+model inside an already-running session. Non-flawless local delivery outcomes
+may escalate to the configured `escalation` target. Human-gated blockers skip
+model escalation and keep asking for the missing human action. A flawless streak
+may de-escalate after `deescalate_after_flawless_runs`; the resolved phase
+reasoning is always a minimum, combined with both explicit floor spelling fields.
+A proposal below that floor is raised to it. A floor above the cap, unknown
+value, or model outside the allowlist is an invalid policy with no usable target.
 
-When adaptive policy is enabled, caps are required. Use `allowed_models`,
-`max_reasoning_effort`, and optional provider or cost-class caps to prevent
-unbounded model, provider, or cost changes without inferring provider-specific
-pricing.
+Caps are mandatory when adaptive policy is enabled. Supplied caps also apply
+when adaptation is disabled. Defaults, overrides, no-change paths, escalation,
+de-escalation and bound persisted targets use the same shared resolver. A higher
+configured reasoning value already satisfying the target is preserved; the
+planner does not require a cost-only downgrade.
+
+Provider and cost-class limits require explicit trusted metadata from the
+adapter/operator. Retarget, validation, inspection, preflight and control planning accept `--capabilities-file`
+with `trusted: true`, a non-empty `source`, and `models` mapping model identifiers
+to `reasoning_efforts`, `provider`, `cost_class` and optional integer `rank`.
+This is an operator attestation, not authentication. Self-declared target
+provider/cost fields and guessed model pricing are never evidence. Requested
+limits without metadata return unresolved/invalid-policy, not enforced. A model
+floor requires explicit ranks; names alone do not establish relative strength.
+Absent host metadata reports `host_support: unknown` without changing the active
+model. Explicit host support selects a supported reasoning value within the
+floor/cap or reports unsupported.
+
+Optional `policy_version` is an operator label; a canonical fingerprint binds
+all policy values even if that label is unchanged. Persisted decisions bind
+source phase/run, target phase and a retained snapshot of verification/review/blocker evidence.
+The decision also retains the explicitly supplied capability metadata; supplying
+fresh metadata overrides that snapshot and detects changes. Destination-phase
+verification or review does not invalidate its source decision. Missing or mixed
+run identities cannot establish a flawless run or justify de-escalation. Old
+unbound targets, changed policy/evidence and wrong run/phase are ignored; bound
+targets still pass current constraints. Cached `last_run_quality` cannot replace current evidence. Flawless streaks
+continue only from a preceding bound decision on the same policy; unbound
+counters are reset for adaptive selection. Inspection, validation, prerequisite
+planning and retargeting all resolve effective targets through the shared runtime.
 
 ## Provider Role Config
 
-Provider-role config lets the package describe reusable model choices for
-workflow roles without replacing `phase_model_policy.json`.
+Provider-role config is an optional, host-neutral input that describes which
+model policy should be used for workflow roles such as executor, reviewer,
+inspector, finalizer, and repairer.
 
 Repository examples live at:
 
@@ -134,324 +149,164 @@ config/providers.example.yaml
 schemas/provider_config.schema.json
 ```
 
-The standard roles are:
+The provider-role config maps each role to:
 
-- `executor`: implement one current phase and run verification
-- `reviewer`: perform the skeptical phase-gate review
-- `inspector`: inspect state, logs, branches, and generated artifacts
-- `finalizer`: run final verification and completion checks
-- `repairer`: repair local or already-authorized blockers
+- the `phase_model_policy.json` field names it can populate (`model` and
+  `reasoning_effort`)
+- provider-specific model names
+- whether the provider supports an explicit reasoning-effort control
+- runner config field names when a host exposes them
 
-The config maps each role to the current phase model-policy fields:
-
-```json
-{
-  "phase_model_policy": {
-    "model_field": "model",
-    "reasoning_effort_field": "reasoning_effort"
-  }
-}
-```
-
-For Codex, role mappings may name the Codex runner fields `model` and
-`reasoning_effort`. Those values are only proposed or documented until the
-Codex app automation config, CLI flags, profile, or another trusted runner
-source reads back matching values. A provider-role config does not prove the
-active runner is configured correctly.
-
-For Claude or other hosts, role mappings may name a model field but must not
-claim explicit reasoning-effort control unless that runner exposes and reads
-back such a field. Record unsupported controls as host limitations and keep the
-start-run gate strict.
-
-## Migrating Existing Automations
-
-Existing roadmap delivery automations can adopt model policy without rewriting
-their whole history. Treat migration as a reconciliation step, not as phase
-delivery:
-
-1. Confirm the current roadmap path, automation slug, delivery state, delivery
-   log, review directory, branch, and saved automation prompt already agree.
-2. Add `phase_model_policy.json` under the existing
-   `automation/<roadmap-slug>/` directory.
-3. Set policy defaults for ordinary phases, add only justified numbered
-   overrides, add a `finalization` policy entry, and set `max_stalled_runs`.
-4. Add missing state fields for required/configured model and reasoning,
-   run/stall counters, progress signature, and last operator alert.
-5. Resolve the current phase's required model/reasoning from policy.
-6. Read back the Codex app automation, CLI profile, or runner config and record
-   configured model/reasoning only from that readback.
-7. Update the saved prompt so it reads the policy file, performs the start-run
-   model gate before implementation, handles blocked remediation before retry,
-   and hard-stops on completed states.
-8. Run artifact validation and status inspection before allowing scheduled
-   delivery to continue.
-
-If any readback or prompt update requires an unapproved automation-config
-change, stop with state blocked and ask for that approval. Do not infer that
-the active session is on the right model because the policy requests it.
-
-## Backward Compatibility
-
-A missing `phase_model_policy.json` keeps legacy behavior unless the roadmap,
-automation guide, or operator explicitly makes model policy strict. Legacy
-roadmaps should still reconcile state, log, review, branch, and automation
-prompt before delivery.
-
-When introducing policy to an older automation, preserve existing review and
-delivery history. Add new fields and log entries append-only where possible.
-Configured automation model and reasoning fields should stay null until
-readback proves them; desired proposal values are not evidence.
-
-Release and operations notes:
-
-- New setup flows should create policy by default.
-- Existing automations can migrate one roadmap at a time.
-- Local alert files are the durable fallback for stalled, blocked,
-  retarget-failed, and completed states.
-- External notification sinks are optional and must fail safe to the local
-  alert file.
-- Pausing, publication, promotion, branch deletion, and destructive git remain
-  explicit operator-approved actions.
-
-## Setup Integration
-
-New roadmap delivery automations should create a phase model policy before the
-automation is saved or activated. Setup must collect or confirm:
-
-- default model
-- default reasoning effort
-- optional per-phase model and reasoning overrides
-- finalization model and reasoning effort
-- `max_stalled_runs`
-- notification mode and fallback
-- optional provider-role config path and selected role when the workflow uses
-  `config/providers.example.yaml` or a project-specific equivalent
-
-Use defaults for ordinary phases and add numbered overrides only when the
-roadmap or operator has a concrete reason. Documentation-only or status-only
-phases can use lower-cost models or lower reasoning. Implementation-heavy,
-multi-file, migration, validator, and finalization phases should use the
-strongest approved coding model and higher reasoning. Do not silently assign an
-expensive model to every phase; make the tradeoff inspectable in
-`phase_model_policy.json`.
-
-Setup resolves the first phase's required model and reasoning from the policy,
-then saves the Codex app automation or runner config with the exact model and
-at least the required reasoning floor. Read back the saved config before
-reporting success. If readback has the wrong model or reasoning below the
-policy floor, correct it only when the automation-config surface is approved;
-if it cannot be corrected, leave the automation paused or blocked and record
-the mismatch.
-
-When setup uses provider-role config, copy the selected role's model and
-reasoning values into `phase_model_policy.json` first, then apply the same
-readback gate. Do not treat the role file itself as runner readback.
-
-Activation is not allowed until:
-
-- `phase_model_policy.json` validates
-- the saved automation model matches the first phase policy and reasoning
-  satisfies the first phase floor
-- the saved prompt includes the start-run model-policy hard stop
-- repository artifacts, roadmap path, state, log, reviews, branch, and
-  automation prompt reconcile without validator errors
+`phase_model_policy.json` remains the durable start-run gate for a roadmap
+phase. A provider-role config can be used to prepare or explain policy values,
+but it does not prove the active runner is configured with those values. The
+start-run gate still needs trusted runner readback before phase-owned edits.
 
 ## Start-Run Gate
 
 Before implementation:
 
-1. Read delivery state and current phase.
-2. Read `phase_model_policy.json` when present.
-3. Resolve required model and reasoning for the current phase. Use a numbered
-   phase override first, then policy defaults.
-4. Read saved automation config or explicit runner config when available.
-5. Compare required versus configured values before phase extraction or any
-   phase-owned file edit.
+1. Resolve current phase from delivery state.
+2. Resolve required model and reasoning from numbered policy override or
+   defaults.
+3. Read configured runner model and reasoning from a trusted config or readback
+   source.
+4. Stop before phase-owned edits if the configured model differs, configured
+   reasoning is lower than required, or required values cannot be proven.
 
-If the model matches and configured reasoning is at least the required floor,
-continue normal phase extraction.
-
-If the model mismatches or configured reasoning is below the required floor, do
-not edit phase-owned files. Record:
-
-- current phase
-- required model and reasoning effort
-- configured model and reasoning effort
-- source of the configured values
-- approval-policy decision for `retarget_saved_automation`
-
-Retarget the automation only when `retarget_saved_automation` resolves to
-`allowed` or explicit human approval is already present, then exit so the next
-run starts on sufficient settings. If the decision is `ask`, record the missing
-approval and stop. If the decision is `forbidden`, record a blocker. Do not ask
-for approval merely to downgrade reasoning that is already above the required
-floor.
-
-If the active model cannot be proven and the roadmap is model-strict, stop and
-ask for confirmation rather than guessing.
-
-For manual CLI runs, use one of these relaunch patterns:
-
-```bash
-codex exec -m gpt-5.5 \
-  -c 'model_reasoning_effort="xhigh"' \
-  -C /path/to/repo \
-  "Run the next safe phase-gated delivery step for roadmaps/example.md"
-```
-
-```bash
-codex exec -p roadmap-delivery-xhigh \
-  -C /path/to/repo \
-  "Run the next safe phase-gated delivery step for roadmaps/example.md"
-```
-
-For Codex app automations, update the saved automation configuration only when
-the model differs or reasoning is below the required floor. After an update,
-read the config back. If readback still has the wrong model or insufficient
-reasoning, keep or set state blocked and write a local alert.
-
-If a provider-role config exists, it may explain why the current phase uses an
-executor, reviewer, inspector, finalizer, or repairer model. It does not loosen
-the start-run gate: required values still come from `phase_model_policy.json`,
-and configured values still come from runner readback.
-
-The gate treats these as stop-before-delivery conditions:
-
-- required model differs from configured model
-- required reasoning effort is higher than configured reasoning effort
-- required model exists but no configured model can be proven
-- required reasoning effort exists but no configured reasoning effort can be
-  proven
+Retarget runner configuration only when `approval_policy.json` resolves
+`retarget_saved_automation` to `allowed` or explicit human approval is already
+present. If the decision is `ask`, record the required approval and stop. If the
+decision is `forbidden`, record a blocker and do not attempt the retarget.
+After retargeting, read back the saved config and stop so a later run starts
+with the right settings.
 
 ## End-Run Retargeting
 
-After a phase is delivered and reviewed:
-
-1. Resolve the next phase.
-2. Resolve the next phase model and reasoning from policy.
-3. Classify the delivered run quality and apply `adaptive_model_policy` to the
-   next-run target.
-4. Update state with next required model/reasoning, run quality, adaptive
-   action, model history, and escalation/de-escalation counters.
-5. Retarget automation only when `retarget_saved_automation` is `allowed` or
-   explicit human approval is already present.
-6. Read back automation config.
-7. If readback fails or mismatches, mark blocked, write an alert, and do not
-   start the next phase.
-
-Do not deliver the next phase in the same run after retargeting.
+After a delivered review verdict, resolve the next phase's model and reasoning,
+classify the run quality, apply `adaptive_model_policy` to the next target,
+update durable state, compare against runner readback, and retarget only when
+the runner is below the target floor or the model must change, and only when
+the approval-policy decision is `allowed` or explicit human approval is already
+present. If the saved runner already uses higher reasoning than the next phase
+requires, leave it unchanged and continue; do not ask for approval just to
+downgrade. The retarget plan should surface the run quality, adaptive action,
+operation decision, and target source so conservative mode preserves ask-first
+behavior and delegated modes avoid repeated prompts only for explicitly allowed
+runner updates. If readback fails or remains below the required target, keep or
+set blocked state, write an alert, and do not start the next phase.
 
 ## Progress And Stall Control
 
-Use a durable progress signature, not narration, to detect repeated
-non-progress. Include surfaces such as current phase, status, last delivered
-phase, review iteration count, verification result, latest review verdict, git
-HEAD, delivery log hash/size, and blocker reason.
+Use versioned semantic evidence and a stable unique `run_id`. Start the attempt
+before phase work, capturing phase/runner identity, owned files, initial evidence
+and counters. Reuse its ID for retries, review fixes and interrupted recovery.
+Read-only inspection does not allocate an attempt or project a fictitious failure.
 
-When the signature changes, reset `stalled_run_count` to `0`.
+Count only verifier-backed accepted work, a newly satisfied named criterion, or
+a check proving the original blocker resolved. Evidence version 1 includes phase,
+kind, stable criterion/blocker and increment IDs, previous/current semantic states,
+artifact SHA-256 and a verifier JSON path/hash. The verifier records the exact
+transition and a passed check path/hash; accepted work also requires a delivered,
+criterion-specific review path/hash and a phase-owned artifact. Local attestation
+integrity is checked; its author identity is a trusted check/reviewer boundary.
 
-When it does not change, increment `stalled_run_count`.
+The shared runtime derives event keys from semantic scope. Supplied evidence IDs,
+new proof paths, timestamps, delivery log hashes, review verdicts/filenames, changed
+failure wording, git commits and repeated passing checks cannot earn progress.
+Deduplicate accepted increments and artifact revisions across runs. A previously
+satisfied criterion cannot reset counters through another passing check.
+For blocker repairs, copy the recorded `blocker_occurrence_id` from the active
+attempt (or `progress_accounting.blocker_context.occurrence_id` after it closes)
+into `previous.blocker_occurrence_id` in verifier-attested evidence. Retries of
+that occurrence are deduplicated; a later recurrence has a new recorded identity
+and requires new evidence. Old repair receipts cannot clear a new occurrence.
 
-When `stalled_run_count >= max_stalled_runs`, keep or set state blocked, resolve
-the `pause_saved_automation` approval decision for the stall context, pause the
-automation when policy allows it, and write an operator alert. A pause attempt
-is valid only after saved automation readback reports `PAUSED`.
+The first unique completed or interrupted attempt without new evidence increments
+both lifetime runs and consecutive failures; the second reaches default threshold
+2, with no grace run. Thresholds 1 and 3 have the same exact boundary rule. Multiple
+new evidence items in one outcome reset the consecutive counter once. A duplicate
+outcome changes neither counter nor the outcome timestamp. Verified original-cause
+repair clears that cause; failure wording and pause results never replace it.
 
-## Blocked Runs
+Record starts/outcomes under a local writer lock, with revision conflict detection.
+Append/fsync the version 2 journal before atomic state replacement. On interruption,
+replay its recorded proposal and finish the same ID once; do not allocate a new ID
+until the unfinished attempt closes. Corrupt/conflicting history stops recording.
+Completion markers take precedence over recovery too: do not account another
+outcome or replay an older accounting proposal over completed scope. Reconcile
+any pending journal explicitly while retaining the terminal hard stop.
+Legacy hashes remain diagnostic and migration preserves known run/stall counts,
+seeds already consumed bootstrap events and explicitly records uncertain history.
+Migration alone never resets counters or counts as progress.
 
-Blocked state is not permission to repeat the same failed phase advancement.
-Before incrementing stall count or writing another blocked review, use Blocked
-Run Remediation from `troubleshooting.md`.
+Use the installed CLI or packaged `scripts/roadmap_delivery.py` helper:
 
-If the blocker is repaired, record `last_blocker_repair`, clear
-`blocked_reason`, reset the stall counter, and resume the current phase.
+```bash
+roadmap-delivery progress \
+  --repo-root /path/to/repo --roadmap-slug example --start-run \
+  --run-id stable-attempt-id --owned-file src/example.py --json
+roadmap-delivery progress \
+  --repo-root /path/to/repo --roadmap-slug example --record-run \
+  --run-id stable-attempt-id --evidence-file accepted-evidence.json --json
+```
 
-If the blocker cannot be repaired without human action, keep state blocked and
-make the required action explicit.
+Omit `--evidence-file` for no progress. Use `--recover-run` with the same ID to
+close an interrupted attempt, retaining any verified evidence. `--expected-revision`
+rejects conflicting writers. A terminal-only invocation does not start another
+attempt. At threshold, keep/set blocked state and retain the actionable
+`blocked_reason`; store the trigger in `stall_metadata`. Accounting returns a
+terminal plan and never edits a saved runner. The host closeout adapter writes the
+local alert and resolves the context-authorized status-only pause, confirms PAUSED
+through readback, or records a specific pending/disabled/unavailable outcome. No
+phase may begin before terminal reconciliation. ACTIVE resume alone is neither
+progress nor a fresh attempt budget. After an external repair at threshold,
+`--resolve-blocker --evidence-file repair-evidence.json` consumes its verified
+original-cause transition once, without allocating an attempt or incrementing
+lifetime runs. A duplicate repair receipt cannot reset a later failed run.
+
+## Self-Pause Policy
+
+The shared approval resolver is the authority for completion/stall pause:
+missing context flags default true; explicit `pause_automation_on_completion`
+or `pause_automation_on_stall: false` disables automatic pausing even when broad
+`pause_saved_automation` permission is true in a delegated mode. A later explicit
+operator request to pause is separate scoped authority. Missing policy uses these
+conservative defaults; malformed policy cannot grant execution authority.
+
+Terminal closeout precedes ordinary phase/model/migration gates. A broad saved
+runner restriction alone does not revoke the narrow status-only safety pause.
+Write the local alert before effects, bind runner identity, preserve all other
+settings, execute through supported host tooling and require authoritative
+PAUSED readback. Attempted/applied updates alone are not verified receipts.
+
+If the context pause is disabled, record `disabled` and preserve that choice.
+If capability or readback is unavailable, record the precise pending action.
+Completion remains `completed_pending_pause` when an applicable pause cannot be
+verified; manual unscheduled runs record `not_applicable`. Final verification,
+delivered review and a distinct final deep-review prompt/artifact or explicit
+human waiver remain necessary before claiming completion.
 
 ## Alerts
 
-Always write a local alert file before relying on optional external
-notifications. Use:
+Local alert files are the durable fallback for `stalled`, `completed`,
+`blocked`, and `retarget-failed` states. External notifications are optional
+and must fail safe to the local alert file.
 
-```text
-automation/<roadmap-slug>/alerts/<timestamp>-<kind>.md
-```
+## Host Adapter Boundary
 
-Initial alert kinds:
+The core defines policy fields, comparison rules, stall counters, pause
+decisions, and alert requirements, including adaptive run quality and
+model-target decisions. Host adapters own concrete model names, provider-role
+guidance, runner readback, and runner update mechanisms. If a host cannot prove
+or set a role's model, reasoning value, or paused status, the adapter must
+record that limitation rather than claiming unsupported control.
 
-- `stalled`
-- `completed`
-- `blocked`
-- `retarget-failed`
+## Codex Execution
 
-Each alert must include enough operator context to act without reopening the
-whole run transcript:
-
-- roadmap path
-- current phase
-- current status
-- alert reason
-- required and configured model/reasoning when known
-- last verification summary
-- last review summary
-- state, delivery log, and review paths
-- next human action
-
-Use `write_operator_alert.py` for deterministic local alerts:
-
-```bash
-python3 skill/roadmap-delivery-skill/scripts/write_operator_alert.py \
-  --repo-root /path/to/repo \
-  --roadmap-slug <roadmap-slug> \
-  --kind stalled \
-  --reason "Stalled after 2 consecutive runs without durable progress." \
-  --json
-```
-
-Optional external sinks are conservative:
-
-- `github_issue`: create one tracking issue per roadmap automation when
-  credentials and approval are available; append or comment for repeated
-  alerts; include state/log/review paths rather than large pasted logs.
-- `none`: allowed only for tests and dry runs; the local alert still records
-  the event.
-- Slack, email, Codex thread, and webhook delivery are future extension
-  points until a phase explicitly implements them.
-
-If an external sink fails, preserve the local alert file, record
-`notification_status: failed` and the failure reason in `last_operator_alert`,
-append the failure to the delivery log, and continue to fail safe to the local
-alert file.
-
-## Completion Pause And Alert Flow
-
-Completion uses the same local-alert fallback as blocked and stalled states,
-but it is also a delivery hard stop.
-
-When state has `all_phases_complete: true`, `status: completed`,
-`status: completed_pending_pause`, or an equivalent completed current phase:
-
-1. Do not extract or start another roadmap phase.
-2. Confirm final verification and latest delivered review evidence.
-3. Confirm a final deep-review prompt or review artifact is recorded when the
-   roadmap requires one.
-4. Write a local `completed` alert with `write_operator_alert.py`.
-5. Attempt to pause the automation when `pause_saved_automation` is allowed,
-   the context-specific `pause_automation_on_completion` flag is true or
-   absent, default terminal safety pause applies, or explicit human approval
-   is present; record pause-needed only when the pause is explicitly disabled
-   or tooling/readback is unavailable.
-6. Read back the saved automation status after any pause attempt.
-7. Record alert path, notification status, and pause status in state/log.
-
-Inspection should make this state obvious:
-
-- complete and `PAUSED`: no further automation work is expected
-- complete and `ACTIVE`: pause is still required, even when the prompt contains
-  a hard-stop guard
-- complete with no completed alert: repair the local alert before treating
-  completion as fully handled
-- complete with notification failure: preserve the local alert and surface the
-  failed optional sink
+Use `scripts/plan_automation_retarget.py` (CLI `plan-retarget`) for next-run
+planning. `scripts/compute_progress_signature.py` (CLI `progress`) records unique
+runs with verifier-backed evidence. Use `scripts/roadmap_delivery.py
+terminal-closeout` to resume alert/readback receipts and emit supported host
+requests; it never edits a live saved runner file. Reading automation.toml
+supplies configuration evidence, not scheduler update capability.

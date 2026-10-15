@@ -11,7 +11,7 @@ import sys
 from typing import Any, Dict, List, Optional
 
 from .paths import resolve_repo_path, slug_forms, state_candidates
-from .state import JsonObjectError, load_json_object, write_json_object
+from .state import JsonObjectError, atomic_write_text, load_json_object, write_json_object
 
 
 ALERT_KINDS = {"stalled", "completed", "blocked", "retarget-failed"}
@@ -188,6 +188,35 @@ def append_delivery_log(
             fh.write("\n".join(lines))
     except OSError as exc:
         raise OperatorAlertError(f"Cannot append delivery log {delivery_log}: {exc}") from exc
+
+
+def ensure_terminal_alert(repo_root: Path, state_file: Path, state: Dict[str, Any],
+                          closeout: Dict[str, Any]) -> None:
+    """Idempotent local effect. The closeout journal persists alert metadata.
+
+    A deterministic path recovers a crash after file creation but before state
+    recording without inventing a second alert or external notification.
+    """
+    kind = "completed" if closeout["context"] == "completion" else "stalled"
+    alerts = state_file.parent / "alerts"
+    alerts.mkdir(parents=True, exist_ok=True)
+    path = alerts / f"terminal-{closeout['intent_id']}-{kind}.md"
+    reason = "All phases complete; reconcile final evidence and scheduler pause." if kind == "completed" else state.get("blocked_reason") or "Consecutive no-progress threshold reached."
+    content = build_alert_content(repo_root, state_file, state, kind=kind, reason=reason,
+                                  next_action=DEFAULT_NEXT_ACTIONS[kind], timestamp=closeout["created_at"],
+                                  notification_sink="alert_file", notification_failure=None)
+    required = ("Alert kind:", "State file:", "Delivery log:", "Next human action:")
+    try:
+        existing = path.read_text(encoding="utf-8") if path.is_file() else ""
+    except (OSError, UnicodeError) as exc:
+        existing = ""
+        closeout["alert_recovery_diagnostic"] = f"Cannot read terminal alert; replacing owned artifact: {exc}"
+    if not all(marker in existing for marker in required):
+        atomic_write_text(path, content)
+    state["last_operator_alert"] = {"kind": kind, "file": relative_or_absolute(repo_root, path),
+                                    "timestamp": closeout["created_at"], "reason": reason,
+                                    "next_human_action": DEFAULT_NEXT_ACTIONS[kind],
+                                    "notification_sink": "alert_file", "notification_status": "local_alert_only"}
 
 
 def write_alert(

@@ -45,8 +45,6 @@ def adaptive_policy_text(*, enabled=True, defaults_model="gpt-5.4", defaults_rea
             "caps": {
                 "allowed_models": ["gpt-5.4", "gpt-5.5"],
                 "max_reasoning_effort": "xhigh",
-                "allowed_providers": ["openai"],
-                "allowed_cost_classes": ["standard", "premium"],
             },
         },
     }
@@ -195,6 +193,9 @@ class AdaptiveModelPolicyTests(unittest.TestCase):
             state_path = fixture.state_dir / "delivery_state.json"
             state = json.loads(state_path.read_text(encoding="utf-8"))
             state["review_iterations"] = 2
+            state["last_completed_run_id"] = "fixture-run-1"
+            state["last_review"]["run_id"] = "fixture-run-1"
+            state["last_verification"]["run_id"] = "fixture-run-1"
             state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
             plan = self.run_plan(fixture, "--delivered-phase", "Phase 1 - Fixture")
@@ -215,7 +216,7 @@ class AdaptiveModelPolicyTests(unittest.TestCase):
 
             self.assertIn("missing_adaptive_caps", self.error_codes(validate))
 
-    def test_inspect_explains_state_recorded_adaptive_target(self):
+    def test_unbound_recorded_target_cannot_override_current_policy(self):
         with tempfile.TemporaryDirectory() as tmp:
             fixture = DeliveryFixture(
                 tmp,
@@ -239,10 +240,10 @@ class AdaptiveModelPolicyTests(unittest.TestCase):
 
             report = self.run_inspect(fixture)
 
-            self.assertEqual(report["required_model"], "gpt-5.5")
-            self.assertEqual(report["required_reasoning_effort"], "xhigh")
-            self.assertEqual(report["model_policy"]["selection_source"], "state.last_adaptive_action")
-            self.assertIn("adaptive escalation", report["model_policy"]["selection_reason"])
+            self.assertEqual(report["required_model"], "gpt-5.4")
+            self.assertEqual(report["required_reasoning_effort"], "medium")
+            validation = self.run_validate(fixture)
+            self.assertEqual(validation["model_policy"]["persisted_target_status"], "ignored_unbound")
 
 
 if __name__ == "__main__":

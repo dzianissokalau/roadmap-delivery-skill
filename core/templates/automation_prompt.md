@@ -3,6 +3,7 @@
 Use concrete paths before saving a runner prompt.
 
 ```text
+Roadmap delivery prompt-template version: 3
 Run the next safe phase-gated delivery step for the roadmap recorded in
 `automation/<roadmap-slug>/delivery_state.json`. Resolve the current roadmap
 path from `delivery_state.json`; the state roadmap field is authoritative
@@ -28,7 +29,7 @@ active-run transition: if durable setup artifacts still say the saved runner is
 PAUSED but saved readback is ACTIVE, and model/reasoning, cwd, state-first
 prompt, hard-stop guard, and blocked-remediation guard all match, accept it as
 operator/manual activation. Update guide/log/state to ACTIVE, record
-`last_activation` and `last_blocker_repair`, reset stalled counters, rerun
+`last_activation` and any verified original-cause repair, preserve stall counters, rerun
 validation, and continue the current phase. Do not stop just because the saved
 runner is ACTIVE after the operator started it.
 
@@ -42,14 +43,18 @@ read-only scan for later model, credential, network, tooling, external
 decision, and approval prerequisites. Record mitigations and required operator
 actions without implementing future phases.
 
-If state is blocked, enter Blocked Remediation Mode before normal delivery.
+If status is blocked, enter Blocked Remediation Mode before normal delivery.
+Classify the original blocker; repair only local or already-authorized causes,
+rerun validation and clear the reason only after verified repair.
 Hard stop before delivery if all phases are complete, status is completed, or
-status is completed_pending_pause. For completed or stalled states, pause the
-saved runner when `pause_saved_automation` is allowed, a context-specific
-pause flag allows it, explicit human approval is present, or the context flag
-is absent and default terminal safety pause applies; generated policies allow
-completion and stalled-run safety pauses by default. Always record pause
-readback evidence.
+status is completed_pending_pause. For completed or stalled states, the narrow status-only safety pause is
+authorized by default unless the corresponding context flag is explicitly
+false. Explicit operator restrictions take precedence; broad saved-runner edit
+restrictions alone do not revoke this terminal exception. Preserve every other
+setting, use supported host tooling, and require authoritative PAUSED readback.
+Terminal handling comes before ordinary model or migration gates. Unknown
+prompt upgrades remain separate operator decisions; do not repeat a pending
+identical approval question.
 
 For the current phase only, extract objective, owned files, implementation
 steps, acceptance criteria, required verification, non-goals, and stop

@@ -2,182 +2,81 @@
 
 Use this reference to deliver exactly one current roadmap phase.
 
-## Reconcile First
+## Core Contract
 
-Before editing, read:
-
-- roadmap file
-- `automation/<slug>/delivery_state.json`
-- `automation/<slug>/delivery_log.md`
-- `automation/<slug>/review_fix_state.json` when present
-- `automation/<slug>/phase_model_policy.json` when present
-- latest review files under `automation/<slug>/reviews/`
-- saved automation config when available
-- `git branch --show-current`
-- `git status --short --branch`
-
-Stop if the current phase, roadmap path, branch, status, review verdicts,
-verification evidence, or automation config disagree. Record the mismatch in
-state/log/review instead of guessing.
+Before editing, reconcile the roadmap, delivery state, delivery log, review/fix
+state, phase model policy, latest review artifact, saved runner config, branch,
+and worktree status. Stop and record a blocker when the current phase, roadmap
+path, branch, latest verdict, model policy, verification evidence, or runner
+readback disagree in a way that cannot be locally repaired.
 
 The roadmap path recorded in `delivery_state.json` is authoritative. If a
 lifecycle rename changes only the roadmap filename, repair repository-local
-references before phase work. Do not require a saved automation prompt retarget
+references before phase work. Do not require a saved runner prompt retarget
 when the prompt is state-first and still points at the stable state/guide
 files.
 
-This reconciliation is the start-run gate. When `phase_model_policy.json`
-exists, validate the current phase's required model and reasoning effort
-before extracting the phase contract or changing phase-owned files.
+When a phase model policy exists, resolve the current phase's required model
+and reasoning before extracting the phase contract. Compare those values with
+the configured runner values from readback. Model comparison is exact. Reasoning
+comparison is a minimum floor: `xhigh` satisfies `high`, while `high` does not
+satisfy `xhigh`. A model mismatch, missing readback, or configured reasoning
+below the required floor is a stop-before-delivery condition unless the operator
+already approved the runner configuration repair.
 
-## Blocked Remediation Gate
+## Runtime Decision Order
 
-If `delivery_state.json` has `status: blocked`, do not immediately retry
-normal phase delivery and do not blindly write another blocked review.
-
-First classify the blocker:
-
-- `local-repairable`: stale paths, missing generated bookkeeping, branch drift,
-  dirty current-phase files, or malformed state/log entries that the current
-  roadmap or operator already allows repairing.
-- `automation-config`: saved automation prompt, cwd, status, execution
-  environment, model, or reasoning configuration needs a permitted update;
-  lifecycle-only prompt drift is excluded when the saved prompt resolves the
-  roadmap from state.
-- `permission-gated`: sandbox escalation, network, credentials, or filesystem
-  access is required.
-- `external-decision`: product, policy, or scope decision is missing.
-- `destructive-risk`: repair would require reset, force push, branch deletion,
-  or overwriting user work.
-
-For `local-repairable` or already-authorized `automation-config` blockers,
-repair the blocker first, rerun reconciliation and artifact validation, record
-the repair in state/log, clear `blocked_reason`, reset stalled counters when
-progress is real, and only then resume the current phase.
-
-If the only blocker is that setup artifacts expected PAUSED while the saved
-Codex automation now reads ACTIVE, treat clear operator/manual activation as an
-already-authorized status decision when model/reasoning, prompt path, cwd,
-hard-stop guard, and blocked-remediation guard all still match. Reconcile
-durable guide/log/state to ACTIVE, record `last_activation` and
-`last_blocker_repair`, clear `blocked_reason` after validation, and resume the
-current phase rather than looping on the same automation-config blocker.
-
-For `permission-gated`, `external-decision`, or `destructive-risk` blockers,
-keep state blocked, record the missing human action, and stop. Do not count a
-successful blocker repair as a delivered phase.
-
-## Model Policy Gate
-
-When `phase_model_policy.json` exists:
-
-1. Read delivery state and resolve the current phase number.
-2. Read the policy defaults and the current phase override; if the phase has no
-   override, use policy defaults.
-3. Read the saved automation config from
-   `~/.codex/automations/<automation-id>/automation.toml`, or read an explicit
-   CLI/profile runner config for manual runs.
-4. Compare required versus configured model and reasoning values before
-   implementation. Model comparison is exact. Reasoning comparison is a floor:
-   `xhigh` satisfies `high`, while `high` does not satisfy `xhigh`.
-5. If the model matches and configured reasoning is at least the required
-   reasoning, continue to phase extraction.
-6. If the model mismatches or configured reasoning is below the required floor,
-   do not edit phase-owned files. Update state/log/review with the required and
-   configured values, retarget only when that automation surface is already
-   approved, then stop so the next run starts on sufficient settings.
-7. If the configured model or reasoning effort cannot be proven and the roadmap
-   is model-strict, stop for operator confirmation rather than guessing.
-
-For manual CLI runs, relaunch with explicit model and reasoning settings, for
-example:
-
-```bash
-codex exec -m <required-model> \
-  -c 'model_reasoning_effort="<required-reasoning-effort>"' \
-  -C <repo-root> \
-  "<phase-gated prompt>"
-```
-
-or use a profile that sets both values:
-
-```bash
-codex exec -p <profile-name> -C <repo-root> "<phase-gated prompt>"
-```
-
-For Codex app automations, the saved config must read back with a matching
-`model` and a `reasoning_effort` that is at least the required floor. If an
-approved retarget changes those fields, stop immediately after readback; do not
-continue delivery in the same run.
+Use the shared control plan: terminal completion/stall handling first,
+intentional activation next, blocked remediation, then normal prerequisites and
+phase review/advancement. `model-policy-and-stall-control.md` defines effective
+pause/progress/target authority; host adapters execute effects and record receipts.
 
 ## Approval Policy Gate
 
-Before asking the operator or performing an operation automatically, read and
-validate `automation/<slug>/approval_policy.json` when present. Missing policy
-keeps conservative legacy behavior. Resolve each named operation to `allowed`,
-`ask`, or `forbidden`:
+Before asking the operator or acting automatically, read and validate
+`approval_policy.json` when present. Missing policy keeps conservative legacy
+behavior. Resolve each named operation to `allowed`, `ask`, or `forbidden`:
 
-- `allowed`: the approval policy pre-approves the operation; proceed and record
-  the decision in state/log/review evidence.
+- `allowed`: the current approval mode pre-approves the operation; proceed and
+  record the approval decision in state, log, or review evidence.
 - `ask`: stop before the operation unless explicit human approval is already
   present in the current workflow.
-- `forbidden`: record a blocker and do not run it automatically.
+- `forbidden`: record a blocker; never-auto operations and unknown operations
+  must not run automatically in any approval mode.
 
-Use named decisions for phase-owned edits, state/log/review writes, branch
-creation, local commits, automation retarget, automation pause, branch push,
-installed-skill sync, publication, promotion, credential use, and destructive
-git. Never-auto and unknown operations are always `forbidden`, even in
-delegated or custom modes.
+Use the gate for phase-owned edits, state/log/review writes, branch creation,
+local commits, automation retargets, broad automation edits, branch push, installed
+skill sync, publication, promotion, credential use, and destructive git.
 
-## End-Run Retargeting Gate
+## Blocked Remediation Gate
 
-After a delivered review verdict and before advancing state to the next phase:
+If state is `blocked`, classify the blocker before attempting normal delivery:
 
-1. Resolve the next numbered phase from the roadmap. If no numbered phase
-   remains, stop the normal phase loop, load
-   `references/finalization-and-promotion.md`, and resolve the `finalization`
-   pseudo-phase.
-2. Read `phase_model_policy.json` and compute the next required model and
-   reasoning effort. Use the next phase override when present; otherwise use
-   policy defaults.
-3. Update `delivery_state.json` with the next phase, next required
-   model/reasoning fields, and the configured automation values observed by
-   readback.
-4. If the current automation config already matches the next required model and
-   configured reasoning is at least the next required reasoning floor, record
-   that no retarget was needed and keep the automation active.
-5. If the model differs or configured reasoning is below the next required
-   floor, update it only when the approval-policy decision for
-   `retarget_saved_automation` is `allowed` or explicit human approval is
-   already present. Read the saved config back after the update. Do not block
-   or ask for approval merely to downgrade reasoning.
-6. If readback matches, record the retarget result and stop. The next run
-   starts the next phase.
-7. If the update or readback fails, set or keep the state blocked, write or
-   request a `retarget-failed` alert, and do not start the next phase.
+- `local-repairable`: stale paths, missing bookkeeping, branch drift, dirty
+  current-phase files, or malformed state/log entries
+- `automation-config`: saved prompt, cwd, status, execution environment, model,
+  or reasoning configuration needs an approved repair; lifecycle-only prompt
+  drift is excluded when the saved prompt resolves the roadmap from state
+- `permission-gated`: sandbox, network, filesystem, or credential access is
+  missing
+- `external-decision`: product, policy, or scope input is missing
+- `destructive-risk`: repair would overwrite user work or rewrite history
 
-When there is no next numbered phase, do not set `all_phases_complete`,
-`completed`, or `completed_pending_pause` from this phase-loop path. The
-finalization reference owns final verification, final deep-review prompt or
-waiver evidence, completed alert, pause handling, and promotion readiness.
+Repair only local or `allowed` runner configuration blockers. Rerun
+reconciliation after repair, clear `blocked_reason` only after validation
+passes, then resume the current phase.
 
-Use the read-only helper when a deterministic plan is useful:
+When the only blocker is saved runner ACTIVE versus setup artifacts that still
+say PAUSED, treat a clear operator/manual activation as an already-approved
+runner status decision if model/reasoning, prompt path, cwd, hard-stop guard,
+and blocked-remediation guard all read back cleanly. Reconcile durable
+guide/log/state to ACTIVE, record `last_activation` and `last_blocker_repair`,
+clear `blocked_reason` after validation, and continue the current phase instead
+of looping on the same blocker.
 
-```bash
-python3 skill/roadmap-delivery-skill/scripts/plan_automation_retarget.py \
-  --repo-root <repo-root> \
-  --roadmap-slug <roadmap-slug> \
-  --automation-id <automation-id> \
-  --delivered-phase "Phase N - Name" \
-  --json
-```
+## Phase Contract
 
-The helper does not mutate state or automation config. It is evidence for the
-review gate, not a substitute for an approved update and readback.
-
-## Extract The Phase Contract
-
-From the current phase only, extract:
+Extract only the current phase:
 
 - objective
 - owned files
@@ -188,183 +87,59 @@ From the current phase only, extract:
 - non-goals
 - stop conditions
 
-Treat this extraction as the working contract. Future-phase ideas belong in
-residual risks or backlog notes, not in the implementation.
+Future-phase ideas belong in residual risks or backlog notes, not in the
+implementation.
 
-## Scope Rules
+## Delivery Rules
 
-- Change only owned files and required automation bookkeeping.
-- Preserve unrelated dirty files.
-- Do not revert user work without explicit instruction.
-- Do not hide unrelated changes inside delivery commits.
-- Do not create helper scripts unless the phase owns them.
-- Do not mutate live external services unless the phase explicitly says to and
-  approval is available.
-- Do not implement future-phase findings during the current phase; record them
-  as residual risks or backlog notes.
+Change only phase-owned files and required automation bookkeeping. Preserve
+unrelated dirty files. Use a dedicated phase branch for implementation phases.
+If an existing branch has an unexpected base or unexplained content, record a
+blocker instead of rewriting it.
 
-## Branch Rules
-
-Implementation phases use:
-
-```text
-codex/<roadmap-slug>-phase-<n>
-```
-
-If the branch already exists, reuse it after checking that its current state is
-consistent with state/log/reviews. If it exists with an unexpected base or
-unexplained changes, stop and record a blocker. Read-only phases may stay on
-the current branch if the roadmap allows it.
-
-## Dirty Worktree Handling
-
-Use:
-
-```bash
-git status --short --branch
-git diff -- <owned-file>
-```
-
-Ignore unrelated dirty files unless they conflict with owned files or make
-verification unreliable. Never clean, stash, or restore unrelated files unless
-the user explicitly asks.
-
-## Verification Selection
-
-Run every command named in the phase. Add targeted checks only when they are
-directly tied to changed behavior. If a required command cannot run, record:
-
-- command
-- exit status or reason it could not run
-- whether the issue is environmental, permission-related, or a phase bug
-- next action
-
-Do not claim delivery when verification only checked pre-existing behavior.
+Run every verification command named by the phase, then any targeted checks
+directly tied to changed behavior. If a required command cannot run, record the
+command, exit status or reason, classification, and next action.
 
 ## Adaptive Model Gate
 
-After verification and review, classify run quality before planning the next
-phase: `flawless`, `delivered_with_fixes`, `verification_failed`,
-`review_needs_fix`, `blocked_local_repairable`, `blocked_human_required`,
-`stalled`, `retarget_failed`, or `completion_closeout_failed`.
+After verification and review, classify the run quality before planning the
+next phase. Use the configured adaptive model policy to decide whether the next
+run keeps the base target, escalates, de-escalates after a flawless streak, or
+skips escalation because the blocker is human-gated. Record the run quality,
+adaptive action, target model/reasoning, target source, and approval decision
+in durable state, log, or review evidence.
 
-Use `adaptive_model_policy` to decide whether the next run keeps the base
-target, escalates, de-escalates after a flawless streak, or skips escalation
-because the blocker is human-gated. Record the run quality, adaptive action,
-target model/reasoning, target source, and approval decision in state, log, or
-review evidence.
-
-Adaptive decisions apply only to the next run. If the chosen next target needs
-a different model or more reasoning than Codex automation readback, retarget the
-saved automation only when approval policy allows that update or explicit human
-approval is already present. If readback already uses higher reasoning than the
-target, keep it unchanged. After any retarget, read back the saved config and
+Adaptive decisions apply only to the next run. If the chosen next target
+requires a different model or more reasoning than runner readback, retarget the
+saved runner only when approval policy allows that automation update or explicit
+human approval is already present. If runner readback already uses higher
+reasoning than the next target, keep it unchanged and do not block for a
+downgrade approval. After any retarget, read back the saved runner config and
 stop so the next run starts with sufficient model and reasoning.
 
-## Review Gate
+## Review And Advancement
 
-After implementation and verification, write a fresh review file before
-advancing the phase. Treat the review as a gate:
+Write a fresh review artifact before advancing. Advance only when acceptance
+criteria are met, required verification passed after the final change, the
+fresh review verdict is `delivered`, and roadmap/state/log/review evidence
+agree. Stop immediately after advancing state to the next phase.
 
-- `delivered`: advance only after state, log, roadmap, verification evidence,
-  and branch all agree.
-- `needs-fix`: do not advance; enter the fix loop, fix only valid current-phase
-  findings, rerun verification, and write a new review iteration.
-- `blocked`: do not advance; record the blocker in state, log, and review.
+When the delivered phase is the final numbered phase, stop the normal phase
+loop and enter finalization. Load the finalization and promotion reference,
+prepare or verify the final deep-review prompt/artifact, and do not set
+`all_phases_complete` or completed-pending-pause state from the phase-loop
+path.
 
-When review happens in the same context as delivery, record that limitation in
-the review and residual risks. A same-context review may still deliver a phase
-only when the acceptance criteria are directly evidenced, verification passed,
-and the limitation is explicit.
+## Host Adapter Boundary
 
-## Fix Loop
+The core defines gates and durable evidence. Host adapters choose the concrete
+branch prefix, runner readback mechanism, and any host-specific review
+delegation tooling.
 
-For each review finding, record the disposition:
+## Codex Execution
 
-| Finding disposition | Action |
-| --- | --- |
-| Valid and current-phase scoped | Fix it, rerun required verification, update the log, then write a new review iteration. |
-| Valid but future phase | Do not implement it now; record it as residual risk or backlog. |
-| Invalid | Explain why it does not apply, with file or command evidence when possible. |
-| Blocked | Stop, update state/log/review, and ask for the missing decision, permission, or input. |
-
-`needs-fix` is not advisory text. It means the phase gate is closed until the
-fixes are made, verification is rerun, and a later review verdict is
-`delivered`.
-
-## Max Iterations
-
-Default maximum is 3 review/fix iterations. If the phase is still not
-`delivered` after the maximum:
-
-1. Set `delivery_state.json` status to `blocked`.
-2. Set `review_fix_state.json` status to `blocked` when present.
-3. Record unresolved findings and commands that did not pass.
-4. Stop without starting the next phase.
-
-## Delivery Log Entry
-
-Use this shape:
-
-```markdown
-## Phase N - YYYY-MM-DD - Delivery Pass M
-
-Status: delivering | reviewing | fixing | delivered | blocked
-Branch: `codex/<slug>-phase-N`
-
-### Scope
-
-- ...
-
-### Changes
-
-- ...
-
-### Tests And Verification
-
-- `command`: passed | failed | not run
-
-### Review
-
-- Review file: `automation/<slug>/reviews/<slug>-phase-N-review-iteration-M.md`
-- Verdict: delivered | needs-fix | blocked
-
-### Finding Disposition
-
-- [P1] finding summary: fixed | deferred | rejected | blocked
-
-### Residual Risks
-
-- ...
-
-### Next Action
-
-- ...
-```
-
-Do not write a final review verdict until a review exists. Final review
-verdicts must use one of the exact lowercase values `delivered`, `needs-fix`,
-or `blocked`.
-
-## Commit And Advancement
-
-Do not advance to the next phase until all are true:
-
-- phase acceptance criteria are satisfied
-- required verification passed after the final fix, if any
-- a fresh review verdict is `delivered`
-- next model/reasoning requirements are resolved and either the saved
-  automation config has the exact model plus sufficient reasoning, or it has an
-  approved retarget readback
-- roadmap header/status is updated
-- delivery log is updated
-- delivery state is updated
-- review/fix state is updated when present
-
-Local commits are optional unless the roadmap or operator requires them. If a
-commit is made, stage only phase-owned files and bookkeeping files by explicit
-path. Publication remains a separate human-approved action.
-
-If this was the final numbered phase, the next action is finalization, not
-completion. A same-context phase review remains a phase review and does not
-satisfy the final deep-review prompt requirement.
+Use `scripts/roadmap_delivery.py plan-control --repo-root <repo-root>
+--roadmap-slug <slug> --automation-id <id> --json` before extraction. Supply
+`--runner-snapshot` for explicit identity/capability evidence. Dedicated branches
+use `codex/<slug>-phase-<n>`; preserve latest delivered uncommitted work.

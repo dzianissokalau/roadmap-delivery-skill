@@ -7,7 +7,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "python3.12",
+            "onFailure": "block",
             "args": [
               "${CLAUDE_PLUGIN_ROOT}/hooks/roadmap_delivery_safety.py",
               "guard-bash"
@@ -23,7 +24,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "python3.12",
+            "onFailure": "block",
             "args": [
               "${CLAUDE_PLUGIN_ROOT}/hooks/roadmap_delivery_safety.py",
               "remind-prompt"
@@ -39,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "python3.12",
             "args": [
               "${CLAUDE_PLUGIN_ROOT}/hooks/roadmap_delivery_safety.py",
               "guard-stop"

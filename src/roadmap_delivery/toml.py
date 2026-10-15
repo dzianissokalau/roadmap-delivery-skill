@@ -1,50 +1,69 @@
-"""Small TOML reader used when stdlib tomllib is unavailable."""
+"""TOML parsing and value-preserving serialization for runner configuration.
+
+Execution requires a real parser. Python 3.11+ supplies tomllib; older hosts
+may supply tomli (or pip's bundled tomli during the repository migration).
+No permissive line parser is used for either inspection or mutation.
+"""
 
 from __future__ import annotations
 
-import ast
-import re
+from datetime import date, datetime, time
+import importlib
+import json
+import math
 from pathlib import Path
 from typing import Any, Dict
 
 
-def parse_minimal_toml(path: Path) -> Dict[str, Any]:
-    try:
-        import tomllib  # type: ignore
-    except ImportError:
-        tomllib = None  # type: ignore
+class TomlError(ValueError):
+    """Invalid TOML or an unavailable parser; never an execution fallback."""
 
-    if tomllib is not None:
-        with path.open("rb") as fh:
-            return tomllib.load(fh)
 
-    data: Dict[str, Any] = {}
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip()
-        if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", key):
-            continue
-        if value.startswith("[") and value.endswith("]"):
-            try:
-                data[key] = ast.literal_eval(value)
-            except (SyntaxError, ValueError):
-                data[key] = value
-            continue
-        if value.startswith(("'", '"')):
-            try:
-                data[key] = ast.literal_eval(value)
-            except (SyntaxError, ValueError):
-                data[key] = value.strip("'\"")
-            continue
-        if value.lower() in ("true", "false"):
-            data[key] = value.lower() == "true"
-            continue
+def parse_toml(text: str) -> Dict[str, Any]:
+    parser = None
+    for name in ("tomllib", "tomli", "pip._vendor.tomli"):
         try:
-            data[key] = int(value)
-        except ValueError:
-            data[key] = value
-    return data
+            parser = importlib.import_module(name)
+            break
+        except ImportError:
+            continue
+    if parser is None:
+        raise TomlError("Real TOML parser unavailable; use Python 3.11+ or provide tomli.")
+    try:
+        return parser.loads(text)
+    except ValueError as exc:
+        raise TomlError(f"Invalid TOML: {exc}") from exc
+
+
+def parse_minimal_toml(path: Path) -> Dict[str, Any]:
+    """Compatibility name; now parses the complete TOML document strictly."""
+    return parse_toml(path.read_text(encoding="utf-8"))
+
+
+def _value(value: Any) -> str:
+    if isinstance(value, str):
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        if math.isnan(value):
+            return "nan"
+        return str(value)
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return "[" + ", ".join(_value(item) for item in value) + "]"
+    if isinstance(value, dict):
+        return "{ " + ", ".join(json.dumps(key) + " = " + _value(item) for key, item in value.items()) + " }"
+    raise TomlError(f"Unsupported TOML value type: {type(value).__name__}")
+
+
+def dump_toml(data: Dict[str, Any]) -> str:
+    """Preserve values, including nested tables; formatting is normalized."""
+    text = "".join(json.dumps(key) + " = " + _value(value) + "\n" for key, value in data.items())
+    parsed = parse_toml(text)
+    if parsed != data:
+        raise TomlError("Serialized candidate does not preserve TOML values.")
+    return text

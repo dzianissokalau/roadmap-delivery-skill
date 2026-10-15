@@ -1,0 +1,600 @@
+{
+  "base_commit": "517bbdd899f7fb9aea9124e471ae36fb1aa620cd",
+  "captured_at": "2026-10-13T17:11:32+00:00",
+  "cases": [
+    {
+      "capture_status": "observed",
+      "evidence_type": "executable",
+      "expected_result": {
+        "first_no_progress_count": 1,
+        "original_blocker_preserved": true,
+        "pause_required_at_run": 2,
+        "phase_attempts_after_threshold": 0,
+        "second_no_progress_count": 2
+      },
+      "fix_phases": [
+        2,
+        8
+      ],
+      "id": "R1",
+      "input": {
+        "accepted_progress": [],
+        "log_template": "Unchanged blocker, bookkeeping attempt {run}\n",
+        "max_stalled_runs": 2,
+        "run_ids": [
+          "run-1",
+          "run-2",
+          "run-3",
+          "run-4",
+          "run-5"
+        ],
+        "state": {
+          "blocked_reason": "Missing fixture input",
+          "current_phase": "Phase 1 - Fixture",
+          "last_progress_signature": null,
+          "run_count": 0,
+          "stalled_run_count": 0,
+          "status": "blocked"
+        }
+      },
+      "observed_result": {
+        "method": "pure planning only; no host effects",
+        "runs": [
+          {
+            "previous_progress_signature": null,
+            "progress_detected": true,
+            "progress_signature": "sha256:c2c6e731a232663d0b45f87c8cdd3547e89cb274924dcf27ee812c7f5a48a632",
+            "run_count": 1,
+            "run_id": "run-1",
+            "stalled_run_count": 0,
+            "threshold_reached": false
+          },
+          {
+            "previous_progress_signature": "sha256:c2c6e731a232663d0b45f87c8cdd3547e89cb274924dcf27ee812c7f5a48a632",
+            "progress_detected": true,
+            "progress_signature": "sha256:e91162185de6c9d1fc64fd18b0d7994872f9fb3d5a5b64016fb7c1adaee0acb6",
+            "run_count": 2,
+            "run_id": "run-2",
+            "stalled_run_count": 0,
+            "threshold_reached": false
+          },
+          {
+            "previous_progress_signature": "sha256:e91162185de6c9d1fc64fd18b0d7994872f9fb3d5a5b64016fb7c1adaee0acb6",
+            "progress_detected": true,
+            "progress_signature": "sha256:2ef05c2042ff9efa29c7a7cfa8c0881959387b99b9bf8b1c60d1c04feda202a7",
+            "run_count": 3,
+            "run_id": "run-3",
+            "stalled_run_count": 0,
+            "threshold_reached": false
+          },
+          {
+            "previous_progress_signature": "sha256:2ef05c2042ff9efa29c7a7cfa8c0881959387b99b9bf8b1c60d1c04feda202a7",
+            "progress_detected": true,
+            "progress_signature": "sha256:b7e7e7187fbbc86da026f6bb6974a0d6d932dc0e29112d70c0f8c60f6b082d03",
+            "run_count": 4,
+            "run_id": "run-4",
+            "stalled_run_count": 0,
+            "threshold_reached": false
+          },
+          {
+            "previous_progress_signature": "sha256:b7e7e7187fbbc86da026f6bb6974a0d6d932dc0e29112d70c0f8c60f6b082d03",
+            "progress_detected": true,
+            "progress_signature": "sha256:7d52b296b123fe15658fd94f548f6dcac0a7cb43b9f13f2f8dafd188d414190f",
+            "run_count": 5,
+            "run_id": "run-5",
+            "stalled_run_count": 0,
+            "threshold_reached": false
+          }
+        ]
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>",
+      "sources": [
+        "src/roadmap_delivery/progress.py",
+        "tests/test_helper_scripts.py"
+      ],
+      "title": "Bookkeeping log churn defeats stall detection"
+    },
+    {
+      "capture_status": "observed",
+      "evidence_type": "executable",
+      "expected_result": {
+        "checkout_import_required": false,
+        "each_helper_exit_code": 0,
+        "stderr": "",
+        "stdout_contains": "usage:"
+      },
+      "fix_phases": [
+        4,
+        8
+      ],
+      "id": "R2",
+      "input": {
+        "arguments": [
+          "--help"
+        ],
+        "cwd": "<other-repository>",
+        "developer_pythonpath": false,
+        "helpers": [
+          "validate_delivery_artifacts.py",
+          "compute_progress_signature.py"
+        ],
+        "package": "skill/roadmap-delivery-skill",
+        "python_flags": [
+          "-I",
+          "-S"
+        ],
+        "site_packages": false
+      },
+      "observed_result": {
+        "checkout_on_child_import_path": false,
+        "helpers": [
+          {
+            "command": [
+              "python3",
+              "-I",
+              "-S",
+              "<isolated-install>/scripts/validate_delivery_artifacts.py",
+              "--help"
+            ],
+            "helper": "validate_delivery_artifacts.py",
+            "returncode": 2,
+            "stderr": "roadmap_delivery package is not importable. Run this script from the repository checkout or install the roadmap-delivery package.\n",
+            "stdout": ""
+          },
+          {
+            "command": [
+              "python3",
+              "-I",
+              "-S",
+              "<isolated-install>/scripts/compute_progress_signature.py",
+              "--help"
+            ],
+            "helper": "compute_progress_signature.py",
+            "returncode": 2,
+            "stderr": "roadmap_delivery package is not importable. Run this script from the repository checkout or install the roadmap-delivery package.\n",
+            "stdout": ""
+          }
+        ],
+        "site_packages_enabled": false
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>",
+      "sources": [
+        "skill/roadmap-delivery-skill/scripts/validate_delivery_artifacts.py",
+        "skill/roadmap-delivery-skill/scripts/compute_progress_signature.py",
+        "tests/test_install_smoke.py",
+        "scripts/host_smoke.py"
+      ],
+      "title": "Skill-only install cannot import runtime"
+    },
+    {
+      "capture_status": "observed",
+      "evidence_type": "instruction_provenance",
+      "expected_result": {
+        "live_scheduler_verified": false,
+        "phase_extraction": false,
+        "saved_prompt_migration": "proposal_only_until_authorized",
+        "terminal_action": "pause_status_only_by_default"
+      },
+      "fix_phases": [
+        1,
+        3,
+        6,
+        7,
+        8
+      ],
+      "id": "R3",
+      "input": {
+        "host_mutation": false,
+        "legacy_clause_provenance": "known_generated_legacy_scenario",
+        "legacy_prompt": "When all phases complete, pause only after explicit approval. Do not alter saved automation configuration without asking the operator.",
+        "package_upgrade": "copy current skill into isolated install",
+        "policy": {
+          "approval_mode": "conservative",
+          "operations": {
+            "pause_saved_automation": false
+          }
+        },
+        "saved_prompt_migration_authorized": false,
+        "specific_operator_pause_restriction": null,
+        "state": {
+          "all_phases_complete": true,
+          "status": "completed"
+        }
+      },
+      "observed_result": {
+        "host_update_attempted": false,
+        "live_scheduler_verified": false,
+        "provenance": "sanitized scenario; not a captured live legacy runner",
+        "saved_config_after_sha256": "d86e50299e7c2009ded45b2e528f4f4a908ea2d8533ea1ec6c988ff20ba243c1",
+        "saved_config_before_sha256": "d86e50299e7c2009ded45b2e528f4f4a908ea2d8533ea1ec6c988ff20ba243c1",
+        "saved_prompt_after_package_copy": "When all phases complete, pause only after explicit approval. Do not alter saved automation configuration without asking the operator.",
+        "source_excerpts": [
+          {
+            "line": 186,
+            "source": "core/references/model-policy-and-stall-control.md",
+            "text": "safety pause context. If a context-specific pause flag is absent, the default\nterminal safety policy allows the completion or stall pause; set the flag to\n`false` only when the operator explicitly wants the scheduler to keep running\nafter that terminal condition. A pause attempt is delivered only after trusted"
+          },
+          {
+            "line": 214,
+            "source": "adapters/codex/templates/references/model-policy-and-stall-control.md",
+            "text": "- Pausing, publication, promotion, branch deletion, and destructive git remain\n  explicit operator-approved actions."
+          }
+        ]
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>",
+      "sources": [
+        "core/references/model-policy-and-stall-control.md",
+        "adapters/codex/templates/references/model-policy-and-stall-control.md",
+        "skill/roadmap-delivery-skill/references/model-policy-and-stall-control.md"
+      ],
+      "title": "Terminal policy instructions and saved legacy prompt diverge"
+    },
+    {
+      "capture_status": "observed",
+      "evidence_type": "executable",
+      "expected_result": {
+        "duplicate_keys_valid": false,
+        "non_status_settings_preserved": true,
+        "readback_status": "PAUSED",
+        "scheduler_pause_claim_from_fixture": false,
+        "status_assignment_count": 1
+      },
+      "fix_phases": [
+        3,
+        8
+      ],
+      "id": "R4",
+      "input": {
+        "automation_id": "fixture-runner",
+        "backend": "temporary_file_only",
+        "config_text": "id = \"fixture-runner\"\nstatus = \"ACTIVE\" # operator activation\nprompt = \"fixture prompt\"\nmodel = \"fixture-model-a\"\n",
+        "requested_status": "PAUSED"
+      },
+      "observed_result": {
+        "candidate_text": "id = \"fixture-runner\"\nstatus = \"ACTIVE\" # operator activation\nprompt = \"fixture prompt\"\nmodel = \"fixture-model-a\"\nstatus = \"PAUSED\"\n",
+        "helper_result": {
+          "attempted": true,
+          "automation_id": "fixture-runner",
+          "paused": true,
+          "paused_at": "fixture-time",
+          "previous_status": "ACTIVE",
+          "readback_status": "PAUSED",
+          "reason": "isolated reproduction",
+          "status": "paused"
+        },
+        "scheduler_pause_verified": false,
+        "status_assignment_count": 2
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>",
+      "sources": [
+        "src/roadmap_delivery/automation.py",
+        "src/roadmap_delivery/toml.py"
+      ],
+      "title": "Inline status comment causes duplicate TOML key"
+    },
+    {
+      "capture_status": "observed",
+      "evidence_type": "executable",
+      "expected_result": {
+        "automatic_pause": false,
+        "effects": [],
+        "manual_pause_authority_remains_separate": true,
+        "reason": "context_pause_disabled"
+      },
+      "fix_phases": [
+        1,
+        8
+      ],
+      "id": "R5",
+      "input": {
+        "broad_pause_permission": true,
+        "contexts": [
+          "completion",
+          "stall"
+        ],
+        "manual_pause_requested": false,
+        "modes": [
+          "delegated_local",
+          "delegated_delivery"
+        ],
+        "pause_automation_on_completion": false,
+        "pause_automation_on_stall": false
+      },
+      "observed_result": {
+        "decisions": [
+          {
+            "context": "completion",
+            "decision": {
+              "context": "completion",
+              "decision": "allowed",
+              "operation": "pause_saved_automation",
+              "reason": "Approval policy pre-approves this operation.",
+              "source": "operation"
+            },
+            "mode": "delegated_local",
+            "raw_policy": {
+              "approval_mode": "delegated_local",
+              "never_auto": [
+                "force_push",
+                "git_reset_hard",
+                "delete_branches_or_tags",
+                "merge_or_promote_to_main",
+                "publish_releases_or_packages",
+                "use_unavailable_credentials",
+                "change_repository_security_or_billing",
+                "install_or_sync_global_tools",
+                "destructive_filesystem_outside_phase_scope"
+              ],
+              "operations": {
+                "commit_delivered_phase_locally": true,
+                "create_or_switch_phase_branch": true,
+                "edit_phase_owned_files": true,
+                "pause_saved_automation": true,
+                "push_current_phase_branch": false,
+                "retarget_saved_automation": true,
+                "run_verification": true,
+                "write_state_log_review_artifacts": true
+              },
+              "pause_automation_on_completion": false,
+              "pause_automation_on_completion_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "pause_automation_on_stall": false,
+              "pause_automation_on_stall_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "schema_version": 1
+            }
+          },
+          {
+            "context": "stall",
+            "decision": {
+              "context": "stall",
+              "decision": "allowed",
+              "operation": "pause_saved_automation",
+              "reason": "Approval policy pre-approves this operation.",
+              "source": "operation"
+            },
+            "mode": "delegated_local",
+            "raw_policy": {
+              "approval_mode": "delegated_local",
+              "never_auto": [
+                "force_push",
+                "git_reset_hard",
+                "delete_branches_or_tags",
+                "merge_or_promote_to_main",
+                "publish_releases_or_packages",
+                "use_unavailable_credentials",
+                "change_repository_security_or_billing",
+                "install_or_sync_global_tools",
+                "destructive_filesystem_outside_phase_scope"
+              ],
+              "operations": {
+                "commit_delivered_phase_locally": true,
+                "create_or_switch_phase_branch": true,
+                "edit_phase_owned_files": true,
+                "pause_saved_automation": true,
+                "push_current_phase_branch": false,
+                "retarget_saved_automation": true,
+                "run_verification": true,
+                "write_state_log_review_artifacts": true
+              },
+              "pause_automation_on_completion": false,
+              "pause_automation_on_completion_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "pause_automation_on_stall": false,
+              "pause_automation_on_stall_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "schema_version": 1
+            }
+          },
+          {
+            "context": "completion",
+            "decision": {
+              "context": "completion",
+              "decision": "allowed",
+              "operation": "pause_saved_automation",
+              "reason": "Approval policy pre-approves this operation.",
+              "source": "operation"
+            },
+            "mode": "delegated_delivery",
+            "raw_policy": {
+              "approval_mode": "delegated_delivery",
+              "never_auto": [
+                "force_push",
+                "git_reset_hard",
+                "delete_branches_or_tags",
+                "merge_or_promote_to_main",
+                "publish_releases_or_packages",
+                "use_unavailable_credentials",
+                "change_repository_security_or_billing",
+                "install_or_sync_global_tools",
+                "destructive_filesystem_outside_phase_scope"
+              ],
+              "operations": {
+                "commit_delivered_phase_locally": true,
+                "create_or_switch_phase_branch": true,
+                "edit_phase_owned_files": true,
+                "pause_saved_automation": true,
+                "push_current_phase_branch": true,
+                "retarget_saved_automation": true,
+                "run_verification": true,
+                "write_state_log_review_artifacts": true
+              },
+              "pause_automation_on_completion": false,
+              "pause_automation_on_completion_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "pause_automation_on_stall": false,
+              "pause_automation_on_stall_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "schema_version": 1
+            }
+          },
+          {
+            "context": "stall",
+            "decision": {
+              "context": "stall",
+              "decision": "allowed",
+              "operation": "pause_saved_automation",
+              "reason": "Approval policy pre-approves this operation.",
+              "source": "operation"
+            },
+            "mode": "delegated_delivery",
+            "raw_policy": {
+              "approval_mode": "delegated_delivery",
+              "never_auto": [
+                "force_push",
+                "git_reset_hard",
+                "delete_branches_or_tags",
+                "merge_or_promote_to_main",
+                "publish_releases_or_packages",
+                "use_unavailable_credentials",
+                "change_repository_security_or_billing",
+                "install_or_sync_global_tools",
+                "destructive_filesystem_outside_phase_scope"
+              ],
+              "operations": {
+                "commit_delivered_phase_locally": true,
+                "create_or_switch_phase_branch": true,
+                "edit_phase_owned_files": true,
+                "pause_saved_automation": true,
+                "push_current_phase_branch": true,
+                "retarget_saved_automation": true,
+                "run_verification": true,
+                "write_state_log_review_artifacts": true
+              },
+              "pause_automation_on_completion": false,
+              "pause_automation_on_completion_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "pause_automation_on_stall": false,
+              "pause_automation_on_stall_reason": "Operator explicitly disabled this terminal safety pause during setup.",
+              "schema_version": 1
+            }
+          }
+        ],
+        "host_update_attempted": false
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>",
+      "sources": [
+        "src/roadmap_delivery/approval.py",
+        "adapters/codex/templates/scripts/plan_automation_retarget.py",
+        "adapters/codex/templates/scripts/plan_phase_prerequisites.py"
+      ],
+      "title": "Broad delegated permission overrides automatic pause opt-out"
+    },
+    {
+      "capture_status": "observed",
+      "evidence_type": "executable",
+      "expected_result": {
+        "applicable_floor": "high",
+        "selection_within_caps": true,
+        "target": {
+          "model": "fixture-model-a",
+          "reasoning_effort": "high"
+        }
+      },
+      "fix_phases": [
+        5,
+        8
+      ],
+      "id": "R6",
+      "input": {
+        "base_model": "fixture-model-a",
+        "base_reasoning_effort": "high",
+        "flawless_streak": 0,
+        "policy": {
+          "adaptive_model_policy": {
+            "caps": {
+              "allowed_models": [
+                "fixture-model-a"
+              ],
+              "max_reasoning_effort": "xhigh"
+            },
+            "deescalate_after_flawless_runs": 1,
+            "deescalation": {
+              "model": "fixture-model-a",
+              "reasoning_effort": "low"
+            },
+            "enabled": true,
+            "floors": {
+              "min_reasoning_effort": "high"
+            }
+          },
+          "defaults": {
+            "model": "fixture-model-a",
+            "reasoning_effort": "high"
+          },
+          "max_stalled_runs": 2,
+          "notification": {
+            "fallback": "alert_file",
+            "mode": "alert_file"
+          },
+          "phases": {},
+          "schema_version": 1
+        },
+        "run_quality": "flawless"
+      },
+      "observed_result": {
+        "adaptive_action": {
+          "action": "deescalate",
+          "enabled": true,
+          "errors": [],
+          "next_flawless_streak": 0,
+          "reason": "Flawless run streak reached the configured de-escalation threshold.",
+          "run_quality": "flawless",
+          "target": {
+            "model": "fixture-model-a",
+            "reasoning_effort": "low"
+          },
+          "target_changed": true
+        },
+        "host_update_attempted": false,
+        "policy_errors": [],
+        "policy_warnings": [
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'required_model'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'required_reasoning_effort'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'configured_automation_model'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'configured_automation_reasoning_effort'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'run_count'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'stalled_run_count'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'max_stalled_runs'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'last_progress_signature'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'last_progress_at'."
+          },
+          {
+            "code": "missing_policy_state_field",
+            "message": "State is missing model/stall field 'last_operator_alert'."
+          }
+        ],
+        "validated_phase_reasoning": "high"
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>",
+      "sources": [
+        "src/roadmap_delivery/adaptive.py",
+        "src/roadmap_delivery/validation.py",
+        "schemas/phase_model_policy.schema.json"
+      ],
+      "title": "Valid adaptive policy returns target below reasoning floor"
+    }
+  ],
+  "python_version": "3.9.6",
+  "schema_version": 1,
+  "scope": "offline isolated baseline, no live scheduler mutation or verification"
+}

@@ -4,6 +4,33 @@ This document records the support boundary for the framework core, generated
 Codex skill package, generated Claude plugin package, and future-adapter
 planning surface.
 
+## 0.3.0 Runtime Boundary
+
+Portable execution requires Python 3.12 (`>=3.12,<3.13`) and cooperative POSIX
+directory locks. There is no verified Windows support or claim for another
+Python minor version. No specific live Codex/Claude app version is certified by
+offline tests. Package loading, scheduler updates and independent agent actions
+require separate host-version and receipt evidence.
+
+Codex/Claude packages include the runtime, canonical schemas, version metadata
+and an integrity manifest. Helpers resolve resources from their installed
+location and run with `-I -S`; runtime execution has no third-party dependencies.
+An offline CLI source build additionally needs local setuptools>=68 and wheel.
+The old Python 3.9+ support declaration is retired; migrate the interpreter and
+replace the whole package before running updated helpers.
+
+Prompt template 3, policy contract 2 and semantic progress evidence 1 are separate
+from artifact schema version 1. Legacy run counts are preserved, old signatures
+are diagnostics, and consumed events cannot count again. Migration accepts only
+known exact generated prompts with scoped authority and actual adapter readback.
+Custom text and malformed/missing policies need a decision. A skill upgrade
+does not rewrite saved runner prompts.
+
+Completion/stall pause flags default true in every approval mode; explicit false
+wins. The second unique no-progress outcome reaches the default threshold. Host
+effects must preserve all non-status settings and verify `PAUSED`; ordinary
+config-file reads and acknowledgements are insufficient scheduler evidence.
+
 ## Supported Surfaces
 
 | Surface | Status | Compatibility promise |
@@ -81,7 +108,10 @@ Host parity limits must remain beside marketplace-preparation guidance:
   helper scripts, validation, and optional live binary smoke checks.
 - Claude support is the generated local plugin package plus manifest checks,
   packaged skill/reviewer/hooks, validation, and optional live binary smoke
-  checks.
+  checks. Automatic hooks require `python3.12` on Claude's PATH; fail-closed
+  PreToolUse/UserPromptSubmit launch handling requires Claude Code v2.1.295+.
+  Stop-hook launch failures do not have the same guarantee. See
+  [installation prerequisites](installing-claude.md#portable-runtime-and-python-migration).
 - Optional live-host checks are warnings or evidence notes unless the result is
   recorded; they are not a substitute for repository validators and privacy
   scanning.

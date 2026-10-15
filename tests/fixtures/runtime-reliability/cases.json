@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "contract": "docs/runtime-control-contract.md",
+  "cases": [
+    {
+      "id": "R1",
+      "title": "Bookkeeping log churn defeats stall detection",
+      "evidence_type": "executable",
+      "fix_phases": [
+        2,
+        8
+      ],
+      "sources": [
+        "src/roadmap_delivery/progress.py",
+        "tests/test_helper_scripts.py"
+      ],
+      "input": {
+        "state": {
+          "current_phase": "Phase 1 - Fixture",
+          "status": "blocked",
+          "blocked_reason": "Missing fixture input",
+          "run_count": 0,
+          "stalled_run_count": 0,
+          "last_progress_signature": null
+        },
+        "max_stalled_runs": 2,
+        "run_ids": [
+          "run-1",
+          "run-2",
+          "run-3",
+          "run-4",
+          "run-5"
+        ],
+        "log_template": "Unchanged blocker, bookkeeping attempt {run}\n",
+        "accepted_progress": []
+      },
+      "expected_result": {
+        "first_no_progress_count": 1,
+        "second_no_progress_count": 2,
+        "pause_required_at_run": 2,
+        "phase_attempts_after_threshold": 0,
+        "original_blocker_preserved": true
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>"
+    },
+    {
+      "id": "R2",
+      "title": "Skill-only install cannot import runtime",
+      "evidence_type": "executable",
+      "fix_phases": [
+        4,
+        8
+      ],
+      "sources": [
+        "skill/roadmap-delivery-skill/scripts/validate_delivery_artifacts.py",
+        "skill/roadmap-delivery-skill/scripts/compute_progress_signature.py",
+        "tests/test_install_smoke.py",
+        "scripts/host_smoke.py"
+      ],
+      "input": {
+        "package": "skill/roadmap-delivery-skill",
+        "helpers": [
+          "validate_delivery_artifacts.py",
+          "compute_progress_signature.py"
+        ],
+        "python_flags": [
+          "-I",
+          "-S"
+        ],
+        "arguments": [
+          "--help"
+        ],
+        "cwd": "<other-repository>",
+        "developer_pythonpath": false,
+        "site_packages": false
+      },
+      "expected_result": {
+        "each_helper_exit_code": 0,
+        "stdout_contains": "usage:",
+        "stderr": "",
+        "checkout_import_required": false
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>"
+    },
+    {
+      "id": "R3",
+      "title": "Terminal policy instructions and saved legacy prompt diverge",
+      "evidence_type": "instruction_provenance",
+      "fix_phases": [
+        1,
+        3,
+        6,
+        7,
+        8
+      ],
+      "sources": [
+        "core/references/model-policy-and-stall-control.md",
+        "adapters/codex/templates/references/model-policy-and-stall-control.md",
+        "skill/roadmap-delivery-skill/references/model-policy-and-stall-control.md"
+      ],
+      "input": {
+        "state": {
+          "status": "completed",
+          "all_phases_complete": true
+        },
+        "policy": {
+          "approval_mode": "conservative",
+          "operations": {
+            "pause_saved_automation": false
+          }
+        },
+        "legacy_prompt": "When all phases complete, pause only after explicit approval. Do not alter saved automation configuration without asking the operator.",
+        "legacy_clause_provenance": "known_generated_legacy_scenario",
+        "specific_operator_pause_restriction": null,
+        "saved_prompt_migration_authorized": false,
+        "package_upgrade": "copy current skill into isolated install",
+        "host_mutation": false
+      },
+      "expected_result": {
+        "terminal_action": "pause_status_only_by_default",
+        "phase_extraction": false,
+        "saved_prompt_migration": "proposal_only_until_authorized",
+        "live_scheduler_verified": false
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>"
+    },
+    {
+      "id": "R4",
+      "title": "Inline status comment causes duplicate TOML key",
+      "evidence_type": "executable",
+      "fix_phases": [
+        3,
+        8
+      ],
+      "sources": [
+        "src/roadmap_delivery/automation.py",
+        "src/roadmap_delivery/toml.py"
+      ],
+      "input": {
+        "automation_id": "fixture-runner",
+        "config_text": "id = \"fixture-runner\"\nstatus = \"ACTIVE\" # operator activation\nprompt = \"fixture prompt\"\nmodel = \"fixture-model-a\"\n",
+        "requested_status": "PAUSED",
+        "backend": "temporary_file_only"
+      },
+      "expected_result": {
+        "status_assignment_count": 1,
+        "readback_status": "PAUSED",
+        "non_status_settings_preserved": true,
+        "duplicate_keys_valid": false,
+        "scheduler_pause_claim_from_fixture": false
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>"
+    },
+    {
+      "id": "R5",
+      "title": "Broad delegated permission overrides automatic pause opt-out",
+      "evidence_type": "executable",
+      "fix_phases": [
+        1,
+        8
+      ],
+      "sources": [
+        "src/roadmap_delivery/approval.py",
+        "adapters/codex/templates/scripts/plan_automation_retarget.py",
+        "adapters/codex/templates/scripts/plan_phase_prerequisites.py"
+      ],
+      "input": {
+        "modes": [
+          "delegated_local",
+          "delegated_delivery"
+        ],
+        "contexts": [
+          "completion",
+          "stall"
+        ],
+        "pause_automation_on_completion": false,
+        "pause_automation_on_stall": false,
+        "broad_pause_permission": true,
+        "manual_pause_requested": false
+      },
+      "expected_result": {
+        "automatic_pause": false,
+        "effects": [],
+        "reason": "context_pause_disabled",
+        "manual_pause_authority_remains_separate": true
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>"
+    },
+    {
+      "id": "R6",
+      "title": "Valid adaptive policy returns target below reasoning floor",
+      "evidence_type": "executable",
+      "fix_phases": [
+        5,
+        8
+      ],
+      "sources": [
+        "src/roadmap_delivery/adaptive.py",
+        "src/roadmap_delivery/validation.py",
+        "schemas/phase_model_policy.schema.json"
+      ],
+      "input": {
+        "policy": {
+          "schema_version": 1,
+          "max_stalled_runs": 2,
+          "notification": {
+            "mode": "alert_file",
+            "fallback": "alert_file"
+          },
+          "defaults": {
+            "model": "fixture-model-a",
+            "reasoning_effort": "high"
+          },
+          "phases": {},
+          "adaptive_model_policy": {
+            "enabled": true,
+            "deescalate_after_flawless_runs": 1,
+            "deescalation": {
+              "model": "fixture-model-a",
+              "reasoning_effort": "low"
+            },
+            "floors": {
+              "min_reasoning_effort": "high"
+            },
+            "caps": {
+              "allowed_models": [
+                "fixture-model-a"
+              ],
+              "max_reasoning_effort": "xhigh"
+            }
+          }
+        },
+        "base_model": "fixture-model-a",
+        "base_reasoning_effort": "high",
+        "run_quality": "flawless",
+        "flawless_streak": 0
+      },
+      "expected_result": {
+        "target": {
+          "model": "fixture-model-a",
+          "reasoning_effort": "high"
+        },
+        "applicable_floor": "high",
+        "selection_within_caps": true
+      },
+      "reproduction_command": "python3 tests/test_runtime_contract.py --capture-baseline --output <report-path>"
+    }
+  ]
+}

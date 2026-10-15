@@ -1,5 +1,6 @@
 import hashlib
 import json
+import runpy
 import shutil
 import subprocess
 import sys
@@ -15,6 +16,28 @@ VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 class ReleaseBuilderTests(unittest.TestCase):
     maxDiff = None
+
+    def test_release_rejects_cli_version_drift(self):
+        builder = runpy.run_path(str(REPO_ROOT / "scripts/build_release.py"))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in builder["SOURCE_PATHS"]:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).touch()
+            (root / "pyproject.toml").write_text('[project]\nversion = "0.0.0"\n')
+            with self.assertRaisesRegex(builder["ReleaseBuildError"], "project.version must match VERSION"):
+                builder["validate_release_inputs"](root, VERSION)
+
+    def test_release_rejects_invalid_cli_metadata(self):
+        builder = runpy.run_path(str(REPO_ROOT / "scripts/build_release.py"))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in builder["SOURCE_PATHS"]:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).touch()
+            (root / "pyproject.toml").write_text('[project\n')
+            with self.assertRaisesRegex(builder["ReleaseBuildError"], "Cannot read package metadata"):
+                builder["validate_release_inputs"](root, VERSION)
 
     def build_release(self, output_dir):
         proc = subprocess.run(

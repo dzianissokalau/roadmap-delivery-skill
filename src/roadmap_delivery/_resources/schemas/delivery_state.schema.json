@@ -1,0 +1,602 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roadmap-delivery.local/schemas/delivery_state.schema.json",
+  "title": "Roadmap Delivery State",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "roadmap",
+    "roadmap_slug",
+    "current_phase",
+    "status",
+    "review_iterations",
+    "max_review_iterations",
+    "blocked_reason",
+    "run_count",
+    "stalled_run_count",
+    "max_stalled_runs",
+    "all_phases_complete",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "roadmap": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\.md$"
+    },
+    "roadmap_slug": {
+      "type": "string",
+      "minLength": 1
+    },
+    "current_phase": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "delivering",
+        "verifying",
+        "reviewing",
+        "fixing",
+        "delivered",
+        "blocked",
+        "completed",
+        "completed_pending_pause"
+      ]
+    },
+    "review_iterations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_review_iterations": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "last_verification": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "last_review": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "last_delivered_phase": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blocked_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_blocker_repair": {
+      "type": [
+        "object",
+        "string",
+        "null"
+      ]
+    },
+    "approval_policy_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approval_mode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "conservative",
+        "delegated_local",
+        "delegated_delivery",
+        "custom",
+        null
+      ]
+    },
+    "last_approval_policy_readback": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "required_model": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "required_reasoning_effort": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        null
+      ]
+    },
+    "configured_automation_model": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "configured_automation_reasoning_effort": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        null
+      ]
+    },
+    "configured_automation_status": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "configured_execution_environment": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "automation": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "run_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stalled_run_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_stalled_runs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "last_progress_signature": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Legacy activity fingerprint retained for diagnostics only; never resets semantic counters."
+    },
+    "last_progress_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_operator_alert": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "last_automation_pause": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "last_control_plan": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Inspectable proposed decision; required effects and desired state are not execution receipts or observed host configuration."
+    },
+    "last_run_quality": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "flawless",
+        "delivered_with_fixes",
+        "verification_failed",
+        "review_needs_fix",
+        "blocked_local_repairable",
+        "blocked_human_required",
+        "stalled",
+        "retarget_failed",
+        "completion_closeout_failed",
+        null
+      ]
+    },
+    "last_adaptive_action": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "model_history": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object"
+      }
+    },
+    "adaptive_escalation_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "adaptive_deescalation_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "adaptive_flawless_streak": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "auto_advance_after_delivered_review": {
+      "type": "boolean"
+    },
+    "commit_delivered_phase_locally": {
+      "type": "boolean"
+    },
+    "push_to_github": {
+      "type": "boolean"
+    },
+    "all_phases_complete": {
+      "type": "boolean"
+    },
+    "deep_review_prompt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "final_deep_review_prompt_prepared": {
+      "type": "boolean"
+    },
+    "final_deep_review_prompt_file": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "final_deep_review_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "prompt-prepared",
+        "review-complete",
+        "waived-by-human",
+        null
+      ]
+    },
+    "final_deep_review_waiver_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "updated_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "progress_accounting": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "schema_version",
+        "revision",
+        "attempt_epoch",
+        "consumed_events",
+        "migration"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attempt_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "consumed_events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "migration": {
+          "type": "object",
+          "required": [
+            "baseline_run_count",
+            "baseline_stalled_run_count",
+            "legacy_run_ids",
+            "uncertain_history"
+          ],
+          "properties": {
+            "baseline_run_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "baseline_stalled_run_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "legacy_run_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "uncertain_history": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "description": "Versioned semantic ledger; journal revision and consumed events survive duplicate/recovered runs."
+    },
+    "active_run": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "run_id",
+        "phase",
+        "initial_evidence",
+        "initial_counters",
+        "owned_files",
+        "blocked_reason"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initial_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "initial_counters": {
+          "type": "object"
+        },
+        "owned_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blocked_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "last_completed_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stall_metadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Consecutive-run terminal trigger; original blocked_reason remains actionable."
+    },
+    "terminal_closeout": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "schema_version",
+        "intent_id",
+        "context",
+        "runner_id",
+        "attempts",
+        "max_attempts",
+        "status",
+        "request",
+        "receipt",
+        "required_action"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "intent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "enum": [
+            "completion",
+            "stall"
+          ]
+        },
+        "runner_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "receipt": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "required_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "description": "Resumable terminal intent/attempts/observed receipt. External requests are emitted once per reserved attempt; bound external_outcomes permit bounded retries. No phase attempt is allocated; journal repairs interrupted state writes."
+    },
+    "runtime_contract": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "schema_version",
+        "versions",
+        "provenance"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "versions": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "framework",
+            "prompt_template",
+            "policy",
+            "progress_evidence"
+          ],
+          "properties": {
+            "framework": {
+              "type": "string",
+              "minLength": 1
+            },
+            "prompt_template": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "policy": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "progress_evidence": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "runner_verified": {
+              "type": "boolean"
+            },
+            "plan_id": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "migration_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "runner_id",
+          "plan_id",
+          "direction",
+          "source",
+          "observed_revision",
+          "scheduler_authoritative"
+        ],
+        "properties": {
+          "direction": {
+            "enum": [
+              "forward",
+              "rollback"
+            ]
+          },
+          "scheduler_authoritative": {
+            "const": true
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

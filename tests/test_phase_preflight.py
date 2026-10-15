@@ -206,6 +206,8 @@ class PhasePreflightTests(unittest.TestCase):
             (automation_dir / "approval_policy.json").write_text(
                 json.dumps(
                     {
+                        "schema_version": 1,
+                        "never_auto": [],
                         "approval_mode": "conservative",
                         "operations": {
                             "edit_phase_owned_files": True,
@@ -274,7 +276,10 @@ class PhasePreflightTests(unittest.TestCase):
 
         self.assertFalse(phase1["network_required"])
         self.assertNotIn("network_disabled", {issue["code"] for issue in phase1["issues"]})
-        self.assertEqual(phase2["readiness"], "needs_approval")
+        # Cached state fields are not runner readback. The credential finding
+        # remains visible alongside the missing model/reasoning evidence.
+        self.assertEqual(phase2["readiness"], "blocked")
+        self.assertIn("runner_readback_missing", {issue["code"] for issue in phase2["issues"]})
         self.assertFalse(phase2["network_required"])
         self.assertIn("credential_approval_required", {issue["code"] for issue in phase2["issues"]})
         self.assertNotIn(
@@ -295,7 +300,7 @@ class PhasePreflightTests(unittest.TestCase):
         ]
         self.assertEqual(len(pause_approvals), 1)
         self.assertEqual(pause_approvals[0]["decision"], "allowed")
-        self.assertEqual(pause_approvals[0]["source"], "pause_automation_on_completion")
+        self.assertEqual(pause_approvals[0]["source"], "default_pause_automation_on_completion")
         self.assertNotIn(
             ("approval_required", "pause_saved_automation"),
             {(issue["code"], issue.get("operation")) for issue in finalization["issues"]},

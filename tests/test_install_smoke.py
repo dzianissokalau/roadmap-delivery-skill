@@ -77,7 +77,9 @@ class InstallSmokeTests(unittest.TestCase):
         env["CODEX_HOME"] = str(home / ".codex")
         env["AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR"] = str(home / ".codex" / "automations")
         env["PYTHONPYCACHEPREFIX"] = str(Path(tmpdir) / "pycache")
-        env["PYTHONPATH"] = str(REPO_ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+        env["PYTHONNOUSERSITE"] = "1"
         return env
 
     def test_codex_package_stages_in_temp_home_and_helpers_validate_demo(self):
@@ -105,6 +107,7 @@ class InstallSmokeTests(unittest.TestCase):
             inspect = self.run_json(
                 [
                     sys.executable,
+                    "-S",
                     str(skill_target / "scripts" / "inspect_delivery_state.py"),
                     "--repo-root",
                     str(demo_repo),
@@ -120,6 +123,7 @@ class InstallSmokeTests(unittest.TestCase):
             validate = self.run_json(
                 [
                     sys.executable,
+                    "-S",
                     str(skill_target / "scripts" / "validate_delivery_artifacts.py"),
                     "--repo-root",
                     str(demo_repo),
@@ -161,8 +165,8 @@ class InstallSmokeTests(unittest.TestCase):
             inspect = self.run_json(
                 [
                     sys.executable,
-                    "-m",
-                    "roadmap_delivery.cli",
+                    "-S",
+                    str(plugin_target / "skills/roadmap-delivery-skill/scripts/roadmap_delivery.py"),
                     "inspect",
                     "--repo-root",
                     str(demo_repo),
@@ -173,14 +177,14 @@ class InstallSmokeTests(unittest.TestCase):
                     "--strict",
                     "--json",
                 ],
-                cwd=REPO_ROOT,
+                cwd=demo_repo,
                 env=env,
             )
             validate = self.run_json(
                 [
                     sys.executable,
-                    "-m",
-                    "roadmap_delivery.cli",
+                    "-S",
+                    str(plugin_target / "skills/roadmap-delivery-skill/scripts/roadmap_delivery.py"),
                     "validate",
                     "--repo-root",
                     str(demo_repo),
@@ -191,7 +195,7 @@ class InstallSmokeTests(unittest.TestCase):
                     "--strict",
                     "--json",
                 ],
-                cwd=REPO_ROOT,
+                cwd=demo_repo,
                 env=env,
             )
 

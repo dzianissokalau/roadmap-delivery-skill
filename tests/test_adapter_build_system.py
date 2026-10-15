@@ -1,4 +1,5 @@
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -46,7 +47,7 @@ class AdapterBuildSystemTests(unittest.TestCase):
         self.assertEqual(claude["check_mode"], "output")
         self.assertEqual(claude["capability_file"], "host-capabilities/claude.yaml")
         self.assertEqual(
-            [item["path"] for item in claude["files"]],
+            [item["path"] for item in claude["files"] if "/runtime/" not in item["path"] and "/scripts/" not in item["path"]],
             [
                 ".claude-plugin/plugin.json",
                 "README.md",
@@ -65,6 +66,7 @@ class AdapterBuildSystemTests(unittest.TestCase):
                 "skills/roadmap-delivery-skill/references/troubleshooting.md",
             ],
         )
+        self.assertIn("skills/roadmap-delivery-skill/runtime/roadmap_delivery/_resources/runtime-manifest.json", {item["path"] for item in claude["files"]})
 
     def test_output_root_snapshot_write_is_deterministic(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -79,6 +81,33 @@ class AdapterBuildSystemTests(unittest.TestCase):
                     second_files = self.report_for(second, adapter)["files"]
                     self.assertEqual(first_files, second_files)
                     self.assertTrue((Path(tmp) / adapter).is_dir())
+
+    def test_generated_host_outputs_are_not_ignored_by_git(self):
+        report = self.run_build("--check", "--json")
+        roots = {"codex": "skill/roadmap-delivery-skill", "claude": "dist/claude"}
+        paths = [
+            f"{roots[adapter]}/{item['path']}"
+            for adapter in roots
+            for item in self.report_for(report, adapter)["files"]
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "dist").mkdir()
+            for name in (".gitignore", "dist/.gitignore"):
+                shutil.copyfile(REPO_ROOT / name, root / name)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            command = ["git", "-c", "core.excludesFile=/dev/null", "check-ignore", "--no-index", "--stdin"]
+            result = subprocess.run(command, cwd=root, input="\n".join(paths) + "\n", text=True, capture_output=True)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertEqual(result.stdout, "")
+            excluded = [
+                "dist/release.tar.gz",
+                "dist/claude/skills/roadmap-delivery-skill/runtime/__pycache__/cache.pyc",
+                "src/roadmap_delivery/__pycache__/cache.pyc",
+            ]
+            result = subprocess.run(command, cwd=root, input="\n".join(excluded) + "\n", text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.splitlines(), excluded)
 
     def test_check_fails_when_generated_snapshot_output_is_stale(self):
         with tempfile.TemporaryDirectory() as tmp:

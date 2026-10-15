@@ -17,9 +17,10 @@ operation is `forbidden` or unknown.
 
 Missing `approval_policy.json` is conservative legacy behavior: local edits,
 state/log/review writes, phase branch creation, and verification may proceed,
-while local commits, automation retargets, automation pause, branch push,
+while local commits, automation retargets, broad automation edits, branch push,
 installed skill sync, publication, promotion, credential use, and destructive
-git require the approval gate.
+git require the approval gate. Default terminal status-only pauses and explicit
+context opt-outs use `model-policy-and-stall-control.md`.
 
 Invalid approval policy is a blocker before delivery relies on pre-approval.
 Record the invalid policy error in state/log/review, use conservative fallback
@@ -77,8 +78,8 @@ On a blocked run:
 2. Classify the blocker.
 3. Repair only local or approval-policy `allowed` runner configuration blockers.
 4. Rerun validation/readback.
-5. Record `last_blocker_repair`, clear `blocked_reason`, and reset stall
-   counters only after repair evidence passes.
+5. Record `last_blocker_repair`, clear `blocked_reason`, and let the semantic journal reset stall
+   counters only for a verified original-cause repair.
 6. Resume the current phase only after reconciliation is clean.
 
 Do not write another blocked review for the same issue until remediation
@@ -102,7 +103,7 @@ Treat the mismatch as repairable activation acceptance when all are true:
 In that case, do not pause the runner and do not keep blocking phase delivery.
 Update durable guide/log/state surfaces to ACTIVE, record `last_activation` and
 `last_blocker_repair`, clear `blocked_reason` only after validation/readback
-passes, reset stalled counters, and resume the current phase.
+passes, and resume the current phase. Activation alone cannot reset stalls.
 
 If ACTIVE was not intended, or any other runner field mismatches, keep state
 blocked and ask for the missing runner repair or operator decision.
@@ -116,7 +117,8 @@ final verification record.
 If policy allowed a completion or stall pause but runner readback is not
 `PAUSED`, classify the issue as an automation-config blocker. Keep or set
 `completed_pending_pause` for completion closeout, keep the local alert, and ask
-for the smallest runner repair or pause approval needed. Do not convert the
+for the smallest unavailable capability/readback repair. Existing terminal
+authority does not need another approval; explicit opt-outs remain disabled. Do not convert the
 state to `completed` until readback proves the runner is paused.
 
 ## Host Adapter Boundary

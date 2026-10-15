@@ -1,6 +1,6 @@
 schema_version: 1
 host: codex
-updated: 2026-05-31
+updated: 2026-10-14
 support_status: supported
 parity_role: baseline
 contract:
@@ -9,6 +9,15 @@ contract:
     - The package routes setup, phase delivery, review, remediation, model policy, and finalization workflows.
     - Repository-local state, logs, reviews, alerts, and validation remain authoritative.
   parity_target: required_parity
+runtime_boundary:
+  candidate_version: 0.3.0
+  python: ">=3.12,<3.13"
+  dependencies: stdlib_only
+  locks: cooperative_posix_directory_locks
+  tested_host_versions: none_offline_contracts_only
+  prompt_template_version: 3
+  policy_contract_version: 2
+  semantic_evidence_version: 1
 capabilities:
   skill_instruction_packaging:
     parity_level: required_parity
@@ -32,15 +41,20 @@ capabilities:
     fallback: manual codex exec or Codex app runs against the same repository artifacts
   live_smoke_harness:
     parity_level: host_specific_enhancement
+    fallback: offline package layout, helper script, and demo fixture validation
     status: optional_supported
     default: offline_package_checks
     offline_parity: package_layout_helper_scripts_demo_fixture_validation
     live_status_source: scripts/host_smoke.py live_status
+    live_status_scope: binary_help_only_not_scheduler_evidence
+    evidence_categories: offline_package_binary_availability_offline_simulation_real_scheduler_independent_agent
+    real_scheduler_check: skipped_by_harness_requires_opt_in_update_and_readback
+    independent_agent_check: skipped_when_unavailable_separate_raw_fixture_evaluation
+    mandatory_behavioral_suite: tests/test_runtime_scenarios.py extracted_release_offline_scheduler_double
     skipped_result_visibility: required
     nightly_workflow: .github/workflows/host-smoke-nightly.yml workflow_dispatch opt-in
     skip_reason_when_missing: codex_binary_not_found
     guard: scripts/host_smoke.py must use --isolated-home and a temporary CODEX_HOME
-    fallback: offline package layout, helper script, and demo fixture validation
     evidence:
       - scripts/host_smoke.py
       - tests/test_host_smoke.py
@@ -66,3 +80,16 @@ capabilities:
     parity_level: host_specific_enhancement
     status: supported_when_tools_are_available
     fallback: file-backed inspection and local CLI validation
+  terminal_status_update:
+    parity_level: required_parity
+    status: host_tool_action_when_available
+    operation: readback_and_status_only_pause
+    source_of_truth: acknowledged_host_readback
+    file_backend: unsupported_unless_host_explicitly_documents_authoritative_file_contract
+    concurrency: adapter_must_compare_observed_revision_and_make_request_id_idempotent
+    settings: preserve_full_configuration_except_status_and_host_updated_at
+    fallback: durable_local_alert_intent_and_action_request_with_specific_required_action
+    evidence:
+      - src/roadmap_delivery/automation.py
+      - tests/test_runner_updates.py
+      - tests/test_terminal_closeout.py

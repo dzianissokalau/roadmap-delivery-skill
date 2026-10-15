@@ -1,8 +1,10 @@
 import json
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -74,6 +76,17 @@ def section_keys(text: str, section: str) -> set[str]:
 
 class GithubActionContractTests(unittest.TestCase):
     maxDiff = None
+
+    def test_ci_provisions_build_dependencies_before_offline_tests(self):
+        requirements = set(tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())["build-system"]["requires"])
+        for name in ("ci.yml", "release-check.yml"):
+            with self.subTest(workflow=name):
+                workflow = (REPO_ROOT / ".github/workflows" / name).read_text()
+                installs = list(re.finditer(r"^\s+run: (python3 -m pip install [^\n]+)$", workflow, re.MULTILINE))
+                provisioning = [match for match in installs if requirements.issubset(shlex.split(match.group(1))[4:])]
+                self.assertTrue(provisioning, "Build isolation does not install tools into the test interpreter")
+                self.assertLess(provisioning[0].start(), workflow.index("python3 -m unittest"))
+                self.assertLess(provisioning[0].start(), workflow.index("PIP_NO_INDEX:"))
 
     def test_action_metadata_declares_stable_offline_contract(self):
         action = read_action()

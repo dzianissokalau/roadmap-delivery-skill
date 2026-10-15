@@ -1,5 +1,22 @@
 # Release Process
 
+## Candidate Provenance And Evidence
+
+The builder consumes current files, including uncommitted changes. Record git
+HEAD, branch, explained worktree status, input hashes and artifact hashes in a
+repository-local evidence receipt outside the archives. A commit hash alone is
+insufficient when the candidate is dirty. Version 0.3.0 retires Python 3.9+
+in favor of `>=3.12,<3.13`; keep VERSION, pyproject, generated plugin/runtime
+metadata and current install examples consistent. Regenerate adapters before
+building. Keep historical release notes unchanged.
+
+Separate passed required checks, failed development attempts, optional skips
+and untested surfaces. Offline scheduler doubles prove executable contracts;
+binary help proves availability only. Live scheduler stopping and independent
+agent behavior require their own raw observations. Prepare the final deep-review
+prompt separately from phase reviews and record `prompt-prepared` until a fresh
+review actually runs. Last numbered phase delivery leaves finalization pending.
+
 This process defines the release-readiness contract for Roadmap Delivery Skill.
 It prepares a local release candidate and the evidence needed for operator
 review. It does not publish tags, GitHub Releases, package registry uploads,
@@ -26,7 +43,7 @@ contains all of the following:
 
 | Evidence | Expected source |
 |---|---|
-| Release notes | `docs/release-notes-0.2.0.md` or the current versioned notes file; this is the source of truth for contents, limitations, verification, and publication boundaries |
+| Release notes | `docs/release-notes-0.3.0.md` or the current versioned notes file; this is the source of truth for contents, limitations, verification, and publication boundaries |
 | Changelog entry | `CHANGELOG.md` entry matching `VERSION` |
 | Release manifest | `dist/roadmap-delivery-<VERSION>-manifest.json` |
 | SHA-256 checksums | `dist/roadmap-delivery-<VERSION>-checksums.sha256` |

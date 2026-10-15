@@ -193,7 +193,8 @@
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "description": "Legacy activity fingerprint retained for diagnostics only; never resets semantic counters."
     },
     "last_progress_at": {
       "type": [
@@ -212,6 +213,13 @@
         "object",
         "null"
       ]
+    },
+    "last_control_plan": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Inspectable proposed decision; required effects and desired state are not execution receipts or observed host configuration."
     },
     "last_run_quality": {
       "type": [
@@ -308,6 +316,286 @@
         "string",
         "null"
       ]
+    },
+    "progress_accounting": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "schema_version",
+        "revision",
+        "attempt_epoch",
+        "consumed_events",
+        "migration"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attempt_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "consumed_events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "migration": {
+          "type": "object",
+          "required": [
+            "baseline_run_count",
+            "baseline_stalled_run_count",
+            "legacy_run_ids",
+            "uncertain_history"
+          ],
+          "properties": {
+            "baseline_run_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "baseline_stalled_run_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "legacy_run_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "uncertain_history": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "description": "Versioned semantic ledger; journal revision and consumed events survive duplicate/recovered runs."
+    },
+    "active_run": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "run_id",
+        "phase",
+        "initial_evidence",
+        "initial_counters",
+        "owned_files",
+        "blocked_reason"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initial_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "initial_counters": {
+          "type": "object"
+        },
+        "owned_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blocked_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "last_completed_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stall_metadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Consecutive-run terminal trigger; original blocked_reason remains actionable."
+    },
+    "terminal_closeout": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "schema_version",
+        "intent_id",
+        "context",
+        "runner_id",
+        "attempts",
+        "max_attempts",
+        "status",
+        "request",
+        "receipt",
+        "required_action"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "intent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "enum": [
+            "completion",
+            "stall"
+          ]
+        },
+        "runner_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "receipt": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "required_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "description": "Resumable terminal intent/attempts/observed receipt. External requests are emitted once per reserved attempt; bound external_outcomes permit bounded retries. No phase attempt is allocated; journal repairs interrupted state writes."
+    },
+    "runtime_contract": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "schema_version",
+        "versions",
+        "provenance"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "versions": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "framework",
+            "prompt_template",
+            "policy",
+            "progress_evidence"
+          ],
+          "properties": {
+            "framework": {
+              "type": "string",
+              "minLength": 1
+            },
+            "prompt_template": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "policy": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "progress_evidence": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "runner_verified": {
+              "type": "boolean"
+            },
+            "plan_id": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "migration_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "runner_id",
+          "plan_id",
+          "direction",
+          "source",
+          "observed_revision",
+          "scheduler_authoritative"
+        ],
+        "properties": {
+          "direction": {
+            "enum": [
+              "forward",
+              "rollback"
+            ]
+          },
+          "scheduler_authoritative": {
+            "const": true
+          }
+        }
+      }
     }
   },
   "additionalProperties": true

@@ -35,6 +35,11 @@ Use this template for `automation/<roadmap-slug>/approval_policy.json`.
 Missing approval policy files keep legacy conservative behavior. Invalid policy
 files must fail validation before delivery work relies on them.
 
+Policy contract version 2 is recorded with provenance in delivery state.
+Migration plans preserve explicit false pause flags and custom restrictions.
+Missing or malformed policies require an operator decision; upgrading the skill
+alone never writes policy or grants saved-prompt update permission.
+
 Setup wizard output must default to `conservative`. Delegated modes are valid
 only when explicitly selected by the operator and recorded in this file.
 

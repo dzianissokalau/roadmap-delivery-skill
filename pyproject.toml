@@ -1,12 +1,12 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "roadmap-delivery"
-version = "0.2.0"
+version = "0.3.0"
 description = "Shared helpers for phase-gated roadmap delivery workflows."
-requires-python = ">=3.9"
+requires-python = ">=3.12,<3.13"
 
 [project.scripts]
 roadmap-delivery = "roadmap_delivery.cli:main"
@@ -16,3 +16,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+roadmap_delivery = ["_resources/*.json", "_resources/VERSION", "_resources/schemas/*.json"]

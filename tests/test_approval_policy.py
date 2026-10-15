@@ -66,7 +66,7 @@ class ApprovalPolicyTests(unittest.TestCase):
                 {"operations": conservative, "pause_automation_on_stall": False},
                 "stall",
             )["decision"],
-            "ask",
+            "disabled",
         )
         destructive = approval_decision_for_operation(delegated_local, "destructive_git")
         self.assertEqual(destructive["decision"], "forbidden")

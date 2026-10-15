@@ -1,9 +1,12 @@
+import contextlib
+import io
 import json
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 try:
     from tests.test_helper_scripts import DeliveryFixture, VALIDATE_SCRIPT
@@ -35,6 +38,75 @@ class CliTests(unittest.TestCase):
 
         version = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
         self.assertEqual(proc.stdout.strip(), f"roadmap-delivery {version}")
+
+    def test_plan_migration_exact_diff_is_read_only_and_missing_policy_is_visible(self):
+        from tests.test_runtime_migrations import CONFIG, EXPECTED, POLICY, ROADMAP
+        from roadmap_delivery.automation import runner_snapshot
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot, expected, policy = [root / name for name in ("runner.json", "expected.json", "policy.json")]
+            snapshot.write_text(json.dumps(runner_snapshot(CONFIG, source="offline fixture")))
+            expected.write_text(json.dumps(EXPECTED)); policy.write_text(json.dumps(POLICY))
+            before = {p.name:p.read_bytes() for p in root.iterdir()}
+            common = ("plan-migration", "--roadmap-slug", "fixture", "--roadmap-path", ROADMAP,
+                      "--runner-snapshot", str(snapshot), "--expected-file", str(expected), "--json")
+            result = json.loads(self.run_cli(*common, "--policy-file", str(policy)).stdout)
+            self.assertEqual(result["status"], "planned")
+            self.assertEqual(result["effects"], ["update_prompt_only"])
+            self.assertTrue(result["read_only"])
+            self.assertIn("before/prompt", result["diffs"]["prompt"])
+            missing = json.loads(self.run_cli(*common, allowed_returncodes=(2,)).stdout)
+            self.assertIn("missing_policy", missing["issues"])
+            self.assertEqual(before, {p.name:p.read_bytes() for p in root.iterdir()})
+            policy.write_text("not JSON")
+            bad = json.loads(self.run_cli(*common, "--policy-file", str(policy), allowed_returncodes=(2,)).stdout)
+            self.assertEqual(bad["status"], "needs-decision")
+
+    def test_plan_control_terminal_exit_categories_and_no_mutations(self):
+        from tests.test_runtime_control import runner, phase_state, final_evidence
+        from roadmap_delivery.approval import default_approval_policy
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); directory = root / "automation/fixture"; directory.mkdir(parents=True)
+            state_file = directory / "delivery_state.json"
+            snapshot = root / "runner.json"; evidence = root / "evidence.json"
+            evidence.write_text(json.dumps(final_evidence()))
+            cases = (
+                ("completed", default_approval_policy(), runner(), "ready", 0),
+                ("completed", default_approval_policy(pause_on_completion=False), runner(), "disabled", 0),
+                ("completed", default_approval_policy(), {**runner(), "capabilities": {}}, "unsupported", 3),
+                ("completed", {}, runner(), "invalid_input", 2),
+                ("not_started", default_approval_policy("custom", {"edit_phase_owned_files": False}), runner(), "permission_required", 1),
+            )
+            for status, policy, observed, result, code in cases:
+                state_file.write_text(json.dumps(phase_state(status=status)))
+                (directory / "approval_policy.json").write_text(json.dumps(policy))
+                snapshot.write_text(json.dumps(observed))
+                before = {str(p): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+                proc = self.run_cli("plan-control", "--repo-root", str(root), "--roadmap-slug", "fixture",
+                                    "--evidence-file", str(evidence), "--runner-snapshot", str(snapshot), "--json", allowed_returncodes=(code,))
+                report = json.loads(proc.stdout)
+                self.assertEqual(report["result"], result)
+                self.assertEqual(report["exit_code"], code)
+                self.assertEqual(before, {str(p): p.read_bytes() for p in root.rglob("*") if p.is_file()})
+
+    def test_plan_control_missing_input_returns_stable_invalid_category(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = self.run_cli("plan-control", "--repo-root", tmp, "--roadmap-slug", "missing", "--json", allowed_returncodes=(2,))
+            self.assertEqual(json.loads(proc.stdout)["result"], "invalid_input")
+
+    def test_plan_control_invalid_model_policy_blocks_only_phase_work(self):
+        from tests.test_runtime_control import runner, phase_state, final_evidence
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); directory = root / "automation/fixture"; directory.mkdir(parents=True)
+            snapshot = root / "runner.json"; snapshot.write_text(json.dumps(runner()))
+            evidence = root / "evidence.json"; evidence.write_text(json.dumps({**final_evidence(), "prerequisites_passed": True}))
+            (directory / "phase_model_policy.json").write_text(json.dumps({"schema_version": 999, "defaults": {"model": "fixture-model", "reasoning_effort": "high"}, "phases": {}}))
+            for status, code, action in (("not_started", 2, "block_phase_work"), ("completed", 0, "pause_status_only")):
+                (directory / "delivery_state.json").write_text(json.dumps(phase_state(status=status)))
+                proc = self.run_cli("plan-control", "--repo-root", str(root), "--roadmap-slug", "fixture", "--evidence-file", str(evidence), "--runner-snapshot", str(snapshot), "--json", allowed_returncodes=(code,))
+                report = json.loads(proc.stdout)
+                self.assertEqual(report["action"], action)
+                self.assertTrue(report["prerequisite_errors"])
 
     def test_validate_strict_returns_nonzero_on_errors(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -123,6 +195,54 @@ class CliTests(unittest.TestCase):
             self.assertEqual(report["status"], "ok")
             self.assertEqual(report["current_phase"], "Phase 1 - Fixture")
             self.assertEqual(report["required_model"], "gpt-5.5")
+
+    def test_inspect_uses_fresh_capability_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = DeliveryFixture(tmp, write_model_policy=True)
+            policy_file = fixture.state_dir / "phase_model_policy.json"
+            policy = json.loads(policy_file.read_text())
+            policy["adaptive_model_policy"] = {"enabled": False, "caps": {
+                "allowed_models": ["gpt-5.5"], "allowed_providers": ["approved-vendor"]}}
+            policy_file.write_text(json.dumps(policy))
+            metadata_file = Path(tmp) / "capabilities.json"
+            metadata = {"trusted": True, "source": "offline-adapter", "models": {
+                "gpt-5.5": {"provider": "approved-vendor", "reasoning_efforts": ["xhigh"]}}}
+            common = ("--repo-root", str(fixture.repo_root), "--roadmap-slug", fixture.slug,
+                      "--automation-id", fixture.automation_id, "--capabilities-file", str(metadata_file), "--json")
+            for provider, expected_status in (("approved-vendor", "resolved"), ("revoked-vendor", "invalid_policy")):
+                with self.subTest(provider=provider):
+                    metadata["models"]["gpt-5.5"]["provider"] = provider
+                    metadata_file.write_text(json.dumps(metadata))
+                    inspected = json.loads(self.run_cli("inspect", *common, env=fixture.env(), allowed_returncodes=(0, 1)).stdout)
+                    validated = json.loads(self.run_cli("validate", *common, env=fixture.env(), allowed_returncodes=(0, 1)).stdout)
+                    resolution = inspected["model_policy"]["target_resolution"]
+                    self.assertEqual(resolution["status"], expected_status)
+                    self.assertEqual(resolution, validated["model_policy"]["target_resolution"])
+
+    def test_terminal_closeout_loads_external_outcome_without_applying_it(self):
+        from roadmap_delivery.cli import main
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / "runner.json"
+            snapshot.write_text(json.dumps({"source": "offline-adapter", "status": "ACTIVE"}))
+            outcome_file = root / "outcome.json"
+            outcome = {"request_id": "fixture-request", "attempt": 1,
+                       "status": "transient_failure", "source": "offline-adapter"}
+            outcome_file.write_text(json.dumps(outcome))
+            args = ["terminal-closeout", "--repo-root", str(root), "--state-file", "state.json",
+                    "--runner-snapshot", str(snapshot), "--external-outcome", str(outcome_file), "--json"]
+            with patch("roadmap_delivery.automation.resume_terminal_closeout", return_value={"exit_code": 4}) as resume:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(main(args), 4)
+                resume.assert_called_once_with(root.resolve(), root.resolve() / "state.json",
+                    observed={"source": "offline-adapter", "status": "ACTIVE"}, external_outcome=outcome)
+            outcome_file.write_text("[]")
+            with patch("roadmap_delivery.automation.resume_terminal_closeout") as resume:
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(main(args), 2)
+                self.assertEqual(json.loads(output.getvalue())["result"], "invalid_input")
+                resume.assert_not_called()
 
     def test_scaffold_dry_run_does_not_create_files(self):
         with tempfile.TemporaryDirectory() as tmp:

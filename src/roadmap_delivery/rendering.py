@@ -254,7 +254,8 @@ def _read_core_source(repo_root: Path, core_source: Optional[str], *, output: st
 def iter_files(root: Path) -> Iterable[Path]:
     if not root.exists():
         return []
-    return sorted(path for path in root.rglob("*") if path.is_file())
+    return sorted(path for path in root.rglob("*") if path.is_file()
+                  and "__pycache__" not in path.parts and path.suffix not in (".pyc", ".pyo"))
 
 
 def file_mode(path: Path) -> int:
@@ -356,3 +357,19 @@ def aggregate_status(reports: Sequence[Dict[str, Any]]) -> str:
     if any(report.get("status") == "drift" for report in reports):
         return "drift"
     return "ok"
+
+
+def portable_runtime_files(repo_root: Path, prefix: str = "runtime") -> List[RenderedFile]:
+    """Explicit dependency closure: stdlib-only modules and canonical schema data."""
+    root = repo_root / "src" / "roadmap_delivery"
+    payload = {"roadmap_delivery/" + path.name: path.read_bytes() for path in sorted(root.glob("*.py"))}
+    payload["VERSION"] = (repo_root / "VERSION").read_bytes()
+    payload["roadmap_delivery/_resources/VERSION"] = payload["VERSION"]
+    for path in sorted((repo_root / "schemas").glob("*.json")):
+        payload["roadmap_delivery/_resources/schemas/" + path.name] = path.read_bytes()
+    manifest = {"schema_version": 1, "version": payload["VERSION"].decode().strip(),
+                "python": ">=3.12,<3.13", "dependencies": "Python standard library only",
+                "files": {name.removeprefix("roadmap_delivery/"): hashlib.sha256(data).hexdigest()
+                          for name, data in payload.items() if name.startswith("roadmap_delivery/")}}
+    payload["roadmap_delivery/_resources/runtime-manifest.json"] = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
+    return [RenderedFile(output=prefix + "/" + name, content=data, mode=0o644) for name, data in sorted(payload.items())]

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "roadmap": "roadmaps/in_progress_evaluation.md",
+  "roadmap_slug": "evaluation",
+  "current_phase": "Phase 1 - Fixture",
+  "status": "blocked",
+  "run_count": 1,
+  "stalled_run_count": 1,
+  "max_stalled_runs": 2,
+  "review_iterations": 0,
+  "max_review_iterations": 3,
+  "required_model": "fixture-model",
+  "required_reasoning_effort": "high",
+  "configured_automation_status": "ACTIVE",
+  "all_phases_complete": false,
+  "blocked_reason": "Required input fixture.txt is absent",
+  "automation": {
+    "id": "evaluation",
+    "kind": "cron",
+    "status": "ACTIVE",
+    "cwd": "$SANDBOX/project",
+    "project_id": "fixture-project",
+    "execution_environment": "local"
+  },
+  "last_review": {
+    "verdict": "blocked",
+    "file": "automation/evaluation/review-2.md"
+  }
+}

@@ -1,63 +1,43 @@
 # Phase Preflight Reference
 
-Use this reference to scan later roadmap phases for prerequisites before a
-Claude-run delivery reaches them.
+Use this reference to scan the whole roadmap for later prerequisites before a
+runner reaches those phases.
 
 ## Core Contract
 
-Before activating or resuming scheduled delivery, perform a read-only scan over
-every remaining phase and finalization. The scan does not deliver future work.
-It records likely blockers, mitigations, approvals, and operator actions so
-later runs do not discover avoidable human-gated issues one phase at a time.
+Before activating scheduled delivery, and whenever a permission-gated blocker
+reveals a likely future class of blocker, perform a read-only phase preflight
+over every remaining phase and finalization. The preflight does not deliver
+future work. It only extracts prerequisites, approvals, mitigations, and
+operator actions so later phases can run without avoidable human interruption.
 
-Create or refresh these repository-local evidence files when the scan finds
-anything material:
+Check each future phase for:
 
-```text
-automation/<roadmap-slug>/phase_prerequisites.json
-automation/<roadmap-slug>/phase_preflight.md
-```
-
-For each remaining phase, inspect the roadmap body, delivery state, phase model
-policy, approval policy, known runner configuration, and current shell
-environment. Record:
-
-- required model and reasoning floors
-- missing environment variables, without printing secret values
-- network, external API, download, upload, or package-install requirements
-- local tools, services, fixtures, datasets, or filesystem prerequisites
+- required model and reasoning floors from phase model policy
+- credential or secret names that must be present in the runner environment
+- network or external API access
+- required local tools, package managers, services, fixtures, or datasets
+- filesystem locations outside normal phase-owned paths
 - branch, commit, push, publication, promotion, runner-retarget, pause, or
-  destructive operations that need explicit approval
+  destructive operations that need approval-policy decisions
 - external product, policy, account, billing, or scope decisions
-- finalization prerequisites, including terminal runner pause evidence
+- finalization prerequisites such as deep review, promotion evidence, and
+  terminal runner pause
 
 Classify each finding as ready, needs mitigation, needs approval, forbidden, or
-unknown. Say when the result is static analysis and cannot prove the eventual
-runner environment. Tool availability checked in the current shell may differ
-from the later runner.
+unknown. Write a durable operator-action list that names the phase, missing
+prerequisite, approval operation, current decision, and mitigation. If the
+preflight is static and cannot prove availability, say that explicitly instead
+of claiming certainty.
 
-## Claude Manual Procedure
+For credentials, report only variable names and presence. Missing credentials
+are blockers. Present credentials still need explicit operator approval before
+use; do not treat a secret value's presence as approval.
 
-This Claude package does not ship a host-specific preflight helper. Use
-read-only file inspection and shell checks, then write the evidence files only
-after the findings are clear.
-
-Suggested scan steps:
-
-1. Read `delivery_state.json`, `delivery_log.md`, `approval_policy.json`,
-   `phase_model_policy.json`, and the roadmap recorded in state.
-2. Extract every remaining `Phase N` section plus finalization.
-3. For each phase, list required env vars, commands, network/API needs,
-   runner model/reasoning requirements, and risky operations.
-4. Resolve approval-policy decisions for local commits, branch pushes, runner
-   retargets, runner pauses, publication, promotion, credential use, and
-   destructive operations.
-5. Write `phase_prerequisites.json` with structured findings and
-   `phase_preflight.md` with a concise operator-action checklist.
-
-Credential handling must report only variable names and presence. A missing
-credential is a blocker. A present credential still requires explicit operator
-approval before use.
+Preflight evidence should be stored near the roadmap automation artifacts, for
+example as `phase_prerequisites.json` plus a human-readable
+`phase_preflight.md`. Later runs must read those files when present and update
+them when a newly discovered blocker changes the mitigation list.
 
 If static preflight reports a network blocker for a current phase, consult
 `network-blocker-remediation.md` before preserving that blocker. Another
@@ -66,7 +46,17 @@ recovery path.
 
 ## Host Adapter Boundary
 
-Claude relies on repository-local files, the current shell environment, and any
-runner configuration supplied by the operator. If a recurring-runner surface
-cannot prove model, reasoning, status, network, or pause support, record that
-as unknown with a mitigation rather than assuming parity.
+The core defines the preflight categories and durable evidence shape. Host
+adapters provide concrete runner readback, environment inspection, network
+availability checks, helper commands, and the exact way approvals are requested
+or recorded.
+
+## Claude Manual Procedure
+
+Use packaged `scripts/plan_phase_prerequisites.py` or
+`scripts/roadmap_delivery.py phase-preflight` with repo root and slug. Explicit
+runner files/snapshots are readback inputs; no scheduler capability is inferred.
+The static scanner can mention fixtures, non-goals or optional live checks;
+record reviewed dispositions in setup_readiness.md while preserving raw output.
+Only required external prerequisites gate delivery. Missing live support is an
+explicit skipped optional check, not evidence of successful host effects.

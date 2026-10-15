@@ -13,6 +13,8 @@ from .validation import validate
 
 
 EXPECTED_SETUP_WARNINGS = [
+    "automation_model_unknown",
+    "automation_reasoning_unknown",
     "missing_automation_config",
     "current_branch_name_mismatch",
     "empty_review_dir",
@@ -37,6 +39,7 @@ def build_wizard_plan(options: WizardOptions) -> Dict[str, Any]:
     report["force"] = options.force
     report["status"] = "planned" if not report.get("errors") else "error"
     report["setup_choices"] = {
+        "runtime_contract": report["preview"]["automation"]["runtime_contract"],
         "roadmap_slug": report["roadmap_slug"],
         "automation_id": report["automation_id"],
         "approval_mode": report["approval_mode"],
@@ -146,6 +149,7 @@ def build_wizard_readback(report: Dict[str, Any]) -> Dict[str, Any]:
             "current_branch",
             "expected_branch",
             "worktree_dirty",
+            "control_plan",
         ),
     )
     inspect_summary = _readback_summary(
@@ -157,6 +161,7 @@ def build_wizard_readback(report: Dict[str, Any]) -> Dict[str, Any]:
             "current_phase",
             "current_branch",
             "worktree_dirty",
+            "control_plan",
         ),
     )
     combined_errors = validate_summary["errors"] + inspect_summary["errors"]

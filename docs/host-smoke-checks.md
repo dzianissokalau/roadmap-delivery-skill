@@ -6,6 +6,31 @@ explicit local script modes; normal repository validation remains offline.
 
 ## Default Mode
 
+Mandatory behavioral acceptance runs on Python 3.12 in CI and release checks:
+
+```bash
+python3 -m unittest tests.test_runtime_scenarios tests.test_portable_install tests.test_terminal_closeout tests.test_runtime_migrations tests.test_host_smoke -v
+```
+
+The scenario harness extracts locally built Codex and Claude releases and loads
+only their bundled runtime under `-I -S`. It exercises setup through completion
+using a persistent scheduler double. Three independent temporary projects per
+host check for state/configuration leaks. Blocker churn, verified repair,
+duplicate run IDs, partial writes, concurrent stale plans, all policy modes,
+opt-outs, legacy upgrades and reasoning floors are replayed offline. Closeout
+crashes resume in new processes at every effect boundary. Six historical
+regression probes detect deliberately reintroduced old behaviors. These checks
+provide executable runtime and adapter-contract evidence.
+
+Independent agent evaluation is separate. Raw project fixtures and realistic
+requests live in `tests/fixtures/runtime-reliability/skill-evaluation/` and
+`tests/fixtures/runtime-reliability/skill-evaluation.json`. Give a fresh evaluator
+only the skill, request and project artifacts; capture actual tool actions and
+artifact changes, and record evaluator/model, raw response and verdict in a
+separate report. The mandatory suite explicitly skips this evaluation when no
+independent evaluator is available. Runtime assertions cannot support claims
+of agent-level reliability.
+
 Repository validation is offline by default. The default path must run without
 network access, repository secrets, global host installation, or a saved Codex
 or Claude runner.
@@ -75,6 +100,17 @@ binary check is reported as `skipped`.
 The JSON report separates `offline_status` from `live_status`. A missing Codex
 binary produces top-level `status: "skipped"` with offline package checks still
 reported as passed. A live binary failure produces `status: "failed"`.
+
+For compatibility, `live_status` describes the binary `--help` check;
+`binary_status` names that scope explicitly. The `evidence` object separates
+offline package validation, binary availability, offline behavioral simulation,
+real scheduler update/readback and independent agent evaluation. The smoke
+harness reports simulation as `not_run`, and real scheduler and agent evaluation
+as `skipped` with reasons. A successful binary help call cannot substantiate
+actual scheduler stopping. The unittest scenario suite provides separate offline
+simulation results. Optional real host checks require an isolated,
+operator-approved runner and actual update/readback receipts; this harness
+does not perform those effects.
 
 ## Claude Prerequisites
 

@@ -68,6 +68,23 @@ class OnboardingWizardTests(unittest.TestCase):
             self.assertIn("worktree_dirty", report["next_commands"][0])
             self.assertFalse((repo_root / "automation" / "pilot_roadmap").exists())
 
+    def test_generated_versions_do_not_claim_host_readback_or_prompt_migration(self):
+        from roadmap_delivery.scaffold import ScaffoldOptions, apply_scaffold_plan, build_scaffold_plan
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            report=build_scaffold_plan(ScaffoldOptions(repo_root=root,roadmap_slug="fixture"))
+            preview=report["preview"]["automation"]
+            self.assertIn("prompt-template version: 3",preview["prompt"])
+            self.assertFalse(preview["runtime_contract"]["provenance"]["runner_verified"])
+            apply_scaffold_plan(report)
+            state=json.loads((root/"automation/fixture/delivery_state.json").read_text())
+            self.assertIsNone(state["configured_automation_model"])
+            self.assertIsNone(state["configured_automation_reasoning_effort"])
+            self.assertIsNone(state["configured_execution_environment"])
+            self.assertEqual(state["runtime_contract"]["provenance"]["source"],"local_generated")
+            self.assertEqual(state["runtime_contract"]["versions"]["prompt_template"],3)
+            self.assertNotIn("migration_history",state)
+
     def test_wizard_write_mode_creates_immediately_valid_artifacts(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo_root = Path(tmp) / "repo"
@@ -135,6 +152,10 @@ class OnboardingWizardTests(unittest.TestCase):
                 "--automation-id",
                 "pilot-roadmap-delivery",
                 "--strict",
+                "--allow-warning",
+                "automation_model_unknown",
+                "--allow-warning",
+                "automation_reasoning_unknown",
                 "--allow-warning",
                 "missing_automation_config",
                 "--allow-warning",

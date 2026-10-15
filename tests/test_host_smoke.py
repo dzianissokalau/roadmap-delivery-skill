@@ -39,6 +39,29 @@ class HostSmokeTests(unittest.TestCase):
                 return item
         raise AssertionError(f"missing check {name!r}: {report['checks']!r}")
 
+    def test_binary_help_cannot_support_scheduler_or_agent_evidence(self):
+        for host in ("codex", "claude"):
+            report = self.run_smoke("--host", host, "--isolated-home", "--" + host + "-binary", "/missing-fixture-binary", "--json")
+            evidence = report["evidence"]
+            self.assertEqual(evidence["offline_package"]["status"], "passed")
+            self.assertEqual(evidence["binary_availability"]["status"], "skipped")
+            self.assertEqual(evidence["offline_simulation"]["status"], "not_run")
+            self.assertEqual(evidence["real_scheduler"]["status"], "skipped")
+            self.assertEqual(evidence["independent_agent"]["status"], "skipped")
+            self.assertTrue(evidence["real_scheduler"]["reason"])
+            self.assertTrue(evidence["independent_agent"]["reason"])
+            self.assertFalse(report["created_real_automation"])
+
+    def test_ci_requires_offline_scenarios_on_supported_python(self):
+        for name in ("ci.yml", "release-check.yml"):
+            text = (REPO_ROOT / ".github/workflows" / name).read_text()
+            self.assertIn("python-version: '3.12'", text)
+            step = text.split("- name: Run mandatory offline behavioral acceptance", 1)[1].split("- name:", 1)[0]
+            self.assertNotIn("if:", step)
+            self.assertIn("PIP_NO_INDEX: '1'", step)
+            for module in ("test_runtime_scenarios", "test_portable_install", "test_terminal_closeout", "test_runtime_migrations", "test_host_smoke"):
+                self.assertIn("tests." + module, step)
+
     def test_codex_smoke_reports_skipped_when_binary_is_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
             active_home = Path(tmp) / "active-codex-home"
@@ -106,6 +129,9 @@ class HostSmokeTests(unittest.TestCase):
 
             self.assertEqual(report["status"], "passed")
             self.assertEqual(report["live_status"], "passed")
+            self.assertEqual(report["evidence"]["binary_availability"]["scope"], "binary --help only")
+            self.assertEqual(report["evidence"]["real_scheduler"]["status"], "skipped")
+            self.assertEqual(report["evidence"]["independent_agent"]["status"], "skipped")
             self.assertEqual(self.check_by_name(report, "codex_binary_help")["status"], "passed")
             used_home = Path(env_out.read_text(encoding="utf-8"))
             self.assertEqual(used_home.name, ".codex")

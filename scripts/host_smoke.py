@@ -144,7 +144,9 @@ def codex_env(repo_root: Path, smoke_root: Path, codex_home: Path) -> Dict[str, 
     env["CODEX_HOME"] = str(codex_home)
     env["AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR"] = str(codex_home / "automations")
     env["PYTHONPYCACHEPREFIX"] = str(smoke_root / "pycache")
-    env["PYTHONPATH"] = str(repo_root / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    env.pop("PYTHONPATH", None)
+    env.pop("PYTHONHOME", None)
+    env["PYTHONNOUSERSITE"] = "1"
     Path(env["HOME"]).mkdir(parents=True, exist_ok=True)
     return env
 
@@ -163,6 +165,8 @@ def run_demo_validation(
     commands = (
         [
             sys.executable,
+            "-I",
+            "-S",
             str(skill_target / "scripts" / "inspect_delivery_state.py"),
             "--repo-root",
             str(demo_repo),
@@ -174,6 +178,8 @@ def run_demo_validation(
         ],
         [
             sys.executable,
+            "-I",
+            "-S",
             str(skill_target / "scripts" / "validate_delivery_artifacts.py"),
             "--repo-root",
             str(demo_repo),
@@ -234,93 +240,6 @@ def run_demo_validation(
     )
 
 
-def run_demo_cli_validation(
-    *,
-    repo_root: Path,
-    smoke_root: Path,
-    demo_repo: Path,
-    env: Dict[str, str],
-    timeout: float,
-) -> Dict[str, Any]:
-    replacements = ((smoke_root, "$SMOKE_HOME"), (repo_root, "$REPO_ROOT"))
-    commands = (
-        [
-            sys.executable,
-            "-m",
-            "roadmap_delivery.cli",
-            "inspect",
-            "--repo-root",
-            str(demo_repo),
-            "--roadmap-slug",
-            DEMO_SLUG,
-            "--automation-id",
-            DEMO_AUTOMATION_ID,
-            "--strict",
-            "--json",
-        ],
-        [
-            sys.executable,
-            "-m",
-            "roadmap_delivery.cli",
-            "validate",
-            "--repo-root",
-            str(demo_repo),
-            "--roadmap-slug",
-            DEMO_SLUG,
-            "--automation-id",
-            DEMO_AUTOMATION_ID,
-            "--strict",
-            "--json",
-        ],
-    )
-    reports = []
-    for command in commands:
-        proc = run_command(command, cwd=demo_repo, env=env, timeout=timeout, replacements=replacements)
-        if proc.returncode != 0:
-            detail = sanitize(proc.stderr or proc.stdout, replacements)
-            return check(
-                "demo_fixture_validation",
-                "failed",
-                "Demo fixture CLI validation command failed.",
-                reason=detail or "nonzero_returncode",
-            )
-        try:
-            reports.append(load_json_output(proc))
-        except RuntimeError as exc:
-            return check(
-                "demo_fixture_validation",
-                "failed",
-                "Demo fixture CLI validation did not return JSON.",
-                reason=sanitize(str(exc), replacements),
-            )
-
-    inspect_report, validate_report = reports
-    if validate_report.get("errors") or validate_report.get("warnings"):
-        return check(
-            "demo_fixture_validation",
-            "failed",
-            "Demo fixture CLI validation reported findings.",
-            reason=json.dumps(
-                {
-                    "errors": validate_report.get("errors", []),
-                    "warnings": validate_report.get("warnings", []),
-                },
-                sort_keys=True,
-            ),
-        )
-    if inspect_report.get("current_phase") != "Phase 1 - Add Smoke Checked Command":
-        return check(
-            "demo_fixture_validation",
-            "failed",
-            "Demo fixture inspect output did not match the expected phase.",
-            reason=str(inspect_report.get("current_phase")),
-        )
-    return check(
-        "demo_fixture_validation",
-        "passed",
-        "Repository CLI inspected and validated the demo roadmap with temporary automation readback.",
-    )
-
 
 def run_codex_help(
     *,
@@ -378,7 +297,9 @@ def claude_env(repo_root: Path, smoke_root: Path, plugin_root: Path) -> Dict[str
     env["CLAUDE_PLUGIN_DIR"] = str(plugin_root.parent)
     env["AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR"] = str(smoke_root / ".automation-readback" / "automations")
     env["PYTHONPYCACHEPREFIX"] = str(smoke_root / "pycache")
-    env["PYTHONPATH"] = str(repo_root / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    env.pop("PYTHONPATH", None)
+    env.pop("PYTHONHOME", None)
+    env["PYTHONNOUSERSITE"] = "1"
     Path(env["HOME"]).mkdir(parents=True, exist_ok=True)
     Path(env["CLAUDE_CONFIG_DIR"]).mkdir(parents=True, exist_ok=True)
     Path(env["AUTONOMOUS_ROADMAP_AUTOMATIONS_DIR"]).mkdir(parents=True, exist_ok=True)
@@ -394,7 +315,7 @@ def prepare_claude_demo_automation(env: Dict[str, str], demo_repo: Path) -> None
     (automation_dir / "automation.toml").write_text(text, encoding="utf-8")
 
 
-def check_claude_manifest(plugin_root: Path) -> Dict[str, Any]:
+def check_claude_manifest(plugin_root: Path, repo_root: Path) -> Dict[str, Any]:
     manifest_path = plugin_root / ".claude-plugin" / "plugin.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -408,7 +329,7 @@ def check_claude_manifest(plugin_root: Path) -> Dict[str, Any]:
     required = {
         "name": "roadmap-delivery",
         "displayName": "Roadmap Delivery Skill",
-        "version": "0.2.0",
+        "version": (repo_root / "VERSION").read_text(encoding="utf-8").strip(),
         "license": "Apache-2.0",
     }
     mismatches = [key for key, expected in required.items() if manifest.get(key) != expected]
@@ -538,6 +459,14 @@ def summarize(host: str, isolated_home: bool, checks: List[Dict[str, Any]]) -> D
         "status": status,
         "offline_status": offline_status,
         "live_status": live_status,
+        "binary_status": live_status,
+        "evidence": {
+            "offline_package": {"status": offline_status, "scope": "isolated package and fixture validation"},
+            "binary_availability": {"status": live_status, "scope": "binary --help only"},
+            "offline_simulation": {"status": "not_run", "command": "python3 -m unittest tests.test_runtime_scenarios -v"},
+            "real_scheduler": {"status": "skipped", "reason": "No real host update/readback is performed by this harness."},
+            "independent_agent": {"status": "skipped", "reason": "No independent fresh-context agent evaluation is performed by this harness."},
+        },
         "isolated_home": isolated_home,
         "active_codex_home_used": False,
         "active_claude_config_used": False,
@@ -648,12 +577,12 @@ def run_claude(args: argparse.Namespace) -> Dict[str, Any]:
         )
         return summarize("claude", True, checks)
     checks.append(check("plugin_layout", "passed", "Generated Claude plugin package layout contains required files."))
-    checks.append(check_claude_manifest(plugin_source))
+    checks.append(check_claude_manifest(plugin_source, repo_root))
 
     with tempfile.TemporaryDirectory(prefix="roadmap-claude-smoke-") as tmp:
         smoke_root = Path(tmp)
         try:
-            plugin_root, _skill_target = prepare_claude_plugin(repo_root, smoke_root)
+            plugin_root, skill_target = prepare_claude_plugin(repo_root, smoke_root)
             demo_repo = copy_demo_repo(repo_root, smoke_root, args.timeout)
             env = claude_env(repo_root, smoke_root, plugin_root)
             prepare_claude_demo_automation(env, demo_repo)
@@ -665,12 +594,14 @@ def run_claude(args: argparse.Namespace) -> Dict[str, Any]:
                 )
             )
             checks.append(
-                run_demo_cli_validation(
+                run_demo_validation(
                     repo_root=repo_root,
                     smoke_root=smoke_root,
                     demo_repo=demo_repo,
+                    skill_target=skill_target,
                     env=env,
                     timeout=args.timeout,
+                    skill_label="Claude",
                 )
             )
             checks.append(

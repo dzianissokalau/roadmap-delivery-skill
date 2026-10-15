@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roadmap-delivery.local/schemas/approval_policy.schema.json",
+  "title": "Roadmap Delivery Approval Policy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "approval_mode",
+    "operations",
+    "never_auto"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "approval_mode": {
+      "type": "string",
+      "enum": [
+        "conservative",
+        "delegated_local",
+        "delegated_delivery",
+        "custom"
+      ]
+    },
+    "operations": {
+      "type": "object",
+      "properties": {
+        "edit_phase_owned_files": {
+          "type": "boolean"
+        },
+        "write_state_log_review_artifacts": {
+          "type": "boolean"
+        },
+        "create_or_switch_phase_branch": {
+          "type": "boolean"
+        },
+        "run_verification": {
+          "type": "boolean"
+        },
+        "commit_delivered_phase_locally": {
+          "type": "boolean"
+        },
+        "retarget_saved_automation": {
+          "type": "boolean"
+        },
+        "pause_saved_automation": {
+          "type": "boolean"
+        },
+        "push_current_phase_branch": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "pause_automation_on_completion": {
+      "type": "boolean",
+      "description": "Defaults true when absent. Explicit false disables automatic completion pause in every mode, regardless of broad pause permission. A separate scoped manual request remains independent."
+    },
+    "pause_automation_on_completion_reason": {
+      "type": "string"
+    },
+    "pause_automation_on_stall": {
+      "type": "boolean",
+      "description": "Defaults true when absent. Explicit false disables automatic stall pause in every mode, regardless of broad pause permission."
+    },
+    "pause_automation_on_stall_reason": {
+      "type": "string"
+    },
+    "never_auto": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "force_push",
+          "git_reset_hard",
+          "delete_branches_or_tags",
+          "merge_or_promote_to_main",
+          "publish_releases_or_packages",
+          "use_unavailable_credentials",
+          "change_repository_security_or_billing",
+          "install_or_sync_global_tools",
+          "destructive_filesystem_outside_phase_scope"
+        ]
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}
